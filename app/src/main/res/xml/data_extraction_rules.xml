@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copia de seguridad (Android 12+): se respaldan los nombres que el usuario puso
+     a sus dispositivos y el historial, para que no los pierda al cambiar de teléfono. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="lupa.db" />
+        <include domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="lupa.db" />
+        <include domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

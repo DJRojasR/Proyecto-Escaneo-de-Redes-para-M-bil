@@ -1,0 +1,59 @@
+# ============================================================
+#  .gitignore - Lupa de Red (Android / Kotlin / Gradle)
+# ============================================================
+
+# ---------- SECRETOS: NUNCA subir ----------
+# Llave de firma de Google Play y sus contraseñas.
+# Si se filtran, alguien podría firmar apps haciéndose pasar por ti.
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+
+# Archivos de configuración con claves de servicios de Google (si algún día los usas)
+google-services.json
+secrets.properties
+
+# ---------- Rutas propias de tu PC ----------
+# Contiene la ruta del Android SDK en TU computadora
+local.properties
+
+# ---------- Archivos generados al compilar ----------
+build/
+/app/build/
+.gradle/
+.kotlin/
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Versiones compiladas (se generan de nuevo, no van al repositorio)
+*.apk
+*.aab
+*.ap_
+*.dex
+/app/release/
+/app/debug/
+output-metadata.json
+mapping.txt
+
+# ---------- Android Studio / IntelliJ ----------
+.idea/
+*.iml
+*.iws
+*.ipr
+.navigation/
+
+# ---------- Sistema operativo ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Registros ----------
+*.log
+hs_err_pid*
+
+# ---------- IMPORTANTE: esto SÍ debe subirse ----------
+# El "wrapper" de Gradle permite compilar el proyecto sin instalar Gradle.
+!gradle/wrapper/gradle-wrapper.jar
