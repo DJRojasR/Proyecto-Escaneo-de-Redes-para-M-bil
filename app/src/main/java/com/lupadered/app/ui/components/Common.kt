@@ -74,7 +74,7 @@ fun DeviceType.icon(): ImageVector = when (this) {
 }
 
 @Composable
-fun DeviceAvatar(type: DeviceType, presence: Presence, modifier: Modifier = Modifier) {
+fun DeviceAvatar(type: DeviceType, presence: Presence, modifier: Modifier = Modifier, iconKey: String? = null) {
     val online = presence == Presence.ONLINE
     val bg = if (online) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
     val fg = if (online) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outline
@@ -85,7 +85,7 @@ fun DeviceAvatar(type: DeviceType, presence: Presence, modifier: Modifier = Modi
             .background(bg),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(type.icon(), contentDescription = type.label, tint = fg)
+        Icon(DeviceIcons.iconFor(type, iconKey), contentDescription = type.label, tint = fg)
     }
 }
 

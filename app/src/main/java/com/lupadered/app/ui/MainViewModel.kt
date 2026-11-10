@@ -1,7 +1,13 @@
 package com.lupadered.app.ui
 
 import android.app.Application
+import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
+import com.lupadered.app.data.NetworkProfile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lupadered.app.LupaApp
@@ -17,6 +23,9 @@ import com.lupadered.app.net.LocalNetwork
 import com.lupadered.app.net.NetworkInfoProvider
 import com.lupadered.app.net.ScanListener
 import com.lupadered.app.net.ScanPhase
+import com.lupadered.app.data.AppSettings
+import com.lupadered.app.widget.DevicesWidget
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -44,6 +53,8 @@ data class DeviceItem(
     val trusted: Boolean,
     val latencyMs: Long?,
     val lastSeen: Long?,
+    val customIcon: String? = null,
+    val groupName: String? = null,
 )
 
 data class HomeState(
@@ -57,11 +68,24 @@ data class HomeState(
     val lastScan: ScanRecord? = null,
     val newDevices: List<Device> = emptyList(),
     val untrustedOnline: Int = 0,
+    /** Grupos creados por el usuario en esta red (RF-32). */
+    val groups: List<String> = emptyList(),
+    /** Grupo elegido en el filtro; null = todos. */
+    val selectedGroup: String? = null,
+    /** La red actual tal como está guardada en "Mis redes"; null si aún no se escaneó nunca. */
+    val profile: NetworkProfile? = null,
+    /** Se acaba de detectar que el teléfono cambió a otra red. */
+    val networkChanged: Boolean = false,
+    /** El usuario eligió "Ahora no" al pedirle un nombre para esta red. */
+    val namePromptDismissed: Boolean = false,
 )
 
 data class HistoryState(
     val scans: List<ScanRecord> = emptyList(),
     val events: List<Pair<DeviceEvent, String>> = emptyList(),
+    /** Versión gratis: cuántos eventos y escaneos de más de 7 días quedan ocultos (RF-27). */
+    val hiddenEvents: Int = 0,
+    val hiddenScans: Int = 0,
 )
 
 /** Una fila del IP Manager: cada IP del rango con su estado. */
@@ -82,15 +106,71 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val live = ConcurrentHashMap<String, HostSnapshot>()
     private var scanJob: Job? = null
 
+    /** Detecta cuando el teléfono se conecta a otro WiFi (otro router) o se desconecta. */
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) = scheduleRefresh()
+        override fun onLost(network: Network) = scheduleRefresh()
+        override fun onLinkPropertiesChanged(network: Network, lp: LinkProperties) = scheduleRefresh()
+    }
+    private var refreshJob: Job? = null
+
     init {
         refreshNetwork()
+        runCatching {
+            val request = NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
+                .build()
+            app.getSystemService(ConnectivityManager::class.java)?.registerNetworkCallback(request, networkCallback)
+        }
+    }
+
+    override fun onCleared() {
+        runCatching { app.getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(networkCallback) }
+    }
+
+    /** Espera un momento a que la red se estabilice (el router da la IP) antes de leerla. */
+    private fun scheduleRefresh() {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            delay(1500)
+            refreshNetwork()
+        }
     }
 
     /** Lee la red actual y muestra al instante lo que ya conocemos de ella. */
     fun refreshNetwork() {
         viewModelScope.launch {
             val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
-            _home.update { it.copy(network = net, networkChecked = true) }
+            val previous = _home.value.network?.key
+            val changed = _home.value.networkChecked && previous != net?.key
+            if (changed && scanJob?.isActive == true) {
+                // Los resultados de un escaneo a medias de la red anterior no sirven.
+                scanJob?.cancel()
+            }
+            _home.update {
+                it.copy(
+                    network = net,
+                    networkChecked = true,
+                    networkChanged = if (changed) net != null else it.networkChanged,
+                    newDevices = if (changed) emptyList() else it.newDevices,
+                    selectedGroup = if (changed) null else it.selectedGroup,
+                    namePromptDismissed = if (changed) false else it.namePromptDismissed,
+                )
+            }
+            reloadFromDb()
+        }
+    }
+
+    fun dismissNetworkChanged() = _home.update { it.copy(networkChanged = false) }
+
+    fun dismissNamePrompt() = _home.update { it.copy(namePromptDismissed = true) }
+
+    /** Pone nombre a la red actual ("Casa", "Router 2"…). */
+    fun renameCurrentNetwork(name: String) {
+        val key = _home.value.network?.key ?: return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { repo.renameNetwork(key, name) }
             reloadFromDb()
         }
     }
@@ -98,14 +178,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun reloadFromDb() {
         val net = _home.value.network ?: run {
             dbDevices = emptyList()
+            _home.update { it.copy(profile = null, lastScan = null) }
             publish()
             return
         }
-        val (devices, last) = withContext(Dispatchers.IO) {
-            repo.devices(net.key) to repo.latestScan(net.key)
+        val (devices, last, profile) = withContext(Dispatchers.IO) {
+            Triple(repo.devices(net.key), repo.latestScan(net.key), repo.network(net.key))
         }
         dbDevices = devices
-        _home.update { it.copy(lastScan = last) }
+        val groups = devices.mapNotNull { it.groupName }.distinct().sorted()
+        _home.update { s ->
+            s.copy(
+                lastScan = last,
+                profile = profile,
+                groups = groups,
+                selectedGroup = s.selectedGroup?.takeIf { it in groups },
+            )
+        }
         publish()
     }
 
@@ -128,26 +217,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val lock = NetworkInfoProvider.acquireMulticastLock(app)
             val started = System.currentTimeMillis()
             try {
-                val result = app.scanner.scan(net.toScanTarget(), object : ScanListener {
-                    override fun onPhase(phase: ScanPhase, progress: Float) {
-                        _home.update { s -> s.copy(phase = phase, progress = maxOf(s.progress, progress)) }
-                    }
+                // Si justo corre un escaneo automático en segundo plano, esperamos a que termine.
+                val summary = app.scanMutex.withLock {
+                    val result = app.scanner.scan(net.toScanTarget(), object : ScanListener {
+                        override fun onPhase(phase: ScanPhase, progress: Float) {
+                            _home.update { s -> s.copy(phase = phase, progress = maxOf(s.progress, progress)) }
+                        }
 
-                    override fun onHost(host: HostSnapshot) {
-                        live[host.ip] = host
+                        override fun onHost(host: HostSnapshot) {
+                            live[host.ip] = host
+                        }
+                    })
+                    withContext(Dispatchers.IO) {
+                        repo.applyScan(
+                            networkKey = net.key,
+                            subnet = net.scanSubnet.cidr,
+                            hosts = result,
+                            startedAt = started,
+                            durationMs = System.currentTimeMillis() - started,
+                            selfModel = phoneModel(),
+                            gateway = net.gateway,
+                        )
                     }
-                })
-                val summary = withContext(Dispatchers.IO) {
-                    repo.applyScan(
-                        networkKey = net.key,
-                        subnet = net.scanSubnet.cidr,
-                        hosts = result,
-                        startedAt = started,
-                        durationMs = System.currentTimeMillis() - started,
-                        selfModel = phoneModel(),
-                    )
                 }
                 app.ads.onScanCompleted()
+                DevicesWidget.updateAll(app)
                 _home.update { it.copy(newDevices = summary.newDevices) }
             } finally {
                 lock?.release()
@@ -165,6 +259,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun dismissNewDevices() = _home.update { it.copy(newDevices = emptyList()) }
+
+    /** Filtra la lista por grupo (RF-32). null = todos. */
+    fun selectGroup(group: String?) {
+        _home.update { it.copy(selectedGroup = group) }
+    }
 
     fun trust(id: Long) {
         viewModelScope.launch {
@@ -185,12 +284,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadHistory() {
         val net = _home.value.network ?: return
+        val premium = app.premium.isPremium
         viewModelScope.launch {
             val state = withContext(Dispatchers.IO) {
                 val names = repo.devices(net.key).associate { it.id to it.displayName }
+                // Versión gratis: últimos 7 días. Los datos antiguos se conservan y
+                // aparecen al activar Premium (RF-27).
+                val since = if (premium) 0L
+                else System.currentTimeMillis() - AppSettings.FREE_HISTORY_DAYS * DAY_MS
                 HistoryState(
-                    scans = repo.scans(net.key),
-                    events = repo.events(net.key).map { it to (names[it.deviceId] ?: "Dispositivo eliminado") },
+                    scans = repo.scans(net.key, limit = if (premium) 500 else 50, since = since),
+                    events = repo.events(net.key, limit = if (premium) 1000 else 200, since = since)
+                        .map { it to (names[it.deviceId] ?: "Dispositivo eliminado") },
+                    hiddenEvents = if (premium) 0 else repo.countEventsBefore(net.key, since),
+                    hiddenScans = if (premium) 0 else repo.countScansBefore(net.key, since),
                 )
             }
             _history.value = state
@@ -252,6 +359,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 trusted = d.trusted,
                 latencyMs = liveHost?.latencyMs ?: d.latencyMs,
                 lastSeen = d.lastSeen,
+                customIcon = d.customIcon,
+                groupName = d.groupName,
             )
         }
         if (scanning) {
@@ -301,6 +410,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     companion object {
+        const val DAY_MS = 24L * 60 * 60 * 1000
+
         fun phoneModel(): String {
             val m = Build.MODEL.orEmpty()
             val b = Build.MANUFACTURER.orEmpty().replaceFirstChar { it.uppercase() }

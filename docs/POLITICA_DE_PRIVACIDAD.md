@@ -35,15 +35,35 @@ consentimiento antes de mostrar anuncios personalizados. Puedes cambiar tu elecc
 *Ajustes > Opciones de privacidad de anuncios*. También puedes restablecer o eliminar tu ID de publicidad en los
 ajustes de Android.
 
-## 3. Niños
+## 3. Compras y suscripción Premium
+
+Las compras de **Lupa de Red Premium** (suscripción mensual o pago único) las procesa **Google Play**. Nosotros no
+recibimos ni guardamos los datos de tu tarjeta ni de tu medio de pago. La app solo consulta a Google Play si tu
+cuenta tiene una compra activa, para activar las funciones Premium. Los usuarios Premium no ven anuncios.
+
+- Condiciones de pago de Google Play: <https://payments.google.com/payments/apis-secure/u/0/get_legal_document?ldo=0&ldt=buyertos>
+- Puedes cancelar la suscripción en *Google Play > Pagos y suscripciones*.
+
+## 4. Vigilancia en segundo plano y notificaciones (Premium)
+
+Si activas la *Vigilancia de la red*, la app escanea **solo la red que elegiste** cada cierto tiempo, también cuando
+no la tienes abierta, y te envía una notificación si aparece un equipo desconocido. Estos escaneos se quedan dentro
+de tu red local y sus resultados se guardan solo en tu teléfono. Puedes desactivarlo en cualquier momento.
+
+## 5. Reportes exportados (Premium)
+
+Cuando exportas un reporte en PDF o CSV, el archivo se guarda donde tú elijas. A partir de ahí, lo que hagas con él
+(enviarlo, compartirlo) queda bajo tu control.
+
+## 6. Niños
 
 La app no está dirigida a menores de 13 años (o la edad mínima que establezca tu país) y no recopilamos a sabiendas
 datos de niños.
 
-## 4. Uso responsable
+## 7. Uso responsable
 
 La app está pensada para revisar redes propias o redes en las que tengas autorización.
 
-## 5. Cambios
+## 8. Cambios
 
 Si cambiamos esta política, publicaremos la nueva versión en esta página con su fecha de actualización.

@@ -85,3 +85,14 @@ Hay imágenes para la ficha en `docs/play-store/`.
 - Exportar el inventario a CSV/PDF.
 - Escaneo periódico en segundo plano con notificación de "dispositivo nuevo" (WorkManager).
 - Versión Pro sin anuncios (Google Play Billing).
+
+
+## Lupa de Red Premium (versión 1.1.0)
+
+La app es gratis con anuncios y ofrece **Premium** (suscripción mensual con 7 días gratis o pago único
+"Pro de por vida"): sin anuncios, vigilancia automática con alerta de intrusos, escaneo diario programado,
+historial completo, análisis de puertos extendido, revisión de seguridad, monitor de latencia, grupos e
+íconos, varias redes, reportes PDF/CSV, widget y temas de color.
+
+Cómo crear los productos en Play Console y probar las compras: **[docs/PREMIUM.md](docs/PREMIUM.md)**.
+En la versión debug, *Ajustes y privacidad › Simular Premium* activa todo sin pagar.

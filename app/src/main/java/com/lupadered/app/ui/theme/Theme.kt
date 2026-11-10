@@ -5,7 +5,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.lupadered.app.data.Appearance
+import com.lupadered.app.data.DarkMode
+import com.lupadered.app.data.ThemeColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -77,25 +83,84 @@ private val AppTypography = Typography().let { t ->
     )
 }
 
+/** true si la app se está mostrando en modo oscuro (puede no coincidir con el sistema). */
+val LocalIsDark = staticCompositionLocalOf { false }
+
 /** Colores con significado (bien / atención / mal), coherentes en claro y oscuro. */
 object StatusColors {
     val good: Color
-        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF7BD88F) else Color(0xFF1B7F3B)
+        @Composable get() = if (LocalIsDark.current) Color(0xFF7BD88F) else Color(0xFF1B7F3B)
     val warn: Color
-        @Composable get() = if (isSystemInDarkTheme()) Color(0xFFF2C14E) else Color(0xFF9A6700)
+        @Composable get() = if (LocalIsDark.current) Color(0xFFF2C14E) else Color(0xFF9A6700)
     val bad: Color
-        @Composable get() = if (isSystemInDarkTheme()) Color(0xFFFF8A80) else Color(0xFFB3261E)
+        @Composable get() = if (LocalIsDark.current) Color(0xFFFF8A80) else Color(0xFFB3261E)
     val idle: Color
         @Composable get() = MaterialTheme.colorScheme.outline
 }
 
 val MonoStyle = TextStyle(fontFeatureSettings = "tnum", fontSize = 13.sp)
 
+/** Color principal de cada tema: (claro, contenedor claro, texto sobre contenedor claro, oscuro, contenedor oscuro). */
+private class Accent(
+    val primary: Color, val container: Color, val onContainer: Color,
+    val darkPrimary: Color, val darkContainer: Color, val darkOnContainer: Color, val darkOnPrimary: Color,
+)
+
+private val accents = mapOf(
+    ThemeColor.BLUE to Accent(
+        Color(0xFF2B5EA7), Color(0xFFD6E3FF), Color(0xFF001B3E),
+        Color(0xFFA9C7FF), Color(0xFF0E4785), Color(0xFFD6E3FF), Color(0xFF003063),
+    ),
+    ThemeColor.PURPLE to Accent(
+        Color(0xFF6B4FA0), Color(0xFFEBDCFF), Color(0xFF25005A),
+        Color(0xFFD3BBFF), Color(0xFF523786), Color(0xFFEBDCFF), Color(0xFF3B1F6E),
+    ),
+    ThemeColor.ORANGE to Accent(
+        Color(0xFF9A4A12), Color(0xFFFFDBC8), Color(0xFF341100),
+        Color(0xFFFFB68B), Color(0xFF7A3400), Color(0xFFFFDBC8), Color(0xFF552000),
+    ),
+)
+
+/** Color de muestra para el selector de temas. */
+fun ThemeColor.swatch(): Color = accents[this]?.primary ?: LightColors.primary
+
+private fun schemeFor(color: ThemeColor, dark: Boolean): ColorScheme {
+    val base = if (dark) DarkColors else LightColors
+    val a = accents[color] ?: return base
+    return if (dark) {
+        base.copy(
+            primary = a.darkPrimary, onPrimary = a.darkOnPrimary,
+            primaryContainer = a.darkContainer, onPrimaryContainer = a.darkOnContainer,
+        )
+    } else {
+        base.copy(
+            primary = a.primary, onPrimary = Color.White,
+            primaryContainer = a.container, onPrimaryContainer = a.onContainer,
+        )
+    }
+}
+
+/**
+ * Tema de la app. Los colores distintos al verde azulado son Premium (RF-35):
+ * si el usuario deja de ser Premium, la app vuelve al color original.
+ */
 @Composable
-fun LupaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors,
-        typography = AppTypography,
-        content = content,
-    )
+fun LupaTheme(
+    appearance: Appearance = Appearance(),
+    premium: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    val dark = when (appearance.dark) {
+        DarkMode.SYSTEM -> isSystemInDarkTheme()
+        DarkMode.LIGHT -> false
+        DarkMode.DARK -> true
+    }
+    val color = if (premium) appearance.color else ThemeColor.TEAL
+    CompositionLocalProvider(LocalIsDark provides dark) {
+        MaterialTheme(
+            colorScheme = schemeFor(color, dark),
+            typography = AppTypography,
+            content = content,
+        )
+    }
 }

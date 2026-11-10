@@ -25,6 +25,15 @@ import androidx.compose.material.icons.automirrored.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material.icons.outlined.WorkspacePremium
+import com.lupadered.app.ui.components.PremiumGold
+import com.lupadered.app.ui.components.PremiumTag
+import com.lupadered.app.ui.components.rememberIsPremium
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,6 +63,7 @@ import com.lupadered.app.net.InspectionResult
 import com.lupadered.app.ui.ScreenScaffold
 import com.lupadered.app.ui.ToolsViewModel
 import com.lupadered.app.ui.components.RadarStatus
+import com.lupadered.app.ui.components.CheckList
 import com.lupadered.app.ui.components.ExplainRow
 import com.lupadered.app.ui.components.SectionTitle
 import com.lupadered.app.ui.components.StatusDot
@@ -63,39 +73,97 @@ import com.lupadered.app.ui.theme.StatusColors
 
 // ============================================================== Herramientas
 
+/** Acciones de la pantalla Herramientas. */
+class ToolsActions(
+    val onManual: () -> Unit,
+    val onDiagnostics: () -> Unit,
+    val onLearn: () -> Unit,
+    val onSettings: () -> Unit,
+    val onPremium: () -> Unit,
+    val onMonitor: () -> Unit,
+    val onSecurity: () -> Unit,
+    val onLatency: () -> Unit,
+    val onNetworks: () -> Unit,
+    val onExport: () -> Unit,
+)
+
 @Composable
-fun ToolsScreen(onManual: () -> Unit, onDiagnostics: () -> Unit, onLearn: () -> Unit, onSettings: () -> Unit) {
+fun ToolsScreen(a: ToolsActions) {
+    val isPremium = rememberIsPremium()
     ScreenScaffold(title = "Herramientas") { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (!isPremium) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable(onClick = a.onPremium),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                ) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.WorkspacePremium, contentDescription = null, tint = PremiumGold)
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text("Lupa de Red Premium", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Sin anuncios, alerta de intrusos, revisión de seguridad y más. Desde S/ 4.90 al mes o un pago único.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
             ToolCard(
                 Icons.AutoMirrored.Outlined.ManageSearch, "Analizar una IP",
                 "¿Conoces una dirección IP de tu red? Revisa si responde, cuánto tarda, su nombre y sus puertos abiertos.",
-                onManual,
+                a.onManual,
             )
             ToolCard(
                 Icons.Outlined.Speed, "Diagnóstico de conexión",
                 "¿Internet va lento? Descubre si el problema es la señal WiFi, el router, tu proveedor o el DNS.",
-                onDiagnostics,
+                a.onDiagnostics,
+            )
+            ToolCard(
+                Icons.Outlined.NotificationsActive, "Vigilancia de la red",
+                "Escaneos automáticos, escaneo diario y aviso cuando se conecta alguien desconocido.",
+                a.onMonitor, premium = !isPremium,
+            )
+            ToolCard(
+                Icons.Outlined.Security, "Revisión de seguridad",
+                "Un puntaje de tu red y los pasos para cerrar lo riesgoso.",
+                a.onSecurity, premium = !isPremium,
+            )
+            ToolCard(
+                Icons.AutoMirrored.Outlined.ShowChart, "Monitor de latencia",
+                "Gráfico en vivo del ping a tu router y a Internet.",
+                a.onLatency, premium = !isPremium,
+            )
+            ToolCard(
+                Icons.Outlined.Wifi, "Mis redes",
+                "Casa, trabajo… cada red con su propio inventario y nombre.",
+                a.onNetworks,
+            )
+            ToolCard(
+                Icons.Outlined.Description, "Exportar reporte",
+                "Inventario, seguridad e historial en PDF o CSV.",
+                a.onExport, premium = !isPremium,
             )
             ToolCard(
                 Icons.Outlined.School, "¿Qué estoy viendo?",
                 "Explicaciones sencillas de IP, router, puertos, latencia y más.",
-                onLearn,
+                a.onLearn,
             )
             ToolCard(
                 Icons.Outlined.Settings, "Ajustes y privacidad",
-                "Privacidad de anuncios, borrar datos y política de privacidad.",
-                onSettings,
+                "Apariencia, privacidad de anuncios, borrar datos y política de privacidad.",
+                a.onSettings,
             )
         }
     }
 }
 
 @Composable
-private fun ToolCard(icon: ImageVector, title: String, text: String, onClick: () -> Unit) {
+private fun ToolCard(icon: ImageVector, title: String, text: String, onClick: () -> Unit, premium: Boolean = false) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
@@ -103,8 +171,14 @@ private fun ToolCard(icon: ImageVector, title: String, text: String, onClick: ()
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(16.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f, fill = false))
+                    if (premium) {
+                        Spacer(Modifier.width(8.dp))
+                        PremiumTag()
+                    }
+                }
                 Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -151,12 +225,25 @@ fun ManualScanScreen(vm: ToolsViewModel, initialIp: String, onBeforeScan: () -> 
             )
             Spacer(Modifier.height(8.dp))
             if (s.running) {
-                RadarStatus(s.step, size = 36.dp)
-                Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
                 TextButton(onClick = vm::cancelInspect) { Text("Detener") }
             } else {
                 Button(onClick = start, modifier = Modifier.fillMaxWidth()) { Text("Analizar") }
+            }
+            if (s.checks.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                ) {
+                    Column(Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
+                        Text(
+                            if (s.running) "Analizando ${s.result?.ip ?: ip.trim()}…" else "Lo que revisamos",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        )
+                        CheckList(s.checks)
+                    }
+                }
             }
             s.result?.let { InspectionView(it) }
         }

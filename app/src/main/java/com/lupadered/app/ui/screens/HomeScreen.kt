@@ -12,14 +12,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.FilterChip
+import com.lupadered.app.ui.components.rememberIsPremium
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -61,6 +72,18 @@ fun HomeScreen(
     onLearn: () -> Unit,
 ) {
     val s by vm.home.collectAsStateWithLifecycle()
+    val isPremium = rememberIsPremium()
+    var renaming by remember { mutableStateOf(false) }
+    if (renaming) {
+        NetworkNameDialog(
+            current = s.profile?.name.orEmpty(),
+            onDismiss = { renaming = false },
+            onSave = {
+                vm.renameCurrentNetwork(it)
+                renaming = false
+            },
+        )
+    }
 
     ScreenScaffold(
         title = "Lupa de Red",
@@ -82,14 +105,43 @@ fun HomeScreen(
             return@ScreenScaffold
         }
 
-        val online = s.devices.filter { it.presence != Presence.OFFLINE }
-        val offline = s.devices.filter { it.presence == Presence.OFFLINE }
+        val shown = s.selectedGroup?.let { g -> s.devices.filter { it.groupName == g } } ?: s.devices
+        val online = shown.filter { it.presence != Presence.OFFLINE }
+        val offline = shown.filter { it.presence == Presence.OFFLINE }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            item { NetworkCard(s) }
+            if (s.networkChanged && s.network != null) {
+                item {
+                    Card(
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.SwapHoriz, contentDescription = null)
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                if (s.profile == null) "Te conectaste a una red nueva. Escanéala para guardarla en \"Mis redes\"."
+                                else "Cambiaste a la red \"${s.profile?.displayName}\". Te mostramos sus equipos.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(onClick = vm::dismissNetworkChanged) { Text("OK") }
+                        }
+                    }
+                }
+            }
+            item { NetworkCard(s, onRename = { renaming = true }) }
+            if (!s.scanning && s.profile != null && s.profile?.name == null && !s.namePromptDismissed) {
+                item {
+                    NamePromptCard(
+                        onSave = vm::renameCurrentNetwork,
+                        onLater = vm::dismissNamePrompt,
+                    )
+                }
+            }
             item { Spacer(Modifier.height(12.dp)) }
             item { ScanCard(s, onScan = onScan, onCancel = vm::cancelScan) }
 
@@ -102,6 +154,30 @@ fun HomeScreen(
                         onOpen = onOpenDevice,
                         onDismiss = vm::dismissNewDevices,
                     )
+                }
+            }
+
+            if (s.groups.isNotEmpty() && isPremium) {
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 12.dp),
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = s.selectedGroup == null,
+                                onClick = { vm.selectGroup(null) },
+                                label = { Text("Todos") },
+                            )
+                        }
+                        items(s.groups) { g ->
+                            FilterChip(
+                                selected = s.selectedGroup == g,
+                                onClick = { vm.selectGroup(if (s.selectedGroup == g) null else g) },
+                                label = { Text(g) },
+                            )
+                        }
+                    }
                 }
             }
 
@@ -142,11 +218,27 @@ fun HomeScreen(
 }
 
 @Composable
-private fun NetworkCard(s: HomeState) {
+private fun NetworkCard(s: HomeState, onRename: () -> Unit) {
     val net = s.network
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            Text("Tu red", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                Text(
+                    s.profile?.displayName ?: "Tu red",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (net != null && s.profile == null) {
+                    Spacer(Modifier.width(8.dp))
+                    Tag("Red nueva", StatusColors.warn)
+                }
+                Spacer(Modifier.weight(1f))
+                if (s.profile != null) {
+                    IconButton(onClick = onRename) {
+                        Icon(Icons.Outlined.Edit, contentDescription = "Cambiar el nombre de la red")
+                    }
+                }
+            }
             if (net == null) {
                 Text("Buscando tu red…", style = MaterialTheme.typography.bodyMedium)
                 return@Column
@@ -297,7 +389,7 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        DeviceAvatar(d.type, d.presence)
+        DeviceAvatar(d.type, d.presence, iconKey = d.customIcon)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -336,4 +428,59 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
             )
         }
     }
+}
+
+
+/** Pide un nombre para la red después de escanearla por primera vez ("Casa", "Router 2"…). */
+@Composable
+private fun NamePromptCard(onSave: (String) -> Unit, onLater: () -> Unit) {
+    var text by remember { mutableStateOf("") }
+    Card(
+        modifier = Modifier.padding(top = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            Text("¿Cómo se llama esta red?", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Ponle un nombre para reconocerla en \"Mis redes\", por ejemplo si tienes dos routers.",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(vertical = 6.dp),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Casa", "Router 2", "Trabajo").forEach { suggestion ->
+                    AssistChip(onClick = { onSave(suggestion) }, label = { Text(suggestion) })
+                }
+            }
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it.take(30) },
+                singleLine = true,
+                placeholder = { Text("Otro nombre") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onLater) { Text("Ahora no") }
+                TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text("Guardar") }
+            }
+        }
+    }
+}
+
+@Composable
+fun NetworkNameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var text by remember { mutableStateOf(current) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nombre de la red") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it.take(30) },
+                singleLine = true,
+                placeholder = { Text("Ej. Casa, Router 2") },
+            )
+        },
+        confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Guardar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+    )
 }

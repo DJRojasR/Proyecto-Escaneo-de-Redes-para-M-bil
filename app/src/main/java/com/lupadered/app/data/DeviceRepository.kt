@@ -12,7 +12,7 @@ import com.lupadered.app.net.DiscoveryMethod
 import com.lupadered.app.net.HostSnapshot
 import com.lupadered.app.net.NetworkScanner
 
-private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 1) {
+private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE devices (
@@ -66,11 +66,37 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         )
         db.execSQL("CREATE INDEX idx_events_net ON events(network_key, at)")
         db.execSQL("CREATE INDEX idx_events_dev ON events(device_id, at)")
+        migrateToV2(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Versión 1: aún no hay migraciones. Cuando cambies el esquema, súbelo
-        // a la versión 2 y agrega aquí los ALTER TABLE (nunca borres datos del usuario).
+        // Nunca borramos datos del usuario: solo agregamos columnas y tablas.
+        if (oldVersion < 2) migrateToV2(db)
+    }
+
+    /** Versión 2 (Premium): grupos e íconos, origen del escaneo y redes guardadas. */
+    private fun migrateToV2(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE devices ADD COLUMN group_name TEXT")
+        db.execSQL("ALTER TABLE devices ADD COLUMN custom_icon TEXT")
+        db.execSQL("ALTER TABLE scans ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
+        db.execSQL(
+            """CREATE TABLE networks (
+                network_key TEXT PRIMARY KEY,
+                name TEXT,
+                subnet TEXT NOT NULL,
+                gateway TEXT,
+                first_seen INTEGER NOT NULL,
+                last_seen INTEGER NOT NULL
+            )"""
+        )
+        // Las redes que ya se habían escaneado pasan a la lista de "Mis redes".
+        db.execSQL(
+            """INSERT OR IGNORE INTO networks (network_key, name, subnet, gateway, first_seen, last_seen)
+               SELECT network_key, NULL, subnet,
+                      NULLIF(substr(network_key, instr(network_key, '|') + 1), '-'),
+                      MIN(started_at), MAX(started_at)
+               FROM scans GROUP BY network_key"""
+        )
     }
 }
 
@@ -96,8 +122,11 @@ class DeviceRepository(context: Context) {
 
     fun latestScan(networkKey: String): ScanRecord? = scans(networkKey, 1).firstOrNull()
 
-    fun scans(networkKey: String, limit: Int = 50): List<ScanRecord> =
-        db.query("scans", null, "network_key = ?", arrayOf(networkKey), null, null, "started_at DESC", limit.toString())
+    fun scans(networkKey: String, limit: Int = 50, since: Long = 0L): List<ScanRecord> =
+        db.query(
+            "scans", null, "network_key = ? AND started_at >= ?", arrayOf(networkKey, since.toString()),
+            null, null, "started_at DESC", limit.toString(),
+        )
             .use { c ->
                 generateSequence {
                     if (!c.moveToNext()) null else ScanRecord(
@@ -108,17 +137,83 @@ class DeviceRepository(context: Context) {
                         durationMs = c.long("duration_ms"),
                         found = c.long("found").toInt(),
                         newCount = c.long("new_count").toInt(),
+                        source = c.str("source")?.let { n -> ScanSource.entries.firstOrNull { it.name == n } }
+                            ?: ScanSource.MANUAL,
                     )
                 }.toList()
             }
 
-    fun events(networkKey: String, limit: Int = 200): List<DeviceEvent> =
-        db.query("events", null, "network_key = ?", arrayOf(networkKey), null, null, "at DESC, id DESC", limit.toString())
+    fun events(networkKey: String, limit: Int = 200, since: Long = 0L): List<DeviceEvent> =
+        db.query(
+            "events", null, "network_key = ? AND at >= ?", arrayOf(networkKey, since.toString()),
+            null, null, "at DESC, id DESC", limit.toString(),
+        )
             .use { c -> generateSequence { if (c.moveToNext()) c.toEvent() else null }.toList() }
 
-    fun eventsForDevice(deviceId: Long, limit: Int = 50): List<DeviceEvent> =
-        db.query("events", null, "device_id = ?", arrayOf(deviceId.toString()), null, null, "at DESC, id DESC", limit.toString())
+    fun eventsForDevice(deviceId: Long, limit: Int = 50, since: Long = 0L): List<DeviceEvent> =
+        db.query(
+            "events", null, "device_id = ? AND at >= ?", arrayOf(deviceId.toString(), since.toString()),
+            null, null, "at DESC, id DESC", limit.toString(),
+        )
             .use { c -> generateSequence { if (c.moveToNext()) c.toEvent() else null }.toList() }
+
+    /** Cuántos eventos de la red son anteriores a [before] (para el aviso del historial gratis). */
+    fun countEventsBefore(networkKey: String, before: Long): Int =
+        count("SELECT COUNT(*) FROM events WHERE network_key = ? AND at < ?", networkKey, before.toString())
+
+    fun countScansBefore(networkKey: String, before: Long): Int =
+        count("SELECT COUNT(*) FROM scans WHERE network_key = ? AND started_at < ?", networkKey, before.toString())
+
+    fun countDeviceEventsBefore(deviceId: Long, before: Long): Int =
+        count("SELECT COUNT(*) FROM events WHERE device_id = ? AND at < ?", deviceId.toString(), before.toString())
+
+    /** Todos los eventos de la red entre dos fechas, del más antiguo al más nuevo (para reportes). */
+    fun eventsBetween(networkKey: String, from: Long, to: Long): List<DeviceEvent> =
+        db.query(
+            "events", null, "network_key = ? AND at >= ? AND at <= ?",
+            arrayOf(networkKey, from.toString(), to.toString()), null, null, "at ASC, id ASC",
+        ).use { c -> generateSequence { if (c.moveToNext()) c.toEvent() else null }.toList() }
+
+    /** Nombres de grupo que el usuario ya usó en esta red. */
+    fun groups(networkKey: String): List<String> =
+        db.rawQuery(
+            "SELECT DISTINCT group_name FROM devices WHERE network_key = ? AND group_name IS NOT NULL ORDER BY group_name",
+            arrayOf(networkKey),
+        ).use { c -> generateSequence { if (c.moveToNext()) c.getString(0) else null }.toList() }
+
+    // -------------------------------------------------------------------- redes
+
+    fun networks(): List<NetworkProfile> =
+        db.rawQuery(
+            """SELECT n.*,
+                      (SELECT COUNT(*) FROM devices d WHERE d.network_key = n.network_key) AS device_count,
+                      (SELECT s.found FROM scans s WHERE s.network_key = n.network_key
+                       ORDER BY s.started_at DESC LIMIT 1) AS last_found
+               FROM networks n ORDER BY n.last_seen DESC""",
+            null,
+        ).use { c -> generateSequence { if (c.moveToNext()) c.toNetwork() else null }.toList() }
+
+    fun network(key: String): NetworkProfile? = networks().firstOrNull { it.key == key }
+
+    fun renameNetwork(key: String, name: String?) {
+        db.update("networks", ContentValues().apply { put("name", name?.trim()?.takeIf { it.isNotEmpty() }) },
+            "network_key = ?", arrayOf(key))
+    }
+
+    /** Olvida una red guardada con todos sus dispositivos e historial. */
+    fun deleteNetwork(key: String) {
+        val database = db
+        database.beginTransaction()
+        try {
+            database.delete("events", "network_key = ?", arrayOf(key))
+            database.delete("scans", "network_key = ?", arrayOf(key))
+            database.delete("devices", "network_key = ?", arrayOf(key))
+            database.delete("networks", "network_key = ?", arrayOf(key))
+            database.setTransactionSuccessful()
+        } finally {
+            database.endTransaction()
+        }
+    }
 
     // ---------------------------------------------------------------- escritura
 
@@ -131,6 +226,15 @@ class DeviceRepository(context: Context) {
         db.update("devices", ContentValues().apply { put("user_type", type?.name) }, "id = ?", arrayOf(id.toString()))
     }
 
+    fun updateGroup(id: Long, group: String?) {
+        db.update("devices", ContentValues().apply { put("group_name", group?.trim()?.takeIf { it.isNotEmpty() }?.take(30)) },
+            "id = ?", arrayOf(id.toString()))
+    }
+
+    fun updateIcon(id: Long, icon: String?) {
+        db.update("devices", ContentValues().apply { put("custom_icon", icon) }, "id = ?", arrayOf(id.toString()))
+    }
+
     fun setTrusted(id: Long, trusted: Boolean) {
         db.update("devices", ContentValues().apply { put("trusted", if (trusted) 1 else 0) }, "id = ?", arrayOf(id.toString()))
     }
@@ -139,11 +243,19 @@ class DeviceRepository(context: Context) {
         db.update("devices", ContentValues().apply { put("trusted", 1) }, "network_key = ?", arrayOf(networkKey))
     }
 
-    fun updatePorts(id: Long, ports: List<Int>, at: Long) {
+    /**
+     * Guarda los puertos abiertos de un análisis. Si se indica [scanned], se
+     * conservan los puertos abiertos encontrados antes que no se revisaron esta vez
+     * (p. ej. los de un análisis extendido cuando ahora se hizo uno común).
+     */
+    fun updatePorts(id: Long, ports: List<Int>, at: Long, scanned: Collection<Int>? = null) {
         val d = device(id) ?: return
-        val type = DeviceClassifier.classify(d.hints(ports.toSet()))
+        val checked = scanned?.toHashSet()
+        val kept = if (checked == null) emptyList() else d.openPorts.filter { it !in checked }
+        val all = (kept + ports).toSortedSet()
+        val type = DeviceClassifier.classify(d.hints(all))
         db.update("devices", ContentValues().apply {
-            put("open_ports", ports.sorted().joinToString(","))
+            put("open_ports", all.joinToString(","))
             put("ports_scanned_at", at)
             put("auto_type", type.name)
         }, "id = ?", arrayOf(id.toString()))
@@ -155,6 +267,7 @@ class DeviceRepository(context: Context) {
     }
 
     fun clearAll() {
+        db.delete("networks", null, null)
         db.delete("events", null, null)
         db.delete("scans", null, null)
         db.delete("devices", null, null)
@@ -171,6 +284,8 @@ class DeviceRepository(context: Context) {
         startedAt: Long,
         durationMs: Long,
         selfModel: String,
+        source: ScanSource = ScanSource.MANUAL,
+        gateway: String? = null,
     ): ScanSummary {
         val database = db
         database.beginTransaction()
@@ -187,7 +302,23 @@ class DeviceRepository(context: Context) {
                 put("duration_ms", durationMs)
                 put("found", hosts.size)
                 put("new_count", 0)
+                put("source", source.name)
             })
+
+            // Registra la red en "Mis redes" (o actualiza cuándo se vio por última vez)
+            val updated = database.update("networks", ContentValues().apply {
+                put("last_seen", now)
+                put("subnet", subnet)
+            }, "network_key = ?", arrayOf(networkKey))
+            if (updated == 0) {
+                database.insert("networks", null, ContentValues().apply {
+                    put("network_key", networkKey)
+                    put("subnet", subnet)
+                    put("gateway", gateway)
+                    put("first_seen", now)
+                    put("last_seen", now)
+                })
+            }
 
             val matched = HashSet<Long>()
             val newDevices = ArrayList<Device>()
@@ -329,6 +460,9 @@ class DeviceRepository(context: Context) {
         })
     }
 
+    private fun count(sql: String, vararg args: String): Int =
+        db.rawQuery(sql, arrayOf(*args)).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+
     private fun Cursor.str(col: String): String? = getColumnIndexOrThrow(col).let { if (isNull(it)) null else getString(it) }
     private fun Cursor.long(col: String): Long = getLong(getColumnIndexOrThrow(col))
     private fun Cursor.longOrNull(col: String): Long? = getColumnIndexOrThrow(col).let { if (isNull(it)) null else getLong(it) }
@@ -357,6 +491,19 @@ class DeviceRepository(context: Context) {
         trusted = long("trusted") != 0L,
         isGateway = long("is_gateway") != 0L,
         isSelf = long("is_self") != 0L,
+        groupName = str("group_name"),
+        customIcon = str("custom_icon"),
+    )
+
+    private fun Cursor.toNetwork() = NetworkProfile(
+        key = str("network_key")!!,
+        name = str("name"),
+        subnet = str("subnet")!!,
+        gateway = str("gateway"),
+        firstSeen = long("first_seen"),
+        lastSeen = long("last_seen"),
+        deviceCount = long("device_count").toInt(),
+        lastFound = longOrNull("last_found")?.toInt(),
     )
 
     private fun Cursor.toEvent() = DeviceEvent(

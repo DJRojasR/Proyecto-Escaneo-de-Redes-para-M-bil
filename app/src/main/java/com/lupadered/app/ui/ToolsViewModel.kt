@@ -10,6 +10,9 @@ import com.lupadered.app.net.HostInspector
 import com.lupadered.app.net.InspectionResult
 import com.lupadered.app.net.Ipv4
 import com.lupadered.app.net.NetworkInfoProvider
+import com.lupadered.app.knowledge.PortKnowledge
+import com.lupadered.app.ui.components.CheckItem
+import com.lupadered.app.ui.components.CheckStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +28,8 @@ data class ManualState(
     val step: String = "",
     val result: InspectionResult? = null,
     val error: String? = null,
+    /** Pasos del análisis en vivo (ping, puertos, nombre) con su resultado. */
+    val checks: List<CheckItem> = emptyList(),
 )
 
 data class DiagState(
@@ -75,9 +80,31 @@ class ToolsViewModel(application: Application) : AndroidViewModel(application) {
                 val dns = withContext(Dispatchers.IO) {
                     NetworkInfoProvider.current(app)?.let { listOfNotNull(it.gateway) + it.dnsServers }.orEmpty()
                 }
-                val result = inspector.inspect(clean, dns) { p, step ->
-                    _manual.update { it.copy(progress = p, step = step) }
-                }
+                val titles = listOf(
+                    "Midiendo cuánto tarda en responder (4 pings)",
+                    "Revisando ${PortKnowledge.COMMON_PORTS.size} puertos comunes",
+                    "Buscando su nombre en la red",
+                )
+                val result = inspector.inspect(
+                    clean, dns,
+                    onProgress = { p, step -> _manual.update { it.copy(progress = p, step = step) } },
+                    onStep = { i, done, summary, good ->
+                        val item = CheckItem(
+                            id = "step$i",
+                            title = titles[i],
+                            status = when {
+                                !done -> CheckStatus.RUNNING
+                                good -> CheckStatus.OK
+                                else -> CheckStatus.WARN
+                            },
+                            result = summary,
+                        )
+                        _manual.update { s ->
+                            val idx = s.checks.indexOfFirst { it.id == item.id }
+                            s.copy(checks = if (idx < 0) s.checks + item else s.checks.toMutableList().also { it[idx] = item })
+                        }
+                    },
+                )
                 app.ads.onScanCompleted()
                 _manual.update { it.copy(result = result) }
             } finally {

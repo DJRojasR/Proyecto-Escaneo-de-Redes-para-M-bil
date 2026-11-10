@@ -20,7 +20,19 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import com.lupadered.app.ui.components.LocalOpenPremium
+import com.lupadered.app.ui.screens.ExportScreen
+import com.lupadered.app.ui.screens.LatencyScreen
+import com.lupadered.app.ui.screens.MonitorScreen
+import com.lupadered.app.ui.screens.NetworkDetailScreen
+import com.lupadered.app.ui.screens.NetworksScreen
+import com.lupadered.app.ui.screens.PremiumScreen
+import com.lupadered.app.ui.screens.SecurityScreen
+import com.lupadered.app.ui.screens.ToolsActions
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -64,7 +76,7 @@ fun Context.findActivity(): Activity? {
 }
 
 @Composable
-fun LupaRoot() {
+fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
     val nav = rememberNavController()
     val mainVm: MainViewModel = viewModel()
     val toolsVm: ToolsViewModel = viewModel()
@@ -81,7 +93,22 @@ fun LupaRoot() {
         activity?.let { app.ads.maybeShowOnScanStart(it) }
         mainVm.startScan()
     }
+    val openPremium: () -> Unit = { nav.navigate("premium") { launchSingleTop = true } }
 
+    // Abrir una pantalla pedida desde una notificación o el widget
+    LaunchedEffect(openRoute) {
+        if (openRoute != null) {
+            if (openRoute == "red") {
+                nav.popBackStack(nav.graph.findStartDestination().id, inclusive = false)
+                mainVm.refreshNetwork()
+            } else {
+                nav.navigate(openRoute) { launchSingleTop = true }
+            }
+            onRouteOpened()
+        }
+    }
+
+    CompositionLocalProvider(LocalOpenPremium provides openPremium) {
     Scaffold(
         bottomBar = {
             if (showBar) {
@@ -130,11 +157,62 @@ fun LupaRoot() {
             }
             composable("herramientas") {
                 ToolsScreen(
-                    onManual = { nav.navigate("manual?ip=") },
-                    onDiagnostics = { nav.navigate("diagnostico") },
-                    onLearn = { nav.navigate("aprende") },
-                    onSettings = { nav.navigate("ajustes") },
+                    ToolsActions(
+                        onManual = { nav.navigate("manual?ip=") },
+                        onDiagnostics = { nav.navigate("diagnostico") },
+                        onLearn = { nav.navigate("aprende") },
+                        onSettings = { nav.navigate("ajustes") },
+                        onPremium = openPremium,
+                        onMonitor = { nav.navigate("vigilancia") },
+                        onSecurity = { nav.navigate("seguridad") },
+                        onLatency = { nav.navigate("latencia") },
+                        onNetworks = { nav.navigate("redes") },
+                        onExport = { nav.navigate("exportar") },
+                    )
                 )
+            }
+            composable("premium") {
+                PremiumScreen(premium = app.premium, activity = activity, onBack = { nav.popBackStack() })
+            }
+            composable("vigilancia") {
+                MonitorScreen(onBack = { nav.popBackStack() })
+            }
+            composable("seguridad") {
+                SecurityScreen(
+                    vm = viewModel(),
+                    onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable("latencia") {
+                LatencyScreen(vm = viewModel(), onBack = { nav.popBackStack() })
+            }
+            composable("redes") { entry ->
+                val vm: NetworksViewModel = viewModel(entry)
+                NetworksScreen(
+                    vm = vm,
+                    onOpenNetwork = { key -> nav.navigate("red-guardada/" + Uri.encode(key)) },
+                    onScanCurrent = {
+                        nav.popBackStack(nav.graph.findStartDestination().id, inclusive = false)
+                        startNetworkScan()
+                    },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(
+                "red-guardada/{key}",
+                arguments = listOf(navArgument("key") { type = NavType.StringType }),
+            ) { entry ->
+                val key = entry.arguments?.getString("key").orEmpty()
+                NetworkDetailScreen(
+                    vm = viewModel(),
+                    key = key,
+                    onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable("exportar") {
+                ExportScreen(vm = viewModel(), onBack = { nav.popBackStack() })
             }
             composable(
                 "dispositivo/{id}",
@@ -169,11 +247,16 @@ fun LupaRoot() {
                 SettingsScreen(
                     vm = mainVm,
                     ads = app.ads,
+                    premium = app.premium,
+                    settings = app.settings,
                     activity = activity,
+                    onPremium = openPremium,
+                    onMonitor = { nav.navigate("vigilancia") },
                     onBack = { nav.popBackStack() },
                 )
             }
         }
+    }
     }
 }
 

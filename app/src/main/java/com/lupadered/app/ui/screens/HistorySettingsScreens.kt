@@ -41,7 +41,31 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lupadered.app.BuildConfig
 import com.lupadered.app.ads.AdsManager
+import com.lupadered.app.data.AppSettings
+import com.lupadered.app.data.DarkMode
+import com.lupadered.app.data.ThemeColor
+import com.lupadered.app.premium.PremiumManager
+import com.lupadered.app.premium.PremiumSource
+import com.lupadered.app.ui.components.PremiumGold
+import com.lupadered.app.ui.components.PremiumTag
+import com.lupadered.app.ui.theme.swatch
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.WorkspacePremium
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Switch
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import com.lupadered.app.data.EventType
+import com.lupadered.app.data.ScanSource
+import com.lupadered.app.ui.components.LockedCard
+import com.lupadered.app.ui.components.rememberIsPremium
 import com.lupadered.app.ui.MainViewModel
 import com.lupadered.app.ui.ScreenScaffold
 import com.lupadered.app.ui.components.EmptyState
@@ -63,7 +87,8 @@ private fun EventType.icon(): ImageVector = when (this) {
 fun HistoryScreen(vm: MainViewModel, onOpenDevice: (Long) -> Unit) {
     val home by vm.home.collectAsStateWithLifecycle()
     val h by vm.history.collectAsStateWithLifecycle()
-    LaunchedEffect(home.network?.key, home.lastScan?.id) { vm.loadHistory() }
+    val isPremium = rememberIsPremium()
+    LaunchedEffect(home.network?.key, home.lastScan?.id, isPremium) { vm.loadHistory() }
 
     ScreenScaffold(title = "Historial") { padding ->
         if (h.events.isEmpty() && h.scans.isEmpty()) {
@@ -79,6 +104,16 @@ fun HistoryScreen(vm: MainViewModel, onOpenDevice: (Long) -> Unit) {
             Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {
+            if (h.hiddenEvents > 0 || h.hiddenScans > 0) {
+                item {
+                    LockedCard(
+                        title = "Historial de más de ${AppSettings.FREE_HISTORY_DAYS} días",
+                        text = "Tienes ${h.hiddenEvents} cambios y ${h.hiddenScans} escaneos más antiguos guardados. " +
+                            "Con Premium ves todo el historial y la línea de tiempo de cada equipo.",
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
             if (h.events.isNotEmpty()) {
                 item { SectionTitle("Cambios en tu red") }
                 items(h.events, key = { "e" + it.first.id }) { (e, name) ->
@@ -119,7 +154,12 @@ fun HistoryScreen(vm: MainViewModel, onOpenDevice: (Long) -> Unit) {
                 items(h.scans, key = { "s" + it.id }) { sc ->
                     ListItem(
                         headlineContent = { Text("${sc.found} dispositivos" + if (sc.newCount > 0) " · ${sc.newCount} nuevos" else "") },
-                        supportingContent = { Text("${dateTime(sc.startedAt)} · ${(sc.durationMs + 500) / 1000} s · ${sc.subnet}") },
+                        supportingContent = {
+                            Text(
+                                "${dateTime(sc.startedAt)} · ${(sc.durationMs + 500) / 1000} s · ${sc.subnet}" +
+                                    if (sc.source != ScanSource.MANUAL) " · ${sc.source.label}" else "",
+                            )
+                        },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 }
@@ -131,12 +171,97 @@ fun HistoryScreen(vm: MainViewModel, onOpenDevice: (Long) -> Unit) {
 // ============================================================== Ajustes
 
 @Composable
-fun SettingsScreen(vm: MainViewModel, ads: AdsManager, activity: Activity?, onBack: () -> Unit) {
+fun SettingsScreen(
+    vm: MainViewModel,
+    ads: AdsManager,
+    premium: PremiumManager,
+    settings: AppSettings,
+    activity: Activity?,
+    onPremium: () -> Unit,
+    onMonitor: () -> Unit,
+    onBack: () -> Unit,
+) {
     val uri = LocalUriHandler.current
     var confirmClear by remember { mutableStateOf(false) }
+    val p by premium.state.collectAsStateWithLifecycle()
+    val appearance by settings.appearance.collectAsStateWithLifecycle()
 
     ScreenScaffold(title = "Ajustes y privacidad", onBack = onBack) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+            SectionTitle("Premium", Modifier.padding(horizontal = 16.dp))
+            ListItem(
+                modifier = Modifier.clickable(onClick = onPremium),
+                headlineContent = { Text(if (p.isPremium) "Tienes Lupa de Red Premium" else "Hazte Premium") },
+                supportingContent = {
+                    Text(
+                        when (p.source) {
+                            PremiumSource.LIFETIME -> "Pago único: Premium para siempre."
+                            PremiumSource.SUBSCRIPTION -> "Suscripción mensual activa. Toca para administrarla."
+                            PremiumSource.TEST -> "Premium de prueba (versión de desarrollo)."
+                            null -> "Sin anuncios, vigilancia, alerta de intrusos y más."
+                        },
+                    )
+                },
+                leadingContent = { Icon(Icons.Outlined.WorkspacePremium, contentDescription = null, tint = PremiumGold) },
+            )
+            ListItem(
+                modifier = Modifier.clickable(onClick = onMonitor),
+                headlineContent = { Text("Vigilancia de la red") },
+                supportingContent = { Text("Escaneos automáticos y alerta de intrusos.") },
+            )
+            if (BuildConfig.DEBUG) {
+                ListItem(
+                    headlineContent = { Text("Simular Premium (solo pruebas)") },
+                    supportingContent = {
+                        Text("Solo aparece en la versión de desarrollo. Sirve para probar las funciones Premium sin pagar.")
+                    },
+                    trailingContent = {
+                        Switch(checked = premium.testPremiumEnabled, onCheckedChange = { premium.setTestPremium(it) })
+                    },
+                )
+            }
+
+            SectionTitle("Apariencia", Modifier.padding(horizontal = 16.dp))
+            Row(
+                Modifier.padding(horizontal = 16.dp).horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                DarkMode.entries.forEach { mode ->
+                    FilterChip(
+                        selected = appearance.dark == mode,
+                        onClick = { settings.setAppearance(appearance.copy(dark = mode)) },
+                        label = { Text(mode.label) },
+                    )
+                }
+            }
+            Row(
+                Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ThemeColor.entries.forEach { c ->
+                    val locked = c != ThemeColor.TEAL && !p.isPremium
+                    val selected = (if (p.isPremium) appearance.color else ThemeColor.TEAL) == c
+                    Box(
+                        Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(c.swatch())
+                            .then(
+                                if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                                else Modifier
+                            )
+                            .clickable {
+                                if (locked) onPremium() else settings.setAppearance(appearance.copy(color = c))
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (locked) Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
+                }
+                if (!p.isPremium) PremiumTag()
+            }
+
             SectionTitle("Privacidad", Modifier.padding(horizontal = 16.dp))
             ListItem(
                 headlineContent = { Text("Tus datos se quedan en tu teléfono") },
@@ -162,10 +287,11 @@ fun SettingsScreen(vm: MainViewModel, ads: AdsManager, activity: Activity?, onBa
 
             SectionTitle("Anuncios", Modifier.padding(horizontal = 16.dp))
             ListItem(
-                headlineContent = { Text("Sin anuncios que interrumpan") },
+                headlineContent = { Text(if (p.isPremium) "Sin anuncios" else "Sin anuncios que interrumpan") },
                 supportingContent = {
                     Text(
-                        "Tus primeros ${AdsManager.SCANS_PER_AD} escaneos no tienen anuncios. Después, como máximo uno cada " +
+                        if (p.isPremium) "Con Premium no verás ningún anuncio."
+                        else "Tus primeros ${AdsManager.SCANS_PER_AD} escaneos no tienen anuncios. Después, como máximo uno cada " +
                             "${AdsManager.SCANS_PER_AD} escaneos, y el escaneo sigue trabajando detrás del anuncio para que no esperes de más.",
                     )
                 },

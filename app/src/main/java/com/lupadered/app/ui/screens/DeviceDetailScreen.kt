@@ -1,6 +1,35 @@
 package com.lupadered.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material3.AssistChip
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import com.lupadered.app.data.AppSettings
+import com.lupadered.app.data.DeviceEvent
+import com.lupadered.app.data.EventType
+import com.lupadered.app.ui.components.DeviceIcons
+import com.lupadered.app.ui.components.LocalOpenPremium
+import com.lupadered.app.ui.components.LockedCard
+import com.lupadered.app.ui.components.PremiumTag
+import com.lupadered.app.ui.components.rememberIsPremium
+import com.lupadered.app.ui.theme.StatusColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,7 +98,12 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
     var renaming by remember { mutableStateOf(false) }
     var choosingType by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var choosingGroup by remember { mutableStateOf(false) }
+    var choosingIcon by remember { mutableStateOf(false) }
+    var choosingExtended by remember { mutableStateOf(false) }
     val uri = LocalUriHandler.current
+    val isPremium = rememberIsPremium()
+    val openPremium = LocalOpenPremium.current
 
     LaunchedEffect(s.deleted) {
         if (s.deleted) {
@@ -107,7 +141,10 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
         ) {
             // ---------- Cabecera
             Row(verticalAlignment = Alignment.CenterVertically) {
-                DeviceAvatar(d.type, Presence.ONLINE)
+                DeviceAvatar(
+                    d.type, Presence.ONLINE, iconKey = d.customIcon,
+                    modifier = Modifier.clickable { if (isPremium) choosingIcon = true else openPremium() },
+                )
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(d.displayName, style = MaterialTheme.typography.titleLarge)
@@ -127,6 +164,28 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             )
             if (d.alias == null && !d.isSelf) {
                 TextButton(onClick = { renaming = true }) { Text("Ponle un nombre (ej. \"Celular de mamá\")") }
+            }
+
+            // ---------- Grupo e ícono (Premium, RF-32)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 4.dp).horizontalScroll(rememberScrollState()),
+            ) {
+                AssistChip(
+                    onClick = { if (isPremium) choosingGroup = true else openPremium() },
+                    label = { Text(d.groupName?.let { "Grupo: $it" } ?: "Agregar a un grupo") },
+                    leadingIcon = { Icon(Icons.Outlined.Category, contentDescription = null) },
+                )
+                Spacer(Modifier.width(8.dp))
+                AssistChip(
+                    onClick = { if (isPremium) choosingIcon = true else openPremium() },
+                    label = { Text("Cambiar ícono") },
+                    leadingIcon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
+                )
+                if (!isPremium) {
+                    Spacer(Modifier.width(8.dp))
+                    PremiumTag()
+                }
             }
 
             // ---------- Conocido
@@ -217,14 +276,25 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             )
             Spacer(Modifier.height(8.dp))
             if (s.portScanRunning) {
-                RadarStatus("Revisando ${PortKnowledge.COMMON_PORTS.size} puertos comunes… ${(s.portScanProgress * 100).toInt()}%")
+                RadarStatus("${s.portScanLabel} ${(s.portScanProgress * 100).toInt()}%")
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(progress = { s.portScanProgress }, modifier = Modifier.fillMaxWidth())
+                TextButton(onClick = vm::cancelPortScan) { Text("Detener") }
             } else {
-                Button(onClick = vm::scanPorts) {
-                    Icon(Icons.Outlined.Security, contentDescription = null)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Button(onClick = vm::scanPorts) {
+                        Icon(Icons.Outlined.Security, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (d.portsScannedAt == null) "Analizar puertos" else "Volver a analizar")
+                    }
                     Spacer(Modifier.width(8.dp))
-                    Text(if (d.portsScannedAt == null) "Analizar puertos" else "Volver a analizar")
+                    OutlinedButton(onClick = { if (isPremium) choosingExtended = true else openPremium() }) {
+                        Text("A fondo")
+                        if (!isPremium) {
+                            Spacer(Modifier.width(6.dp))
+                            Icon(Icons.Outlined.Lock, contentDescription = "Premium", modifier = Modifier.size(16.dp))
+                        }
+                    }
                 }
                 d.portsScannedAt?.let {
                     Text(
@@ -249,18 +319,26 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 )
             }
 
-            // ---------- Historial
-            if (s.events.isNotEmpty()) {
-                SectionTitle("Historial")
-                s.events.forEach { e ->
-                    Row(Modifier.padding(vertical = 4.dp)) {
-                        Text(
-                            e.type.label + if (e.detail != null) " (antes ${e.detail} → ahora ${e.ip})" else "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(relativeTime(e.at), style = MaterialTheme.typography.labelSmall)
-                    }
+            // ---------- Línea de tiempo (RF-27)
+            if (s.events.isNotEmpty() || s.hiddenEvents > 0) {
+                SectionTitle("Línea de tiempo")
+                val connections = s.events.count { it.type == EventType.NEW || it.type == EventType.BACK }
+                if (isPremium && connections > 0) {
+                    Text(
+                        "Se ha conectado $connections ${if (connections == 1) "vez" else "veces"} desde ${dateTime(d.firstSeen)}.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
+                Timeline(s.events)
+                if (s.hiddenEvents > 0) {
+                    LockedCard(
+                        title = "Línea de tiempo completa",
+                        text = "Hay ${s.hiddenEvents} eventos de más de ${AppSettings.FREE_HISTORY_DAYS} días. " +
+                            "Con Premium ves toda la historia de este equipo.",
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
                 }
             }
 
@@ -284,6 +362,40 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             vm.setType(it)
             choosingType = false
         })
+    }
+    if (choosingGroup && d != null) {
+        GroupDialog(
+            current = d.groupName,
+            groups = s.groups,
+            onDismiss = { choosingGroup = false },
+            onSelect = {
+                vm.setGroup(it)
+                choosingGroup = false
+            },
+        )
+    }
+    if (choosingIcon && d != null) {
+        IconDialog(
+            d = d,
+            onDismiss = { choosingIcon = false },
+            onSelect = {
+                vm.setIcon(it)
+                choosingIcon = false
+            },
+        )
+    }
+    if (choosingExtended) {
+        ExtendedPortsDialog(
+            onDismiss = { choosingExtended = false },
+            onCommonExtended = {
+                choosingExtended = false
+                vm.scanPortsExtended()
+            },
+            onRange = { from, to ->
+                choosingExtended = false
+                vm.scanPortRange(from, to)
+            },
+        )
     }
     if (confirmDelete) {
         AlertDialog(
@@ -368,5 +480,196 @@ private fun TypeDialog(d: Device, onDismiss: () -> Unit, onSelect: (DeviceType?)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } },
+    )
+}
+
+
+@Composable
+private fun Timeline(events: List<DeviceEvent>) {
+    val lineColor = MaterialTheme.colorScheme.outlineVariant
+    Column {
+        events.forEachIndexed { i, e ->
+            val color = when (e.type) {
+                EventType.NEW -> StatusColors.warn
+                EventType.BACK -> StatusColors.good
+                EventType.LEFT -> StatusColors.idle
+                EventType.IP_CHANGED -> MaterialTheme.colorScheme.tertiary
+            }
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Box(Modifier.width(20.dp).fillMaxHeight(), contentAlignment = Alignment.TopCenter) {
+                    if (i < events.lastIndex) {
+                        Box(Modifier.padding(top = 14.dp).width(2.dp).fillMaxHeight().background(lineColor))
+                    }
+                    Box(Modifier.padding(top = 6.dp).size(10.dp).clip(CircleShape).background(color))
+                }
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f).padding(bottom = 12.dp)) {
+                    Text(
+                        e.type.label + if (e.detail != null) " (antes ${e.detail} → ahora ${e.ip})" else "",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        dateTime(e.at) + " · " + relativeTime(e.at),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GroupDialog(current: String?, groups: List<String>, onDismiss: () -> Unit, onSelect: (String?) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Grupo") },
+        text = {
+            Column {
+                Text(
+                    "Agrupa tus equipos para encontrarlos rápido, por ejemplo \"Cámaras\" o \"Cuarto de mamá\".",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(Modifier.height(8.dp))
+                LazyColumn(Modifier.heightIn(max = 240.dp)) {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth().clickable { onSelect(null) },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = current == null, onClick = { onSelect(null) })
+                            Text("Sin grupo")
+                        }
+                    }
+                    items(groups) { g ->
+                        Row(
+                            Modifier.fillMaxWidth().clickable { onSelect(g) },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = current == g, onClick = { onSelect(g) })
+                            Text(g)
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it.take(30) },
+                    singleLine = true,
+                    label = { Text("Nuevo grupo") },
+                    placeholder = { Text("Ej. Cámaras") },
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSelect(text.trim()) }, enabled = text.isNotBlank()) { Text("Crear y usar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+    )
+}
+
+@Composable
+private fun IconDialog(d: Device, onDismiss: () -> Unit, onSelect: (String?) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Elige un ícono") },
+        text = {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                modifier = Modifier.heightIn(max = 360.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item {
+                    IconChoice(DeviceIcons.iconFor(d.type, null), "Automático", d.customIcon == null) { onSelect(null) }
+                }
+                items(DeviceIcons.options) { o ->
+                    IconChoice(o.icon, o.label, d.customIcon == o.key) { onSelect(o.key) }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } },
+    )
+}
+
+@Composable
+private fun IconChoice(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceContainerHigh,
+            )
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(icon, contentDescription = label)
+        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun ExtendedPortsDialog(onDismiss: () -> Unit, onCommonExtended: () -> Unit, onRange: (Int, Int) -> Unit) {
+    var from by remember { mutableStateOf("1") }
+    var to by remember { mutableStateOf("1024") }
+    val f = from.toIntOrNull()
+    val t = to.toIntOrNull()
+    val rangeError = when {
+        f == null || t == null -> "Escribe dos números."
+        f !in 1..65535 || t !in 1..65535 -> "Los puertos van del 1 al 65535."
+        f > t -> "\"Desde\" debe ser menor o igual que \"Hasta\"."
+        else -> null
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Análisis de puertos a fondo") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Revisa muchos más puertos que el análisis normal. Puede tardar de 30 segundos a unos minutos.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Button(onClick = onCommonExtended, modifier = Modifier.fillMaxWidth()) {
+                    Text("${PortKnowledge.EXTENDED_PORTS.size} puertos más usados")
+                }
+                Text("O elige un rango:", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = from,
+                        onValueChange = { from = it.filter(Char::isDigit).take(5) },
+                        label = { Text("Desde") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = to,
+                        onValueChange = { to = it.filter(Char::isDigit).take(5) },
+                        label = { Text("Hasta") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                rangeError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                if (rangeError == null && f != null && t != null && t - f > 20000) {
+                    Text(
+                        "Es un rango grande: puede tardar varios minutos.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = StatusColors.warn,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (f != null && t != null) onRange(f, t) },
+                enabled = rangeError == null,
+            ) { Text("Analizar rango") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )
 }

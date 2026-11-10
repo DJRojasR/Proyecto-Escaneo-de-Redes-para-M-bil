@@ -32,8 +32,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  *  - Nunca aparece en medio de los resultados ni mientras lee un dispositivo.
  *  - Pausa mínima de [MIN_INTERVAL_MS] entre anuncios.
  *  - Si no hay un anuncio ya cargado, no se espera: se escanea directo.
+ *  - Los usuarios Premium nunca ven anuncios (RF-22).
  */
-class AdsManager(context: Context) {
+class AdsManager(context: Context, private val isPremium: () -> Boolean = { false }) {
 
     private val app = context.applicationContext
     private val prefs = app.getSharedPreferences("ads", Context.MODE_PRIVATE)
@@ -45,6 +46,7 @@ class AdsManager(context: Context) {
 
     /** Pide el consentimiento (obligatorio en Europa y algunos países) y prepara los anuncios. */
     fun gatherConsent(activity: Activity) {
+        if (isPremium()) return
         val info = UserMessagingPlatform.getConsentInformation(activity)
         consentInformation = info
         val params = ConsentRequestParameters.Builder().build()
@@ -83,6 +85,7 @@ class AdsManager(context: Context) {
     }
 
     private fun preload() {
+        if (isPremium()) return
         if (!initialized.get() || interstitial != null || loading) return
         loading = true
         InterstitialAd.load(
@@ -115,6 +118,7 @@ class AdsManager(context: Context) {
      * lo muestra. En ambos casos el escaneo empieza de inmediato.
      */
     fun maybeShowOnScanStart(activity: Activity) {
+        if (isPremium()) return
         val since = prefs.getInt(KEY_SINCE_AD, 0)
         val last = prefs.getLong(KEY_LAST_AD_AT, 0L)
         val now = System.currentTimeMillis()

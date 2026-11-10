@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Lupa de Red</string>
+    <string name="widget_description">Cuántos equipos hay conectados en tu red y cuántos están sin revisar.</string>
 </resources>

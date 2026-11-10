@@ -27,6 +27,10 @@ data class Device(
     val trusted: Boolean,
     val isGateway: Boolean,
     val isSelf: Boolean,
+    /** Grupo elegido por el usuario, p. ej. "Cámaras" (Premium, RF-32). */
+    val groupName: String? = null,
+    /** Ícono elegido por el usuario (clave de DeviceIcons); null = el del tipo (RF-32). */
+    val customIcon: String? = null,
 ) {
     val type: DeviceType get() = userType ?: autoType
 
@@ -57,6 +61,13 @@ data class DeviceEvent(
     val at: Long,
 )
 
+/** Quién inició un escaneo. */
+enum class ScanSource(val label: String) {
+    MANUAL("Manual"),
+    AUTO("Vigilancia automática"),
+    SCHEDULED("Programado"),
+}
+
 data class ScanRecord(
     val id: Long,
     val networkKey: String,
@@ -65,7 +76,22 @@ data class ScanRecord(
     val durationMs: Long,
     val found: Int,
     val newCount: Int,
+    val source: ScanSource = ScanSource.MANUAL,
 )
+
+/** Una red guardada (casa, trabajo…) con su propio inventario (RF-33). */
+data class NetworkProfile(
+    val key: String,
+    val name: String?,
+    val subnet: String,
+    val gateway: String?,
+    val firstSeen: Long,
+    val lastSeen: Long,
+    val deviceCount: Int,
+    val lastFound: Int?,
+) {
+    val displayName: String get() = name?.takeIf { it.isNotBlank() } ?: "Red $subnet"
+}
 
 data class ScanSummary(
     val scanId: Long,

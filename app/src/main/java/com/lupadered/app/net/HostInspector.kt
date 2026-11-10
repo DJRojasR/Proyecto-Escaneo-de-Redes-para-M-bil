@@ -36,13 +36,14 @@ class HostInspector {
         ip: String,
         ports: List<Int> = PortKnowledge.COMMON_PORTS,
         timeoutMs: Long = 1200,
+        maxInFlight: Int = 128,
         onProgress: (Float) -> Unit = {},
     ): Pair<List<Int>, Boolean> = withContext(Dispatchers.IO) {
         val job = coroutineContext[Job]
         val open = sortedSetOf<Int>()
         var responded = false
         var done = 0
-        NioTcpProber(maxInFlight = 128).run(
+        NioTcpProber(maxInFlight = maxInFlight).run(
             ports.map { NioTcpProber.Target(ip, it) }, timeoutMs, { job?.isActive == false }
         ) { o ->
             if (o.state == NioTcpProber.State.OPEN) open += o.target.port
@@ -57,21 +58,42 @@ class HostInspector {
         ip: String,
         dnsServers: List<String>,
         onProgress: (Float, String) -> Unit,
+        /** Avisa cuando empieza (done = false) o termina (done = true, con resumen) cada paso: 0 ping, 1 puertos, 2 nombre. */
+        onStep: (step: Int, done: Boolean, summary: String?, good: Boolean) -> Unit = { _, _, _, _ -> },
     ): InspectionResult = withContext(Dispatchers.IO) {
         val start = System.currentTimeMillis()
         val job = coroutineContext[Job]
         val isCancelled = { job?.isActive == false }
 
+        onStep(0, false, null, true)
         onProgress(0.05f, "Midiendo cuánto tarda en responder…")
         val pings = ArrayList<Long?>()
         repeat(4) {
             pings += NetworkScanner.ping(ip, 1000)
             onProgress(0.05f + 0.05f * (it + 1), "Midiendo cuánto tarda en responder…")
         }
+        val okPings = pings.filterNotNull()
+        onStep(
+            0, true,
+            if (okPings.isEmpty()) "No respondió al ping (puede tenerlo bloqueado)."
+            else "Respondió ${okPings.size} de 4 · promedio ${okPings.average().toLong()} ms",
+            okPings.size == 4,
+        )
 
+        onStep(1, false, null, true)
         onProgress(0.25f, "Revisando puertos abiertos…")
         val (open, responded) = scanPorts(ip) { p -> onProgress(0.25f + 0.55f * p, "Revisando puertos abiertos…") }
+        val risky = open.count { PortKnowledge.info(it).risk.ordinal >= com.lupadered.app.knowledge.Risk.MEDIUM.ordinal }
+        onStep(
+            1, true,
+            "${PortKnowledge.COMMON_PORTS.size} puertos revisados · " + when {
+                open.isEmpty() -> "ninguno abierto"
+                else -> "${open.size} abiertos (${open.take(5).joinToString(", ")})" + if (risky > 0) " · $risky para revisar" else ""
+            },
+            risky == 0,
+        )
 
+        onStep(2, false, null, true)
         onProgress(0.82f, "Buscando su nombre…")
         val names = coroutineScope {
             val nb = async {
@@ -105,6 +127,8 @@ class HostInspector {
             }
             Triple(nb.await(), md.await(), dns.await())
         }
+        val found = names.second ?: names.first ?: names.third
+        onStep(2, true, found?.let { "Se llama \"$it\"" } ?: "No anuncia su nombre en la red.", true)
         onProgress(1f, "Listo")
 
         InspectionResult(
