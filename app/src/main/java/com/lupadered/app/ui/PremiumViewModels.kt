@@ -137,8 +137,11 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                         setCheck(item.copy(progress = p))
                         _state.update { it.copy(progress = (i + p) / (targets.size + 1)) }
                     }
-                    withContext(Dispatchers.IO) {
-                        repo.updatePorts(d.id, open, System.currentTimeMillis(), scanned = PortKnowledge.COMMON_PORTS)
+                    // Si no respondió (dormido), conservamos los puertos que ya conocíamos
+                    if (responded) {
+                        withContext(Dispatchers.IO) {
+                            repo.updatePorts(d.id, open, System.currentTimeMillis(), scanned = PortKnowledge.COMMON_PORTS)
+                        }
                     }
                     portsChecked += PortKnowledge.COMMON_PORTS.size
                     val infos = open.map { PortKnowledge.info(it) }

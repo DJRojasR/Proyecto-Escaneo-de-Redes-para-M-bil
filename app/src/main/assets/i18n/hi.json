@@ -861,5 +861,14 @@
 "equipo conectado": "डिवाइस जुड़ा",
 "equipos conectados": "डिवाइस जुड़े",
 "1 sin revisar": "1 बिना जाँचा",
-"%1$s sin revisar": "%1$s बिना जाँचे"
+"%1$s sin revisar": "%1$s बिना जाँचे",
+"Aparece en la lista del router": "राउटर की सूची में है",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "राउटर ने जुड़े डिवाइस की अपनी सूची साझा की, उस नाम के साथ जो हर डिवाइस ने जुड़ते समय दिया। इससे सोए हुए और जवाब न देने वाले डिवाइस भी मिल जाते हैं।",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share: पास के डिवाइस के साथ फ़ाइलें भेज और पा सकता है",
+"Android con depuración inalámbrica activada": "वायरलेस डीबगिंग चालू वाला Android",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "Samsung TV: आप फ़ोन से इस पर कंटेंट भेज सकते हैं",
+"Parlante o pantalla Google/Nest": "Google/Nest स्पीकर या डिस्प्ले",
+"Aún no analizamos sus puertos.": "हमने अभी तक इसके पोर्ट नहीं जाँचे।",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "डिवाइस ने जवाब नहीं दिया, इसलिए हमने पिछले विश्लेषण के पोर्ट रखे। शायद यह बंद है या सोया है; इस्तेमाल के समय फिर कोशिश करें।",
+"Ya no están abiertos desde el último análisis: %1$s.": "पिछले विश्लेषण के बाद से अब खुले नहीं हैं: %1$s।"
 }

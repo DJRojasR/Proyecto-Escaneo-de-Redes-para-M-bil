@@ -861,5 +861,14 @@
 "equipo conectado": "device connected",
 "equipos conectados": "devices connected",
 "1 sin revisar": "1 not reviewed",
-"%1$s sin revisar": "%1$s not reviewed"
+"%1$s sin revisar": "%1$s not reviewed",
+"Aparece en la lista del router": "Listed by the router",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "The router shared its list of connected devices, with the name each one gave it when connecting. This finds devices even when they are asleep and don't respond.",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share: can send and receive files with nearby devices",
+"Android con depuración inalámbrica activada": "Android with wireless debugging turned on",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "Samsung TV: you can cast content to it from your phone",
+"Parlante o pantalla Google/Nest": "Google/Nest speaker or display",
+"Aún no analizamos sus puertos.": "We haven't analyzed its ports yet.",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "The device didn't respond, so we kept the ports from the previous analysis. It may be off or asleep; try again while it's in use.",
+"Ya no están abiertos desde el último análisis: %1$s.": "No longer open since the last analysis: %1$s."
 }

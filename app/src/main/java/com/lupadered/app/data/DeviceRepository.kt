@@ -398,9 +398,9 @@ class DeviceRepository(context: Context) {
 
                 if (candidate != null) {
                     matched += candidate.id
-                    // Conservamos los puertos encontrados en un análisis a fondo
-                    val keptPorts = candidate.openPorts.filter { it !in NetworkScanner.DISCOVERY_PORTS }
-                    val ports = (keptPorts + h.openPorts).toSortedSet()
+                    // El escaneo de red es rápido y puede perder un puerto lento: aquí solo sumamos.
+                    // Los puertos se quitan únicamente con "Analizar puertos", que los revisa con calma.
+                    val ports = (candidate.openPorts + h.openPorts).toSortedSet()
                     val services = candidate.services + h.mdnsServices
                     val merged = HostMerge(
                         name = name ?: candidate.name,

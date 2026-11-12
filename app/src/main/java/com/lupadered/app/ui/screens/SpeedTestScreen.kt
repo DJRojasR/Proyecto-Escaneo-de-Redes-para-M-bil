@@ -1,6 +1,5 @@
 package com.lupadered.app.ui.screens
 
-import com.lupadered.app.i18n.tr
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -97,13 +96,14 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
     val downColor = if (dark) Color(0xFF8AB4F8) else Color(0xFF1A63D6)
     val upColor = if (dark) Color(0xFFD7AEFB) else Color(0xFF8E24AA)
 
-    ScreenScaffold(title = tr("Prueba de velocidad"), onBack = onBack) { padding ->
+    ScreenScaffold(title = "Prueba de velocidad", onBack = onBack) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                tr("Mide la velocidad real de tu Internet: cuánto bajas (videos, descargas), cuánto subes (videollamadas, fotos) y cuánto tarda en responder (juegos)."),
+                "Mide la velocidad real de tu Internet: cuánto bajas (videos, descargas), cuánto subes " +
+                    "(videollamadas, fotos) y cuánto tarda en responder (juegos).",
                 style = MaterialTheme.typography.bodyMedium,
             )
 
@@ -116,18 +116,18 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
                 mbps = if (s.running || s.phase == SpeedPhase.DONE) s.liveMbps else 0.0,
                 color = needleColor,
                 label = when (s.phase) {
-                    SpeedPhase.LOCATING -> tr("Conectando…")
-                    SpeedPhase.DOWNLOAD -> tr("Bajada")
-                    SpeedPhase.UPLOAD -> tr("Subida")
-                    SpeedPhase.DONE -> tr("Bajada")
-                    else -> tr("Listo para medir")
+                    SpeedPhase.LOCATING -> "Conectando…"
+                    SpeedPhase.DOWNLOAD -> "Bajada"
+                    SpeedPhase.UPLOAD -> "Subida"
+                    SpeedPhase.DONE -> "Bajada"
+                    else -> "Listo para medir"
                 },
             )
 
             // ---------- Botón
             val limitReached = !isPremium && s.testsToday >= AppSettings.FREE_SPEED_TESTS_PER_DAY && !s.running
             if (s.running) {
-                OutlinedButton(onClick = vm::cancel, modifier = Modifier.fillMaxWidth()) { Text(tr("Detener")) }
+                OutlinedButton(onClick = vm::cancel, modifier = Modifier.fillMaxWidth()) { Text("Detener") }
             } else if (!limitReached) {
                 Button(
                     onClick = vm::requestStart,
@@ -136,7 +136,7 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = downColor),
                 ) {
                     Text(
-                        if (s.phase == SpeedPhase.DONE || s.phase == SpeedPhase.ERROR) tr("Medir otra vez") else tr("Iniciar prueba"),
+                        if (s.phase == SpeedPhase.DONE || s.phase == SpeedPhase.ERROR) "Medir otra vez" else "Iniciar prueba",
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -145,12 +145,13 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
                 val left = (AppSettings.FREE_SPEED_TESTS_PER_DAY - s.testsToday).coerceAtLeast(0)
                 if (limitReached) {
                     LockedCard(
-                        tr("Pruebas ilimitadas"),
-                        tr("La versión gratis incluye %1\$s pruebas por día y ya las usaste. Con Premium mides cuantas veces quieras y guardas el historial con gráfico.", AppSettings.FREE_SPEED_TESTS_PER_DAY),
+                        "Pruebas ilimitadas",
+                        "La versión gratis incluye ${AppSettings.FREE_SPEED_TESTS_PER_DAY} pruebas por día y ya las usaste. " +
+                            "Con Premium mides cuantas veces quieras, guardas el historial y lo comparas con tu plan.",
                     )
                 } else {
                     Text(
-                        tr("Te quedan %1\$s %2\$s gratis hoy.", left, if (left == 1) tr("prueba") else tr("pruebas")),
+                        "Te quedan $left ${if (left == 1) "prueba" else "pruebas"} gratis hoy.",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
@@ -164,21 +165,25 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
             // ---------- Resultados
             if (s.downloadMbps != null || s.uploadMbps != null || s.running) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ResultTile(Icons.Outlined.ArrowDownward, tr("Bajada"), s.downloadMbps?.let { formatMbps(it) }, tr("Mbps"), downColor, Modifier.weight(1f))
-                    ResultTile(Icons.Outlined.ArrowUpward, tr("Subida"), s.uploadMbps?.let { formatMbps(it) }, tr("Mbps"), upColor, Modifier.weight(1f))
-                    ResultTile(Icons.Outlined.Timer, tr("Latencia"), s.pingMs?.toInt()?.toString(), "ms", MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
+                    ResultTile(Icons.Outlined.ArrowDownward, "Bajada", s.downloadMbps?.let { formatMbps(it) }, "Mbps", downColor, Modifier.weight(1f))
+                    ResultTile(Icons.Outlined.ArrowUpward, "Subida", s.uploadMbps?.let { formatMbps(it) }, "Mbps", upColor, Modifier.weight(1f))
+                    ResultTile(Icons.Outlined.Timer, "Latencia", s.pingMs?.toInt()?.toString(), "ms", MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
                 }
             }
 
             if (s.phase == SpeedPhase.DONE) {
                 Explanation(s)
+                if (isPremium) PlanComparison(s, vm::setPlan) else LockedCard(
+                    "¿Te dan lo que pagas?",
+                    "Escribe la velocidad de tu plan y te diremos qué porcentaje recibes de verdad, con un historial para reclamar a tu proveedor.",
+                )
             }
 
             // ---------- Pasos en vivo
             if (s.checks.isNotEmpty()) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
                     Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)) {
-                        Text(tr("Lo que medimos"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Lo que medimos", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(vertical = 4.dp))
                         CheckList(s.checks)
                     }
                 }
@@ -187,7 +192,7 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
             // ---------- Historial (Premium)
             if (s.history.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SectionTitle(tr("Historial de pruebas"))
+                    SectionTitle("Historial de pruebas")
                     if (!isPremium) {
                         Spacer(Modifier.width(8.dp))
                         PremiumTag()
@@ -199,14 +204,15 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
                 } else {
                     s.history.take(1).forEach { HistoryRow(it, downColor, upColor) }
                     LockedCard(
-                        tr("Historial de velocidad"),
-                        tr("Guarda todas tus pruebas y mira en un gráfico si tu Internet va más lento a ciertas horas."),
+                        "Historial de velocidad",
+                        "Guarda todas tus pruebas y mira en un gráfico si tu Internet va más lento a ciertas horas.",
                     )
                 }
             }
 
             Text(
-                tr("Las pruebas usan los servidores abiertos de M-Lab (measurementlab.net). Cada prueba usa datos: con Internet rápido puede gastar más de 100 MB."),
+                "Las pruebas usan los servidores abiertos de M-Lab (measurementlab.net). Cada prueba usa datos: " +
+                    "con Internet rápido puede gastar más de 100 MB.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -216,27 +222,32 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
     if (s.askConsent) {
         AlertDialog(
             onDismissRequest = vm::dismissDialogs,
-            title = { Text(tr("Antes de tu primera prueba")) },
+            title = { Text("Antes de tu primera prueba") },
             text = {
                 Text(
-                    tr("Para medir tu velocidad usamos los servidores de M-Lab (Measurement Lab), una plataforma abierta de investigación sobre Internet apoyada por Google.\n\nM-Lab guarda y publica el resultado de cada prueba como datos abiertos, junto con tu dirección IP pública (la de tu conexión a Internet, no la de tu teléfono en tu red). No se envía tu nombre, tu correo ni nada de tu red local.\n\n¿Aceptas hacer la prueba con M-Lab?"),
+                    "Para medir tu velocidad usamos los servidores de M-Lab (Measurement Lab), una plataforma abierta " +
+                        "de investigación sobre Internet apoyada por Google.\n\n" +
+                        "M-Lab guarda y publica el resultado de cada prueba como datos abiertos, junto con tu dirección " +
+                        "IP pública (la de tu conexión a Internet, no la de tu teléfono en tu red). No se envía tu nombre, " +
+                        "tu correo ni nada de tu red local.\n\n¿Aceptas hacer la prueba con M-Lab?",
                 )
             },
-            confirmButton = { TextButton(onClick = vm::acceptConsent) { Text(tr("Acepto")) } },
-            dismissButton = { TextButton(onClick = vm::dismissDialogs) { Text(tr("Ahora no")) } },
+            confirmButton = { TextButton(onClick = vm::acceptConsent) { Text("Acepto") } },
+            dismissButton = { TextButton(onClick = vm::dismissDialogs) { Text("Ahora no") } },
         )
     }
     if (s.askCellular) {
         AlertDialog(
             onDismissRequest = vm::dismissDialogs,
-            title = { Text(tr("Estás usando datos móviles")) },
+            title = { Text("Estás usando datos móviles") },
             text = {
                 Text(
-                    tr("La prueba puede gastar varios cientos de MB de tu plan de datos. Te recomendamos conectarte a un WiFi primero."),
+                    "La prueba puede gastar varios cientos de MB de tu plan de datos. " +
+                        "Te recomendamos conectarte a un WiFi primero.",
                 )
             },
-            confirmButton = { TextButton(onClick = vm::confirmCellular) { Text(tr("Medir igual")) } },
-            dismissButton = { TextButton(onClick = vm::dismissDialogs) { Text(tr("Cancelar")) } },
+            confirmButton = { TextButton(onClick = vm::confirmCellular) { Text("Medir igual") } },
+            dismissButton = { TextButton(onClick = vm::dismissDialogs) { Text("Cancelar") } },
         )
     }
 }
@@ -292,7 +303,7 @@ private fun Gauge(mbps: Double, color: Color, label: String) {
                 fontWeight = FontWeight.Bold,
                 color = color,
             )
-            Text(tr("Mbps · %1\$s", label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Mbps · $label", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -312,17 +323,88 @@ private fun ResultTile(icon: ImageVector, label: String, value: String?, unit: S
     }
 }
 
-/** Consejo para medir bien la velocidad. */
+/** Traduce los números a lo que el usuario puede hacer con su Internet. */
 @Composable
 private fun Explanation(s: SpeedTestState) {
-    if (s.downloadMbps == null) return
+    val down = s.downloadMbps ?: return
+    val up = s.uploadMbps ?: 0.0
+    val ping = s.pingMs
+    val lines = buildList {
+        add(
+            when {
+                down < 5 -> "Bajada lenta: alcanza para WhatsApp, música y navegar; los videos en HD pueden trabarse."
+                down < 25 -> "Bajada buena: videos en HD y videollamadas en uno o dos equipos a la vez."
+                down < 100 -> "Bajada muy buena: video 4K, videollamadas y juegos en varios equipos."
+                else -> "Bajada excelente: sobra para toda la familia, con 4K en varias pantallas y descargas rápidas."
+            }
+        )
+        add(
+            when {
+                up < 2 -> "Subida baja: las videollamadas pueden verse pixeladas y subir fotos tarda."
+                up < 10 -> "Subida correcta para videollamadas y subir fotos."
+                else -> "Subida muy buena: ideal para transmitir en vivo, trabajar en la nube y videollamadas en HD."
+            }
+        )
+        if (ping != null) add(
+            when {
+                ping < 30 -> "Latencia excelente: ideal para juegos en línea."
+                ping < 80 -> "Latencia buena: juegos y videollamadas sin problemas."
+                else -> "Latencia alta: en juegos en línea notarás retraso."
+            }
+        )
+        s.server?.let { add("Servidor usado: $it.") }
+    }
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(tr("Consejo"), style = MaterialTheme.typography.titleSmall)
+            Text("¿Qué significa?", style = MaterialTheme.typography.titleSmall)
+            lines.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
             Text(
-                tr("Para medir la velocidad real de tu Internet, haz la prueba cerca del router. Lejos del router verás menos velocidad por la señal WiFi, no por tu proveedor."),
+                "Consejo: para medir tu plan real, haz la prueba cerca del router. Lejos del router verás menos " +
+                    "velocidad por la señal WiFi, no por tu proveedor.",
                 style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp),
             )
+        }
+    }
+}
+
+/** Compara la bajada medida con la velocidad contratada (Premium). */
+@Composable
+private fun PlanComparison(s: SpeedTestState, onSetPlan: (Int) -> Unit) {
+    var text by remember(s.planMbps) { mutableStateOf(if (s.planMbps > 0) s.planMbps.toString() else "") }
+    val down = s.downloadMbps ?: return
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("¿Te dan lo que pagas?", style = MaterialTheme.typography.titleSmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it.filter(Char::isDigit).take(5) },
+                    label = { Text("Mbps de tu plan") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                TextButton(onClick = { onSetPlan(text.toIntOrNull() ?: 0) }) { Text("Guardar") }
+            }
+            if (s.planMbps > 0) {
+                val pct = (down / s.planMbps * 100).toInt()
+                val color = when {
+                    pct >= 80 -> StatusColors.good
+                    pct >= 50 -> StatusColors.warn
+                    else -> StatusColors.bad
+                }
+                Text("Recibes el $pct% de tu plan", style = MaterialTheme.typography.titleMedium, color = color)
+                Text(
+                    when {
+                        pct >= 80 -> "¡Bien! Recibes lo que pagas."
+                        pct >= 50 -> "Un poco por debajo. Prueba cerca del router o con cable; si sigue igual a distintas horas, consulta a tu proveedor."
+                        else -> "Muy por debajo de lo contratado. Repite la prueba cerca del router; si se mantiene, guarda el historial y reclama a tu proveedor."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }
@@ -334,7 +416,7 @@ private fun HistoryChart(list: List<SpeedTestRecord>, downColor: Color, upColor:
     val max = list.maxOf { maxOf(it.downloadMbps, it.uploadMbps) }.coerceAtLeast(1.0)
     val grid = MaterialTheme.colorScheme.outlineVariant
     Column {
-        Text(tr("Máx. %1\$s Mbps", formatMbps(max)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Máx. ${formatMbps(max)} Mbps", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Canvas(Modifier.fillMaxWidth().height(120.dp)) {
             val slot = size.width / list.size
             val bar = slot * 0.35f
@@ -348,7 +430,7 @@ private fun HistoryChart(list: List<SpeedTestRecord>, downColor: Color, upColor:
             }
         }
         Text(
-            tr("Últimas %1\$s pruebas, de la más antigua a la más reciente · azul = bajada, morado = subida", list.size),
+            "Últimas ${list.size} pruebas, de la más antigua a la más reciente · azul = bajada, morado = subida",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

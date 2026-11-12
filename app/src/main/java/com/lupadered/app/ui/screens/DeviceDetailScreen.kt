@@ -13,14 +13,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AssistChip
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import com.lupadered.app.data.AppSettings
 import com.lupadered.app.data.DeviceEvent
@@ -101,7 +98,6 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
     var confirmDelete by remember { mutableStateOf(false) }
     var choosingGroup by remember { mutableStateOf(false) }
     var choosingIcon by remember { mutableStateOf(false) }
-    var choosingExtended by remember { mutableStateOf(false) }
     val uri = LocalUriHandler.current
     val isPremium = rememberIsPremium()
     val openPremium = LocalOpenPremium.current
@@ -280,8 +276,8 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             // ---------- Servicios
             if (d.services.isNotEmpty()) {
                 SectionTitle(tr("Lo que sabe hacer"))
-                d.services.sorted().forEach { svc ->
-                    Text("• " + DeviceClassifier.serviceLabel(svc), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
+                d.services.sorted().map { DeviceClassifier.serviceLabel(it) }.distinct().forEach { label ->
+                    Text("• " + label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
                 }
             }
 
@@ -305,14 +301,6 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                         Spacer(Modifier.width(8.dp))
                         Text(if (d.portsScannedAt == null) tr("Analizar puertos") else tr("Volver a analizar"))
                     }
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(onClick = { if (isPremium) choosingExtended = true else openPremium() }) {
-                        Text(tr("A fondo"))
-                        if (!isPremium) {
-                            Spacer(Modifier.width(6.dp))
-                            Icon(Icons.Outlined.Lock, contentDescription = tr("Premium"), modifier = Modifier.size(16.dp))
-                        }
-                    }
                 }
                 d.portsScannedAt?.let {
                     Text(
@@ -331,7 +319,7 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 d.openPorts.sorted().forEach { PortCard(it) }
             } else if (d.portsScannedAt == null) {
                 Text(
-                    tr("Aún no analizamos sus puertos a fondo."),
+                    tr("Aún no analizamos sus puertos."),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -398,19 +386,6 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             onSelect = {
                 vm.setIcon(it)
                 choosingIcon = false
-            },
-        )
-    }
-    if (choosingExtended) {
-        ExtendedPortsDialog(
-            onDismiss = { choosingExtended = false },
-            onCommonExtended = {
-                choosingExtended = false
-                vm.scanPortsExtended()
-            },
-            onRange = { from, to ->
-                choosingExtended = false
-                vm.scanPortRange(from, to)
             },
         )
     }
@@ -625,68 +600,4 @@ private fun IconChoice(icon: ImageVector, label: String, selected: Boolean, onCl
         Icon(icon, contentDescription = label)
         Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
-}
-
-@Composable
-private fun ExtendedPortsDialog(onDismiss: () -> Unit, onCommonExtended: () -> Unit, onRange: (Int, Int) -> Unit) {
-    var from by remember { mutableStateOf("1") }
-    var to by remember { mutableStateOf("1024") }
-    val f = from.toIntOrNull()
-    val t = to.toIntOrNull()
-    val rangeError = when {
-        f == null || t == null -> tr("Escribe dos números.")
-        f !in 1..65535 || t !in 1..65535 -> tr("Los puertos van del 1 al 65535.")
-        f > t -> tr("\"Desde\" debe ser menor o igual que \"Hasta\".")
-        else -> null
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(tr("Análisis de puertos a fondo")) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    tr("Revisa muchos más puertos que el análisis normal. Puede tardar de 30 segundos a unos minutos."),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Button(onClick = onCommonExtended, modifier = Modifier.fillMaxWidth()) {
-                    Text(tr("%1\$s puertos más usados", PortKnowledge.EXTENDED_PORTS.size))
-                }
-                Text(tr("O elige un rango:"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = from,
-                        onValueChange = { from = it.filter(Char::isDigit).take(5) },
-                        label = { Text(tr("Desde")) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = to,
-                        onValueChange = { to = it.filter(Char::isDigit).take(5) },
-                        label = { Text(tr("Hasta")) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                rangeError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                if (rangeError == null && f != null && t != null && t - f > 20000) {
-                    Text(
-                        tr("Es un rango grande: puede tardar varios minutos."),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = StatusColors.warn,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { if (f != null && t != null) onRange(f, t) },
-                enabled = rangeError == null,
-            ) { Text(tr("Analizar rango")) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
-    )
 }

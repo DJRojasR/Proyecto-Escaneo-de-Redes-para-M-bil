@@ -98,19 +98,6 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
         timeoutMs = 1200, inFlight = 128,
     )
 
-    /** Análisis extendido de más de 1100 puertos (Premium, RF-28). */
-    fun scanPortsExtended() = runPortScan(
-        PortKnowledge.EXTENDED_PORTS,
-        tr("Análisis extendido: %1\$s puertos…", PortKnowledge.EXTENDED_PORTS.size),
-        timeoutMs = 900, inFlight = 256,
-    )
-
-    /** Rango elegido por el usuario, por ejemplo 8000–9000 (Premium, RF-28). */
-    fun scanPortRange(from: Int, to: Int) {
-        val ports = (from.coerceIn(1, 65535)..to.coerceIn(1, 65535)).toList()
-        runPortScan(ports, tr("Revisando los puertos %1\$s a %2\$s (%3\$s)…", from, to, ports.size), timeoutMs = 800, inFlight = 256)
-    }
-
     private fun runPortScan(ports: List<Int>, label: String, timeoutMs: Long, inFlight: Int) {
         val ip = _state.value.device?.ip ?: return
         if (portJob?.isActive == true || ports.isEmpty()) return
@@ -119,17 +106,33 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
                 it.copy(portScanRunning = true, portScanProgress = 0f, portScanMessage = null, portScanLabel = label)
             }
             try {
-                val (open, responded) = inspector.scanPorts(ip, ports, timeoutMs, inFlight) { p ->
+                val before = _state.value.device?.openPorts.orEmpty().toSet()
+                val (firstOpen, responded) = inspector.scanPorts(ip, ports, timeoutMs, inFlight) { p ->
                     _state.update { it.copy(portScanProgress = p) }
                 }
-                withContext(Dispatchers.IO) {
-                    repo.updatePorts(deviceId, open, System.currentTimeMillis(), scanned = ports)
+                // Los que estaban abiertos y ahora no contestaron: los revisamos otra vez con más
+                // paciencia, para no borrarlos por una respuesta lenta.
+                val missing = before.filter { it in ports && it !in firstOpen }
+                val rescued = if (responded && missing.isNotEmpty()) {
+                    inspector.scanPorts(ip, missing, timeoutMs = 3000, maxInFlight = 32).first
+                } else emptyList()
+                val open = (firstOpen + rescued).distinct().sorted()
+                val closed = missing.filter { it !in rescued }.sorted()
+
+                // Si el equipo no respondió (apagado o dormido), no tocamos lo que ya sabíamos
+                if (responded) {
+                    withContext(Dispatchers.IO) {
+                        repo.updatePorts(deviceId, open, System.currentTimeMillis(), scanned = ports)
+                    }
                 }
                 app.ads.onScanCompleted()
                 val msg = when {
+                    !responded && before.isNotEmpty() ->
+                        tr("El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.")
+                    !responded -> tr("El equipo no respondió. Puede estar apagado, dormido o haber cambiado de IP. Vuelve a escanear la red.")
+                    closed.isNotEmpty() -> tr("Ya no están abiertos desde el último análisis: %1\$s.", closed.joinToString(", "))
                     open.isNotEmpty() -> null
-                    responded -> tr("No encontramos puertos abiertos entre los %1\$s revisados. Es buena señal: ofrece pocos servicios.", ports.size)
-                    else -> tr("El equipo no respondió. Puede estar apagado, dormido o haber cambiado de IP. Vuelve a escanear la red.")
+                    else -> tr("No encontramos puertos abiertos entre los %1\$s revisados. Es buena señal: ofrece pocos servicios.", ports.size)
                 }
                 _state.update { it.copy(portScanMessage = msg) }
             } finally {

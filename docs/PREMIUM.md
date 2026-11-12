@@ -82,7 +82,7 @@ Actívalo.
 | RF-24 / RF-26 | Escaneo automático y diario | `monitor/MonitorScheduler.kt`, `monitor/BackgroundScanWorker.kt` |
 | RF-25 | Alerta de intrusos | `monitor/Notifier.kt` |
 | RF-27 | Historial completo (gratis: 7 días) y línea de tiempo | `ui/MainViewModel.kt`, `ui/screens/DeviceDetailScreen.kt` |
-| RF-28 | Puertos extendidos y por rango | `knowledge/PortKnowledge.kt` (`EXTENDED_PORTS`) |
+| RF-28 | ~~Puertos extendidos y por rango~~ (retirado: basta con "Volver a analizar") | — |
 | RF-29 | Revisión de seguridad | `knowledge/SecurityReview.kt` |
 | RF-30 | Monitor de latencia | `net/LatencyProbe.kt`, `ui/screens/PremiumToolScreens.kt` |
 | RF-32 | Grupos e íconos | `data/DeviceRepository.kt`, `ui/components/DeviceIcons.kt` |

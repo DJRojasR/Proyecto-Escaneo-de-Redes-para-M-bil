@@ -28,6 +28,10 @@ enum class DiscoveryMethod(val label: String, val explanation: String) {
         tr("Se anunció por UPnP"),
         tr("Televisores, consolas, decodificadores y routers suelen anunciarse por UPnP para que otros los encuentren.")
     ),
+    ROUTER(
+        tr("Aparece en la lista del router"),
+        tr("El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.")
+    ),
 }
 
 enum class ScanPhase(val label: String) {

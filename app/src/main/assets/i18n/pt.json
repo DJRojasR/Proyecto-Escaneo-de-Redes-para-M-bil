@@ -861,5 +861,14 @@
 "equipo conectado": "aparelho conectado",
 "equipos conectados": "aparelhos conectados",
 "1 sin revisar": "1 não revisado",
-"%1$s sin revisar": "%1$s não revisados"
+"%1$s sin revisar": "%1$s não revisados",
+"Aparece en la lista del router": "Aparece na lista do roteador",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "O roteador compartilhou a lista de aparelhos conectados, com o nome que cada um informou ao se conectar. Assim encontramos aparelhos mesmo em repouso e sem responder.",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share: pode enviar e receber arquivos com aparelhos próximos",
+"Android con depuración inalámbrica activada": "Android com depuração sem fio ativada",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "TV Samsung: você pode transmitir conteúdo do celular para ela",
+"Parlante o pantalla Google/Nest": "Alto-falante ou tela Google/Nest",
+"Aún no analizamos sus puertos.": "Ainda não analisamos as portas dele.",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "O aparelho não respondeu, então mantivemos as portas da análise anterior. Pode estar desligado ou em repouso; tente quando estiver em uso.",
+"Ya no están abiertos desde el último análisis: %1$s.": "Não estão mais abertas desde a última análise: %1$s."
 }

@@ -861,5 +861,14 @@
 "equipo conectado": "устройство подключено",
 "equipos conectados": "устройств подключено",
 "1 sin revisar": "1 не проверено",
-"%1$s sin revisar": "Не проверено: %1$s"
+"%1$s sin revisar": "Не проверено: %1$s",
+"Aparece en la lista del router": "Есть в списке роутера",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "Роутер передал список подключённых устройств с именами, которые каждое сообщило при подключении. Так мы находим даже спящие устройства, которые не отвечают.",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share: может отправлять и получать файлы с устройствами рядом",
+"Android con depuración inalámbrica activada": "Android с включённой отладкой по Wi-Fi",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "Телевизор Samsung: на него можно транслировать с телефона",
+"Parlante o pantalla Google/Nest": "Колонка или дисплей Google/Nest",
+"Aún no analizamos sus puertos.": "Мы ещё не анализировали его порты.",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "Устройство не ответило, поэтому мы оставили порты из прошлого анализа. Возможно, оно выключено или спит; попробуйте, когда им пользуются.",
+"Ya no están abiertos desde el último análisis: %1$s.": "Больше не открыты с прошлого анализа: %1$s."
 }

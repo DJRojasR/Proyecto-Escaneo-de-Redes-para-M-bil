@@ -126,7 +126,13 @@ class HostInspector {
                 }
                 name
             }
-            Triple(nb.await(), md.await(), dns.await())
+            // Si el DNS no lo sabe, le preguntamos al router por su lista de equipos (TR-064)
+            val router = async {
+                val gw = dnsServers.firstOrNull { Ipv4.isPrivate(it) } ?: return@async null
+                RouterHosts.fetch(gw, emptyList(), isCancelled).firstOrNull { it.ip == ip }?.name
+            }
+            val dnsName = dns.await() ?: router.await()
+            Triple(nb.await(), md.await(), dnsName)
         }
         val found = names.second ?: names.first ?: names.third
         onStep(2, true, found?.let { tr("Se llama \"%1\$s\"", it) } ?: tr("No anuncia su nombre en la red."), true)

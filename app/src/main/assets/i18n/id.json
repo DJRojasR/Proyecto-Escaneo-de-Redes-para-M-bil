@@ -861,5 +861,14 @@
 "equipo conectado": "perangkat terhubung",
 "equipos conectados": "perangkat terhubung",
 "1 sin revisar": "1 belum ditinjau",
-"%1$s sin revisar": "%1$s belum ditinjau"
+"%1$s sin revisar": "%1$s belum ditinjau",
+"Aparece en la lista del router": "Ada di daftar router",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "Router membagikan daftar perangkat yang terhubung, dengan nama yang diberikan tiap perangkat saat terhubung. Dengan begitu kami menemukan perangkat meski sedang tidur dan tidak merespons.",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share: bisa mengirim dan menerima file dengan perangkat di dekatnya",
+"Android con depuración inalámbrica activada": "Android dengan debugging nirkabel aktif",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "TV Samsung: kamu bisa mengirim konten ke sini dari ponsel",
+"Parlante o pantalla Google/Nest": "Speaker atau layar Google/Nest",
+"Aún no analizamos sus puertos.": "Kami belum menganalisis port-nya.",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "Perangkat tidak merespons, jadi kami menyimpan port dari analisis sebelumnya. Mungkin mati atau tidur; coba lagi saat sedang dipakai.",
+"Ya no están abiertos desde el último análisis: %1$s.": "Sudah tidak terbuka sejak analisis terakhir: %1$s."
 }

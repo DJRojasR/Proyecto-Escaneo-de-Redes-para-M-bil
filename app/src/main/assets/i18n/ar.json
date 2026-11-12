@@ -861,5 +861,14 @@
 "equipo conectado": "جهاز متصل",
 "equipos conectados": "أجهزة متصلة",
 "1 sin revisar": "1 غير مُراجَع",
-"%1$s sin revisar": "%1$s غير مُراجَعة"
+"%1$s sin revisar": "%1$s غير مُراجَعة",
+"Aparece en la lista del router": "يظهر في قائمة الراوتر",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "شارك الراوتر قائمة الأجهزة المتصلة، مع الاسم الذي أعطاه كل جهاز عند الاتصال. هكذا نجد الأجهزة حتى لو كانت نائمة ولا تستجيب.",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share: يمكنه إرسال الملفات واستقبالها مع الأجهزة القريبة",
+"Android con depuración inalámbrica activada": "Android مع تفعيل التصحيح اللاسلكي",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "تلفاز Samsung: يمكنك إرسال المحتوى إليه من هاتفك",
+"Parlante o pantalla Google/Nest": "سماعة أو شاشة Google/Nest",
+"Aún no analizamos sus puertos.": "لم نحلل منافذه بعد.",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "لم يستجب الجهاز، لذلك احتفظنا بمنافذ التحليل السابق. ربما هو مطفأ أو نائم؛ حاول مجددًا أثناء استخدامه.",
+"Ya no están abiertos desde el último análisis: %1$s.": "لم تعد مفتوحة منذ آخر تحليل: %1$s."
 }

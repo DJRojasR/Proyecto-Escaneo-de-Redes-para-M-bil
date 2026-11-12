@@ -53,6 +53,9 @@ class NetworkScanner {
                 }
             }
 
+            // URLs que el router anuncia por UPnP: ahí puede estar su lista de equipos (TR-064)
+            val gatewayLocations = java.util.Collections.synchronizedSet(LinkedHashSet<String>())
+
             fun host(ip: String): HostAccumulator = acc.computeIfAbsent(ip) { HostAccumulator(it) }
             fun publish(h: HostAccumulator) {
                 if (h.update { alive }) listener.onHost(h.snapshot())
@@ -92,6 +95,7 @@ class NetworkScanner {
                 launch {
                     Ssdp.discover(iface, 3500, isCancelled) { r ->
                         if (subnet.contains(r.ip)) {
+                            if (r.ip == target.gateway) r.location?.let { gatewayLocations += it }
                             host(r.ip).update {
                                 if (ssdpServer == null) ssdpServer = r.server
                                 if (ssdpLocation == null) ssdpLocation = r.location
@@ -166,6 +170,17 @@ class NetworkScanner {
                 val dnsTargets = (listOfNotNull(target.gateway) + target.dnsServers)
                     .filter { Ipv4.isPrivate(it) }.distinct()
                 coroutineScope {
+                    target.gateway?.takeIf { subnet.contains(it) }?.let { gw ->
+                        launch {
+                            // La lista de equipos del router (TR-064), si la comparte
+                            for (e in RouterHosts.fetch(gw, gatewayLocations.toList(), isCancelled)) {
+                                if (!subnet.contains(e.ip) || e.ip == target.selfIp) continue
+                                if (e.name != null) host(e.ip).update { if (dnsName == null) dnsName = e.name }
+                                // Si el router dice que está conectado, lo contamos aunque no nos haya respondido
+                                if (e.active) alive(e.ip, DiscoveryMethod.ROUTER, null)
+                            }
+                        }
+                    }
                     launch {
                         // DNS inverso: muchos routers saben el nombre que cada equipo dio al conectarse
                         val sends = ArrayList<UdpSweep.Send>()
@@ -289,7 +304,7 @@ class NetworkScanner {
                                 val inst = Mdns.instanceOf(rec.data)
                                 h.update {
                                     if (svc != null) mdnsServices += svc
-                                    if (inst != null && svc != "_sleep-proxy._udp") mdnsInstances += inst
+                                    if (inst != null && svc !in Mdns.CODED_INSTANCES) mdnsInstances += inst
                                 }
                             }
                         }
@@ -304,6 +319,19 @@ class NetworkScanner {
                         }
                     }
                     DnsMessage.TYPE_TXT -> {
+                        val svc = Mdns.serviceTypeOf(rec.name)
+                        if (svc == Mdns.QUICK_SHARE) {
+                            // Quick Share: el TXT viene codificado; de ahí sacamos tipo y nombre
+                            val n = rec.data.split(';').firstOrNull { it.startsWith("n=") }?.removePrefix("n=")
+                            val info = n?.let { Mdns.decodeQuickShare(it) }
+                            h.update {
+                                mdnsServices += Mdns.QUICK_SHARE
+                                info?.kind?.let { mdnsServices += "${Mdns.QUICK_SHARE}/$it" }
+                                info?.name?.let { if (friendlyName == null) friendlyName = it }
+                            }
+                            continue
+                        }
+                        if (svc in Mdns.CODED_INSTANCES) continue
                         for (kv in rec.data.split(';')) {
                             val i = kv.indexOf('=')
                             if (i <= 0) continue

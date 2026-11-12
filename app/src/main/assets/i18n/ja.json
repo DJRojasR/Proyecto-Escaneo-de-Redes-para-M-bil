@@ -861,5 +861,14 @@
 "equipo conectado": "台が接続中",
 "equipos conectados": "台が接続中",
 "1 sin revisar": "未確認 1 台",
-"%1$s sin revisar": "未確認 %1$s 台"
+"%1$s sin revisar": "未確認 %1$s 台",
+"Aparece en la lista del router": "ルーターの一覧にあります",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "ルーターが接続中の機器一覧を共有しました。各機器が接続時に伝えた名前も含まれます。スリープ中で応答しない機器も見つけられます。",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share：近くの機器とファイルを送受信できます",
+"Android con depuración inalámbrica activada": "ワイヤレスデバッグが有効な Android",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "Samsung テレビ：スマホからコンテンツを送れます",
+"Parlante o pantalla Google/Nest": "Google/Nest のスピーカーまたはディスプレイ",
+"Aún no analizamos sus puertos.": "まだポートを分析していません。",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "機器が応答しなかったため、前回の分析のポートをそのまま残しました。電源オフかスリープ中かもしれません。使用中にもう一度お試しください。",
+"Ya no están abiertos desde el último análisis: %1$s.": "前回の分析以降、開いていないポート：%1$s。"
 }

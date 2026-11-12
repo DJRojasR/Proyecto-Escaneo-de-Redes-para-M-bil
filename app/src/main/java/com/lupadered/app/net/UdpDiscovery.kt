@@ -106,7 +106,49 @@ object Mdns {
         "_rdlink._tcp.local",
         "_sleep-proxy._udp.local",
         "_nvstream._tcp.local",
+        // Android y Samsung
+        "_FC9F5ED42C8A._tcp.local",   // Quick Share / Nearby Share (celulares, tablets y PCs visibles)
+        "_adb-tls-connect._tcp.local", // Android con depuración inalámbrica activa
+        "_samsungmsf._tcp.local",      // Televisores Samsung
+        "_googlezone._tcp.local",      // Parlantes y pantallas Google/Nest
     )
+
+    /** Servicios cuyo "nombre de instancia" es un código, no un nombre para mostrar. */
+    val CODED_INSTANCES = setOf(QUICK_SHARE, "_adb-tls-connect._tcp", "_sleep-proxy._udp", "_googlezone._tcp")
+
+    const val QUICK_SHARE = "_fc9f5ed42c8a._tcp"
+
+    /** Lo que publica un equipo con Quick Share: su tipo y, si es visible para todos, su nombre. */
+    class QuickShareInfo(val kind: String?, val name: String?)
+
+    /**
+     * Decodifica el campo TXT "n" de Quick Share (base64 URL). Byte 0: el tipo de
+     * equipo en los bits 1–3 (1 celular, 2 tablet, 3 computadora). Byte 17: largo
+     * del nombre, que viene a continuación en UTF-8. Si el equipo solo es visible
+     * para sus contactos, el nombre no viene y solo sabemos el tipo.
+     */
+    fun decodeQuickShare(value: String): QuickShareInfo? = try {
+        val data = java.util.Base64.getUrlDecoder().decode(value.trim().trimEnd('='))
+        if (data.isEmpty()) null else {
+            val kind = when ((data[0].toInt() shr 1) and 7) {
+                1 -> "phone"
+                2 -> "tablet"
+                3 -> "computer"
+                else -> null
+            }
+            var name: String? = null
+            if (data.size > 18) {
+                val len = data[17].toInt() and 0xFF
+                if (len in 1..data.size - 18) {
+                    val n = String(data, 18, len, Charsets.UTF_8).trim()
+                    if (n.length >= 2 && n.any { it.isLetter() } && n.none { it.isISOControl() || it == '\uFFFD' }) name = n
+                }
+            }
+            QuickShareInfo(kind, name)
+        }
+    } catch (_: Exception) {
+        null
+    }
 
     /**
      * Pregunta (por multicast) quién ofrece cada servicio y escucha [durationMs].

@@ -861,5 +861,14 @@
 "equipo conectado": "台设备已连接",
 "equipos conectados": "台设备已连接",
 "1 sin revisar": "1 台未检查",
-"%1$s sin revisar": "%1$s 台未检查"
+"%1$s sin revisar": "%1$s 台未检查",
+"Aparece en la lista del router": "在路由器列表中",
+"El router nos compartió su lista de equipos conectados, con el nombre que cada uno le dio al conectarse. Así encontramos equipos aunque estén en reposo y no respondan.": "路由器共享了已连接设备列表，包括每台设备连接时提供的名称。这样即使设备在休眠、没有响应，我们也能找到它。",
+"Quick Share: puede enviar y recibir archivos con equipos cercanos": "Quick Share：可以与附近设备收发文件",
+"Android con depuración inalámbrica activada": "已开启无线调试的 Android",
+"Televisor Samsung: puedes enviarle contenido desde tu celular": "三星电视：可以从手机向它投送内容",
+"Parlante o pantalla Google/Nest": "Google/Nest 音箱或屏幕",
+"Aún no analizamos sus puertos.": "我们还没有分析它的端口。",
+"El equipo no respondió, así que dejamos los puertos del análisis anterior. Puede estar apagado o dormido; inténtalo cuando esté en uso.": "设备没有响应，所以我们保留了上次分析的端口。它可能已关机或在休眠；请在使用时再试。",
+"Ya no están abiertos desde el último análisis: %1$s.": "自上次分析后已不再开放：%1$s。"
 }
