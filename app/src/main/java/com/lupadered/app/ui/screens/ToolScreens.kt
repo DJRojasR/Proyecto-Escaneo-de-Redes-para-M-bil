@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.screens
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -96,7 +97,7 @@ class ToolsActions(
 @Composable
 fun ToolsScreen(a: ToolsActions) {
     val isPremium = rememberIsPremium()
-    ScreenScaffold(title = "Herramientas") { padding ->
+    ScreenScaffold(title = tr("Herramientas")) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -110,9 +111,9 @@ fun ToolsScreen(a: ToolsActions) {
                         Icon(Icons.Outlined.WorkspacePremium, contentDescription = null, tint = PremiumGold)
                         Spacer(Modifier.width(16.dp))
                         Column {
-                            Text("Lupa de Red Premium", style = MaterialTheme.typography.titleMedium)
+                            Text(tr("Lupa de Red Premium"), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Sin anuncios, alerta de intrusos, revisión de seguridad y más. Desde S/ 4.90 al mes o un pago único.",
+                                tr("Sin anuncios, alerta de intrusos, revisión de seguridad y más. Suscripción mensual o pago único."),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
@@ -120,75 +121,75 @@ fun ToolsScreen(a: ToolsActions) {
                 }
             }
             ToolSection(
-                title = "Herramientas gratis",
-                subtitle = "Disponibles para todos, sin pagar.",
+                title = tr("Herramientas gratis"),
+                subtitle = tr("Disponibles para todos, sin pagar."),
                 icon = Icons.Outlined.LockOpen,
                 color = MaterialTheme.colorScheme.primary,
             )
             ToolCard(
-                Icons.Outlined.NetworkCheck, "Prueba de velocidad",
-                "¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos." +
-                    if (isPremium) "" else " Gratis: 2 pruebas al día.",
+                Icons.Outlined.NetworkCheck, tr("Prueba de velocidad"),
+                tr("¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos.") +
+                    if (isPremium) "" else tr(" Gratis: 2 pruebas al día."),
                 a.onSpeed,
             )
             ToolCard(
-                Icons.AutoMirrored.Outlined.ManageSearch, "Analizar una IP",
-                "¿Conoces una dirección IP de tu red? Revisa si responde, cuánto tarda, su nombre y sus puertos abiertos.",
+                Icons.AutoMirrored.Outlined.ManageSearch, tr("Analizar una IP"),
+                tr("¿Conoces una dirección IP de tu red? Revisa si responde, cuánto tarda, su nombre y sus puertos abiertos."),
                 a.onManual,
             )
             ToolCard(
-                Icons.Outlined.Speed, "Diagnóstico de conexión",
-                "¿Internet va lento? Descubre si el problema es la señal WiFi, el router, tu proveedor o el DNS.",
+                Icons.Outlined.Speed, tr("Diagnóstico de conexión"),
+                tr("¿Internet va lento? Descubre si el problema es la señal WiFi, el router, tu proveedor o el DNS."),
                 a.onDiagnostics,
             )
             ToolCard(
-                Icons.Outlined.Wifi, "Mis redes",
-                "Casa, trabajo… cada red con su propio inventario y nombre.",
+                Icons.Outlined.Wifi, tr("Mis redes"),
+                tr("Casa, trabajo… cada red con su propio inventario y nombre."),
                 a.onNetworks,
             )
 
             ToolSection(
-                title = "Herramientas Premium",
-                subtitle = if (isPremium) "Incluidas en tu Premium. ¡Gracias por apoyar la app!"
-                else "Desbloquéalas todas con Premium.",
+                title = tr("Herramientas Premium"),
+                subtitle = if (isPremium) tr("Incluidas en tu Premium. ¡Gracias por apoyar la app!")
+                else tr("Desbloquéalas todas con Premium."),
                 icon = Icons.Outlined.WorkspacePremium,
                 color = PremiumGold,
             )
             ToolCard(
-                Icons.Outlined.NotificationsActive, "Vigilancia de la red",
-                "Escaneos automáticos, escaneo diario y aviso cuando se conecta alguien desconocido.",
+                Icons.Outlined.NotificationsActive, tr("Vigilancia de la red"),
+                tr("Escaneos automáticos, escaneo diario y aviso cuando se conecta alguien desconocido."),
                 a.onMonitor, premium = !isPremium,
             )
             ToolCard(
-                Icons.Outlined.Security, "Revisión de seguridad",
-                "Un puntaje de tu red y los pasos para cerrar lo riesgoso.",
+                Icons.Outlined.Security, tr("Revisión de seguridad"),
+                tr("Un puntaje de tu red y los pasos para cerrar lo riesgoso."),
                 a.onSecurity, premium = !isPremium,
             )
             ToolCard(
-                Icons.AutoMirrored.Outlined.ShowChart, "Monitor de latencia",
-                "Gráfico en vivo del ping a tu router y a Internet.",
+                Icons.AutoMirrored.Outlined.ShowChart, tr("Monitor de latencia"),
+                tr("Gráfico en vivo del ping a tu router y a Internet."),
                 a.onLatency, premium = !isPremium,
             )
             ToolCard(
-                Icons.Outlined.Description, "Exportar reporte",
-                "Inventario, seguridad e historial en PDF o CSV.",
+                Icons.Outlined.Description, tr("Exportar reporte"),
+                tr("Inventario, seguridad e historial en PDF o CSV."),
                 a.onExport, premium = !isPremium,
             )
 
             ToolSection(
-                title = "Ayuda y ajustes",
+                title = tr("Ayuda y ajustes"),
                 subtitle = null,
                 icon = Icons.Outlined.Settings,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             ToolCard(
-                Icons.Outlined.School, "¿Qué estoy viendo?",
-                "Explicaciones sencillas de IP, router, puertos, latencia y más.",
+                Icons.Outlined.School, tr("¿Qué estoy viendo?"),
+                tr("Explicaciones sencillas de IP, router, puertos, latencia y más."),
                 a.onLearn,
             )
             ToolCard(
-                Icons.Outlined.Settings, "Ajustes y privacidad",
-                "Apariencia, privacidad de anuncios, borrar datos y política de privacidad.",
+                Icons.Outlined.Settings, tr("Ajustes y privacidad"),
+                tr("Apariencia, privacidad de anuncios, borrar datos y política de privacidad."),
                 a.onSettings,
             )
         }
@@ -253,12 +254,12 @@ fun ManualScanScreen(vm: ToolsViewModel, initialIp: String, onBeforeScan: () -> 
         vm.inspect(ip)
     }
 
-    ScreenScaffold(title = "Analizar una IP", onBack = onBack) { padding ->
+    ScreenScaffold(title = tr("Analizar una IP"), onBack = onBack) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
         ) {
             Text(
-                "Escribe una dirección de tu red. La revisaremos a fondo: si responde, cuánto tarda, cómo se llama y qué puertos tiene abiertos.",
+                tr("Escribe una dirección de tu red. La revisaremos a fondo: si responde, cuánto tarda, cómo se llama y qué puertos tiene abiertos."),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(Modifier.height(12.dp))
@@ -268,7 +269,7 @@ fun ManualScanScreen(vm: ToolsViewModel, initialIp: String, onBeforeScan: () -> 
                     ip = it.filter { c -> c.isDigit() || c == '.' }.take(15)
                     vm.clearError()
                 },
-                label = { Text("Dirección IP") },
+                label = { Text(tr("Dirección IP")) },
                 placeholder = { Text("192.168.1.10") },
                 singleLine = true,
                 isError = s.error != null,
@@ -280,9 +281,9 @@ fun ManualScanScreen(vm: ToolsViewModel, initialIp: String, onBeforeScan: () -> 
             Spacer(Modifier.height(8.dp))
             if (s.running) {
                 LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
-                TextButton(onClick = vm::cancelInspect) { Text("Detener") }
+                TextButton(onClick = vm::cancelInspect) { Text(tr("Detener")) }
             } else {
-                Button(onClick = start, modifier = Modifier.fillMaxWidth()) { Text("Analizar") }
+                Button(onClick = start, modifier = Modifier.fillMaxWidth()) { Text(tr("Analizar")) }
             }
             if (s.checks.isNotEmpty()) {
                 Card(
@@ -291,7 +292,7 @@ fun ManualScanScreen(vm: ToolsViewModel, initialIp: String, onBeforeScan: () -> 
                 ) {
                     Column(Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
                         Text(
-                            if (s.running) "Analizando ${s.result?.ip ?: ip.trim()}…" else "Lo que revisamos",
+                            if (s.running) tr("Analizando %1\$s…", s.result?.ip ?: ip.trim()) else tr("Lo que revisamos"),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.padding(vertical = 4.dp),
                         )
@@ -317,16 +318,15 @@ private fun InspectionView(r: InspectionResult) {
                 StatusDot(if (r.alive) StatusColors.good else StatusColors.idle)
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    if (r.alive) "${r.ip} está en uso" else "${r.ip} no respondió",
+                    if (r.alive) tr("%1\$s está en uso", r.ip) else tr("%1\$s no respondió", r.ip),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
             Text(
                 if (r.alive) {
-                    "Hay un equipo encendido en esta dirección." + (r.bestName?.let { " Se llama \"$it\"." } ?: "")
+                    tr("Hay un equipo encendido en esta dirección.") + (r.bestName?.let { tr(" Se llama \"%1\$s\".", it) } ?: "")
                 } else {
-                    "No respondió a ping, a conexiones ni a consultas de nombre. Puede estar libre, pero también puede " +
-                        "haber un equipo apagado, dormido o con firewall. No la uses como IP fija sin revisar tu router."
+                    tr("No respondió a ping, a conexiones ni a consultas de nombre. Puede estar libre, pero también puede haber un equipo apagado, dormido o con firewall. No la uses como IP fija sin revisar tu router.")
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 6.dp),
@@ -335,41 +335,40 @@ private fun InspectionView(r: InspectionResult) {
     }
     if (!r.alive) return
 
-    SectionTitle("Respuesta")
+    SectionTitle(tr("Respuesta"))
     if (r.pingOk.isNotEmpty()) {
         ExplainRow(
-            "Tiempo de respuesta (ping)",
-            "promedio ${r.pingAvg} ms · mín ${r.pingMin} · máx ${r.pingMax}",
+            tr("Tiempo de respuesta (ping)"),
+            tr("promedio %1\$s ms · mín %2\$s · máx %3\$s", r.pingAvg, r.pingMin, r.pingMax),
             latencyExplanation(r.pingAvg),
         )
         ExplainRow(
-            "Pérdida de paquetes",
+            tr("Pérdida de paquetes"),
             "${r.pingLossPercent}%",
-            "De 4 mensajes de prueba, cuántos no tuvieron respuesta. 0% es lo ideal. Una pérdida alta indica señal débil o un equipo saturado.",
+            tr("De 4 mensajes de prueba, cuántos no tuvieron respuesta. 0% es lo ideal. Una pérdida alta indica señal débil o un equipo saturado."),
         )
     } else {
         ExplainRow(
-            "Ping",
-            "Bloqueado",
-            "El equipo no responde al ping (muchas PCs con Windows y algunos celulares lo bloquean por seguridad), " +
-                "pero sí lo detectamos por otros métodos.",
+            tr("Ping"),
+            tr("Bloqueado"),
+            tr("El equipo no responde al ping (muchas PCs con Windows y algunos celulares lo bloquean por seguridad), pero sí lo detectamos por otros métodos."),
         )
     }
-    r.mdnsHostname?.let { ExplainRow("Nombre Bonjour", it, "Nombre que el equipo anuncia por mDNS (típico de Apple, Android, Chromecast e impresoras).") }
-    r.netbiosName?.let { ExplainRow("Nombre de Windows", it, "Nombre de equipo que responde por NetBIOS (PCs con Windows o discos NAS).") }
-    r.dnsName?.let { ExplainRow("Nombre según el router", it, "El nombre que el equipo le dio al router al conectarse.") }
+    r.mdnsHostname?.let { ExplainRow(tr("Nombre Bonjour"), it, tr("Nombre que el equipo anuncia por mDNS (típico de Apple, Android, Chromecast e impresoras).")) }
+    r.netbiosName?.let { ExplainRow(tr("Nombre de Windows"), it, tr("Nombre de equipo que responde por NetBIOS (PCs con Windows o discos NAS).")) }
+    r.dnsName?.let { ExplainRow(tr("Nombre según el router"), it, tr("El nombre que el equipo le dio al router al conectarse.")) }
 
-    SectionTitle("Puertos abiertos (${r.openPorts.size})")
+    SectionTitle(tr("Puertos abiertos (%1\$s)", r.openPorts.size))
     if (r.openPorts.isEmpty()) {
         Text(
-            "No encontramos puertos abiertos de nuestra lista. Significa que este equipo ofrece pocos servicios a la red, lo cual es bueno para la seguridad.",
+            tr("No encontramos puertos abiertos de nuestra lista. Significa que este equipo ofrece pocos servicios a la red, lo cual es bueno para la seguridad."),
             style = MaterialTheme.typography.bodyMedium,
         )
     } else {
         r.openPorts.forEach { PortCard(it) }
     }
     Text(
-        "Análisis completado en ${(r.durationMs + 500) / 1000} s.",
+        tr("Análisis completado en %1\$s s.", (r.durationMs + 500) / 1000),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(vertical = 12.dp),
@@ -381,22 +380,22 @@ private fun InspectionView(r: InspectionResult) {
 @Composable
 fun DiagnosticsScreen(vm: ToolsViewModel, onBack: () -> Unit) {
     val s by vm.diag.collectAsStateWithLifecycle()
-    ScreenScaffold(title = "Diagnóstico", onBack = onBack) { padding ->
+    ScreenScaffold(title = tr("Diagnóstico"), onBack = onBack) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
         ) {
             Text(
-                "Revisamos tu conexión paso a paso: la señal WiFi, el router, la salida a Internet y el DNS. Así sabrás dónde está el problema.",
+                tr("Revisamos tu conexión paso a paso: la señal WiFi, el router, la salida a Internet y el DNS. Así sabrás dónde está el problema."),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(Modifier.height(12.dp))
             if (s.running) {
-                RadarStatus("Probando tu conexión…", size = 36.dp)
+                RadarStatus(tr("Probando tu conexión…"), size = 36.dp)
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
             } else {
                 Button(onClick = vm::runDiagnostics, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (s.items.isEmpty()) "Iniciar diagnóstico" else "Repetir diagnóstico")
+                    Text(if (s.items.isEmpty()) tr("Iniciar diagnóstico") else tr("Repetir diagnóstico"))
                 }
             }
             s.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp)) }
@@ -408,9 +407,9 @@ fun DiagnosticsScreen(vm: ToolsViewModel, onBack: () -> Unit) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 ) {
                     Text(
-                        if (problems.isEmpty()) "Todo se ve bien. Tu conexión funciona correctamente."
-                        else "Revisa: " + problems.joinToString(", ") { it.title.substringBefore(" (") } +
-                            ". Abajo te explicamos qué significa y qué puedes hacer.",
+                        if (problems.isEmpty()) tr("Todo se ve bien. Tu conexión funciona correctamente.")
+                        else tr("Revisa: ") + problems.joinToString(", ") { it.title.substringBefore(" (") } +
+                            tr(". Abajo te explicamos qué significa y qué puedes hacer."),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(16.dp),
                     )
@@ -429,7 +428,7 @@ fun DiagnosticsScreen(vm: ToolsViewModel, onBack: () -> Unit) {
                             }
                             Text(item.explanation, style = MaterialTheme.typography.bodySmall)
                             item.advice?.let {
-                                Text("Qué hacer: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                Text(tr("Qué hacer: %1\$s", it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -443,7 +442,7 @@ fun DiagnosticsScreen(vm: ToolsViewModel, onBack: () -> Unit) {
 
 @Composable
 fun LearnScreen(onBack: () -> Unit) {
-    ScreenScaffold(title = "¿Qué estoy viendo?", onBack = onBack) { padding ->
+    ScreenScaffold(title = tr("¿Qué estoy viendo?"), onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
@@ -453,7 +452,7 @@ fun LearnScreen(onBack: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
                     Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(8.dp))
-                    Text("Toca un tema para ver la explicación completa.", style = MaterialTheme.typography.bodyMedium)
+                    Text(tr("Toca un tema para ver la explicación completa."), style = MaterialTheme.typography.bodyMedium)
                 }
             }
             items(Glossary.entries, key = { it.term }) { e ->

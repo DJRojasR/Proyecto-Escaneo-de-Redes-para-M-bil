@@ -1,5 +1,6 @@
 package com.lupadered.app.export
 
+import com.lupadered.app.i18n.tr
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -46,15 +47,15 @@ object ReportExporter {
         val sb = StringBuilder()
         // BOM para que Excel reconozca las tildes
         sb.append('﻿')
-        sb.appendLine(row("Red", "Nombre", "IP", "Tipo", "Grupo", "Fabricante", "Modelo", "Estado", "Conocido",
-            "Puertos abiertos", "Latencia (ms)", "Visto por primera vez", "Visto por última vez"))
+        sb.appendLine(row(tr("Red"), tr("Nombre"), "IP", tr("Tipo"), tr("Grupo"), tr("Fabricante"), tr("Modelo"), tr("Estado"), tr("Conocido"),
+            tr("Puertos abiertos"), tr("Latencia (ms)"), tr("Visto por primera vez"), tr("Visto por última vez")))
         for (d in data.devices.sortedWith(compareBy({ !data.isOnline(it) }, { it.ip }))) {
             sb.appendLine(
                 row(
                     data.network.displayName, d.displayName, d.ip, d.type.label, d.groupName.orEmpty(),
                     d.vendor.orEmpty(), d.model.orEmpty(),
-                    if (data.isOnline(d)) "En línea" else "Visto antes",
-                    if (d.trusted) "Sí" else "No",
+                    if (data.isOnline(d)) tr("En línea") else tr("Visto antes"),
+                    if (d.trusted) tr("Sí") else "No",
                     d.openPorts.sorted().joinToString(" "),
                     d.latencyMs?.toString().orEmpty(),
                     date(d.firstSeen), date(d.lastSeen),
@@ -62,10 +63,10 @@ object ReportExporter {
             )
         }
         sb.appendLine()
-        sb.appendLine(row("Historial", "Equipo", "IP", "Evento", "Detalle", "Fecha"))
+        sb.appendLine(row(tr("Historial"), tr("Equipo"), "IP", tr("Evento"), tr("Detalle"), tr("Fecha")))
         val names = data.devices.associate { it.id to it.displayName }
         for (e in data.events) {
-            sb.appendLine(row("", names[e.deviceId] ?: "Eliminado", e.ip, e.type.label, e.detail.orEmpty(), date(e.at)))
+            sb.appendLine(row("", names[e.deviceId] ?: tr("Eliminado"), e.ip, e.type.label, e.detail.orEmpty(), date(e.at)))
         }
         out.write(sb.toString().toByteArray(Charsets.UTF_8))
     }
@@ -87,28 +88,28 @@ object ReportExporter {
         val doc = PdfDocument()
         val w = PdfWriter(doc)
 
-        w.title("Reporte de red · ${data.network.displayName}")
-        w.text("Generado el ${dateTime(data.createdAt)} con Lupa de Red", 10f, GREY)
+        w.title(tr("Reporte de red · %1\$s", data.network.displayName))
+        w.text(tr("Generado el %1\$s con Lupa de Red", dateTime(data.createdAt)), 10f, GREY)
         w.space(10f)
 
-        w.heading("Resumen")
+        w.heading(tr("Resumen"))
         val online = data.devices.count { data.isOnline(it) }
-        w.text("Rango: ${data.network.subnet}" + (data.network.gateway?.let { " · Router: $it" } ?: ""))
-        w.text("Dispositivos guardados: ${data.devices.size} · En línea en el último escaneo: $online")
-        data.lastScan?.let { w.text("Último escaneo: ${dateTime(it.startedAt)} (${(it.durationMs + 500) / 1000} s)") }
-        w.text("Seguridad: ${data.security.score}/100 (${data.security.grade}). ${data.security.summary}")
+        w.text(tr("Rango: %1\$s", data.network.subnet) + (data.network.gateway?.let { tr(" · Router: %1\$s", it) } ?: ""))
+        w.text(tr("Dispositivos guardados: %1\$s · En línea en el último escaneo: %2\$s", data.devices.size, online))
+        data.lastScan?.let { w.text(tr("Último escaneo: %1\$s (%2\$s s)", dateTime(it.startedAt), (it.durationMs + 500) / 1000)) }
+        w.text(tr("Seguridad: %1\$s/100 (%2\$s). %3\$s", data.security.score, data.security.grade, data.security.summary))
         w.space(8f)
 
-        w.heading("Dispositivos")
-        w.tableRow(listOf("Nombre", "IP", "Tipo", "Estado", "Puertos"), listOf(150f, 85f, 95f, 70f, 115f), bold = true)
+        w.heading(tr("Dispositivos"))
+        w.tableRow(listOf(tr("Nombre"), "IP", tr("Tipo"), tr("Estado"), tr("Puertos")), listOf(150f, 85f, 95f, 70f, 115f), bold = true)
         for (d in data.devices.sortedWith(compareBy({ !data.isOnline(it) }, { it.ip }))) {
             w.tableRow(
                 listOf(
                     d.displayName + (d.groupName?.let { " [$it]" } ?: ""),
                     d.ip,
                     d.type.label,
-                    if (data.isOnline(d)) "En línea" else "Visto antes",
-                    d.openPorts.sorted().joinToString(", ").ifEmpty { if (d.portsScannedAt == null) "—" else "ninguno" },
+                    if (data.isOnline(d)) tr("En línea") else tr("Visto antes"),
+                    d.openPorts.sorted().joinToString(", ").ifEmpty { if (d.portsScannedAt == null) "—" else tr("ninguno") },
                 ),
                 listOf(150f, 85f, 95f, 70f, 115f),
             )
@@ -116,18 +117,18 @@ object ReportExporter {
         w.space(8f)
 
         if (data.security.findings.isNotEmpty()) {
-            w.heading("Revisión de seguridad")
+            w.heading(tr("Revisión de seguridad"))
             for (f in data.security.findings.take(25)) {
                 w.text("• [${f.severity.label}] ${f.title}", 10f, bold = true)
                 w.text("   ${f.detail}", 9f, GREY)
-                f.steps.firstOrNull()?.let { w.text("   Qué hacer: $it", 9f, GREY) }
+                f.steps.firstOrNull()?.let { w.text(tr("   Qué hacer: %1\$s", it), 9f, GREY) }
             }
             w.space(8f)
         }
 
         val portsSeen = data.devices.flatMap { it.openPorts }.toSortedSet()
         if (portsSeen.isNotEmpty()) {
-            w.heading("Qué significan los puertos encontrados")
+            w.heading(tr("Qué significan los puertos encontrados"))
             for (p in portsSeen) {
                 val info = PortKnowledge.info(p)
                 w.text("$p · ${info.service} (${info.risk.label}): ${info.whatItMeans}", 9f)
@@ -136,11 +137,11 @@ object ReportExporter {
         }
 
         if (data.events.isNotEmpty()) {
-            w.heading("Historial reciente")
+            w.heading(tr("Historial reciente"))
             val names = data.devices.associate { it.id to it.displayName }
             for (e in data.events.take(80)) {
                 w.text(
-                    "${dateTime(e.at)} · ${names[e.deviceId] ?: "Eliminado"} · ${e.type.label}" +
+                    "${dateTime(e.at)} · ${names[e.deviceId] ?: tr("Eliminado")} · ${e.type.label}" +
                         (if (e.detail != null) " (${e.detail} → ${e.ip})" else " (${e.ip})"),
                     9f,
                 )
@@ -173,7 +174,7 @@ object ReportExporter {
             paint.textSize = 8f
             paint.color = GREY
             paint.typeface = Typeface.DEFAULT
-            p.canvas.drawText("Lupa de Red · página $pageNumber", MARGIN, PAGE_H - 20f, paint)
+            p.canvas.drawText(tr("Lupa de Red · página %1\$s", pageNumber), MARGIN, PAGE_H - 20f, paint)
         }
 
         private fun ensure(height: Float) {

@@ -6,6 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.lupadered.app.i18n.I18n
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lupadered.app.ui.LupaRoot
@@ -26,10 +30,15 @@ class MainActivity : ComponentActivity() {
             val appearance by app.settings.appearance.collectAsStateWithLifecycle()
             val premium by app.premium.state.collectAsStateWithLifecycle()
             LupaTheme(appearance = appearance, premium = premium.isPremium) {
-                LupaRoot(
-                    openRoute = openRoute.value,
-                    onRouteOpened = { openRoute.value = null },
-                )
+                // El árabe se lee de derecha a izquierda
+                CompositionLocalProvider(
+                    LocalLayoutDirection provides if (I18n.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+                ) {
+                    LupaRoot(
+                        openRoute = openRoute.value,
+                        onRouteOpened = { openRoute.value = null },
+                    )
+                }
             }
         }
     }

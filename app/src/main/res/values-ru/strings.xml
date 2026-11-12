@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Сколько устройств подключено к вашей сети и сколько из них не проверено.</string>
+</resources>

@@ -1,5 +1,6 @@
 package com.lupadered.app.ui
 
+import com.lupadered.app.i18n.tr
 import android.app.Application
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -121,7 +122,7 @@ class SpeedTestViewModel(application: Application) : AndroidViewModel(applicatio
             var current: CheckItem? = null
             try {
                 // 1) Servidor
-                val locItem = CheckItem("locate", "Buscando el servidor de pruebas más cercano", CheckStatus.RUNNING)
+                val locItem = CheckItem("locate", tr("Buscando el servidor de pruebas más cercano"), CheckStatus.RUNNING)
                 current = locItem
                 setCheck(locItem)
                 val server = tester.locate()
@@ -129,35 +130,35 @@ class SpeedTestViewModel(application: Application) : AndroidViewModel(applicatio
                 _state.update { it.copy(server = server.place) }
 
                 // 2) Bajada
-                val downItem = CheckItem("down", "Midiendo la velocidad de bajada (10 s)", CheckStatus.RUNNING, progress = 0f)
+                val downItem = CheckItem("down", tr("Midiendo la velocidad de bajada (10 s)"), CheckStatus.RUNNING, progress = 0f)
                 current = downItem
                 setCheck(downItem)
                 _state.update { it.copy(phase = SpeedPhase.DOWNLOAD) }
                 val down = tester.download(server) { mbps, p ->
                     _state.update { it.copy(liveMbps = mbps, progress = p) }
-                    setCheck(downItem.copy(progress = p, result = "${formatMbps(mbps)} Mbps"))
+                    setCheck(downItem.copy(progress = p, result = tr("%1\$s Mbps", formatMbps(mbps))))
                 }
-                setCheck(downItem.copy(status = CheckStatus.OK, progress = null, result = "${formatMbps(down.mbps)} Mbps"))
+                setCheck(downItem.copy(status = CheckStatus.OK, progress = null, result = tr("%1\$s Mbps", formatMbps(down.mbps))))
                 _state.update { it.copy(downloadMbps = down.mbps, pingMs = down.minRttMs, liveMbps = down.mbps) }
 
                 // 3) Subida
-                val upItem = CheckItem("up", "Midiendo la velocidad de subida (10 s)", CheckStatus.RUNNING, progress = 0f)
+                val upItem = CheckItem("up", tr("Midiendo la velocidad de subida (10 s)"), CheckStatus.RUNNING, progress = 0f)
                 current = upItem
                 setCheck(upItem)
                 _state.update { it.copy(phase = SpeedPhase.UPLOAD, liveMbps = 0.0, progress = 0f) }
                 val up = tester.upload(server) { mbps, p ->
                     _state.update { it.copy(liveMbps = mbps, progress = p) }
-                    setCheck(upItem.copy(progress = p, result = "${formatMbps(mbps)} Mbps"))
+                    setCheck(upItem.copy(progress = p, result = tr("%1\$s Mbps", formatMbps(mbps))))
                 }
-                setCheck(upItem.copy(status = CheckStatus.OK, progress = null, result = "${formatMbps(up.mbps)} Mbps"))
+                setCheck(upItem.copy(status = CheckStatus.OK, progress = null, result = tr("%1\$s Mbps", formatMbps(up.mbps))))
                 current = null
 
                 val ping = down.minRttMs ?: up.minRttMs
                 setCheck(
                     CheckItem(
-                        "ping", "Latencia hasta el servidor",
+                        "ping", tr("Latencia hasta el servidor"),
                         if (ping == null) CheckStatus.INFO else CheckStatus.OK,
-                        ping?.let { "${it.toInt()} ms" } ?: "No disponible",
+                        ping?.let { "${it.toInt()} ms" } ?: tr("No disponible"),
                     )
                 )
 
@@ -181,13 +182,13 @@ class SpeedTestViewModel(application: Application) : AndroidViewModel(applicatio
                 _state.update {
                     it.copy(
                         phase = SpeedPhase.ERROR,
-                        error = "No se pudo completar la prueba. Revisa tu conexión a Internet e inténtalo de nuevo.",
+                        error = tr("No se pudo completar la prueba. Revisa tu conexión a Internet e inténtalo de nuevo."),
                     )
                 }
-                current?.let { setCheck(it.copy(status = CheckStatus.BAD, progress = null, result = "Falló")) }
+                current?.let { setCheck(it.copy(status = CheckStatus.BAD, progress = null, result = tr("Falló"))) }
                 current = null
             } finally {
-                current?.let { setCheck(it.copy(status = CheckStatus.PENDING, progress = null, result = "Detenido")) }
+                current?.let { setCheck(it.copy(status = CheckStatus.PENDING, progress = null, result = tr("Detenido"))) }
                 if (_state.value.running) _state.update { it.copy(phase = SpeedPhase.IDLE, liveMbps = 0.0) }
             }
         }

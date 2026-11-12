@@ -1,5 +1,6 @@
 package com.lupadered.app.data
 
+import com.lupadered.app.i18n.tr
 import com.lupadered.app.knowledge.DeviceType
 import com.lupadered.app.net.DiscoveryMethod
 
@@ -38,17 +39,17 @@ data class Device(
     val displayName: String
         get() = alias?.takeIf { it.isNotBlank() }
             ?: when {
-                isSelf -> "Este teléfono" + (name?.let { " ($it)" } ?: "")
-                isGateway && name == null -> "Router"
+                isSelf -> tr("Este teléfono") + (name?.let { " ($it)" } ?: "")
+                isGateway && name == null -> tr("Router")
                 else -> name ?: type.label
             }
 }
 
 enum class EventType(val label: String) {
-    NEW("Nuevo dispositivo"),
-    BACK("Volvió a conectarse"),
-    LEFT("Se desconectó"),
-    IP_CHANGED("Cambió de IP"),
+    NEW(tr("Nuevo dispositivo")),
+    BACK(tr("Volvió a conectarse")),
+    LEFT(tr("Se desconectó")),
+    IP_CHANGED(tr("Cambió de IP")),
 }
 
 data class DeviceEvent(
@@ -63,9 +64,9 @@ data class DeviceEvent(
 
 /** Quién inició un escaneo. */
 enum class ScanSource(val label: String) {
-    MANUAL("Manual"),
-    AUTO("Vigilancia automática"),
-    SCHEDULED("Programado"),
+    MANUAL(tr("Manual")),
+    AUTO(tr("Vigilancia automática")),
+    SCHEDULED(tr("Programado")),
 }
 
 data class ScanRecord(
@@ -90,7 +91,7 @@ data class NetworkProfile(
     val deviceCount: Int,
     val lastFound: Int?,
 ) {
-    val displayName: String get() = name?.takeIf { it.isNotBlank() } ?: "Red $subnet"
+    val displayName: String get() = name?.takeIf { it.isNotBlank() } ?: tr("Red %1\$s", subnet)
 }
 
 data class ScanSummary(

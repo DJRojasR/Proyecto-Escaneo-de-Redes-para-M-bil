@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.components
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -166,7 +167,7 @@ fun ExplainRow(label: String, value: String, explanation: String?, modifier: Mod
         }
         if (explanation != null) {
             IconButton(onClick = { open = true }) {
-                Icon(Icons.Outlined.Info, contentDescription = "¿Qué significa?", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Outlined.Info, contentDescription = tr("¿Qué significa?"), tint = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -181,7 +182,7 @@ fun ExplainDialog(title: String, text: String, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(text) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Entendido") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Entendido")) } },
     )
 }
 
@@ -205,15 +206,15 @@ fun EmptyState(icon: ImageVector, title: String, text: String, modifier: Modifie
 // ------------------------------------------------------------------ formatos
 
 fun relativeTime(ts: Long?, now: Long = System.currentTimeMillis()): String {
-    if (ts == null || ts <= 0) return "nunca"
+    if (ts == null || ts <= 0) return tr("nunca")
     val diff = (now - ts).coerceAtLeast(0)
     val min = diff / 60_000
     return when {
-        min < 1 -> "hace un momento"
-        min < 60 -> "hace $min min"
-        min < 24 * 60 -> "hace ${min / 60} h"
-        min < 48 * 60 -> "ayer"
-        min < 7 * 24 * 60 -> "hace ${min / (24 * 60)} días"
+        min < 1 -> tr("hace un momento")
+        min < 60 -> tr("hace %1\$s min", min)
+        min < 24 * 60 -> tr("hace %1\$s h", min / 60)
+        min < 48 * 60 -> tr("ayer")
+        min < 7 * 24 * 60 -> tr("hace %1\$s días", min / (24 * 60))
         else -> DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(ts))
     }
 }
@@ -223,18 +224,18 @@ fun dateTime(ts: Long): String =
 
 fun latencyText(ms: Long?): String = when {
     ms == null -> "—"
-    ms < 1 -> "<1 ms"
+    ms < 1 -> tr("<1 ms")
     else -> "$ms ms"
 }
 
 /** Explicación de una latencia concreta, para el botón (i). */
 fun latencyExplanation(ms: Long?): String {
-    val base = "Es lo que tardó el equipo en responder, en milésimas de segundo (ms). "
+    val base = tr("Es lo que tardó el equipo en responder, en milésimas de segundo (ms). ")
     return base + when {
-        ms == null -> "No pudimos medirlo: el equipo se detectó porque se anunció solo, sin responder a nuestras pruebas."
-        ms < 10 -> "Menos de 10 ms es excelente dentro de casa."
-        ms < 50 -> "Es un valor normal."
-        ms < 200 -> "Es algo lento. Puede estar lejos del router, con señal débil o en reposo (los celulares tardan en despertar)."
-        else -> "Es muy lento. Puede estar en reposo, muy lejos del router o con la red saturada."
+        ms == null -> tr("No pudimos medirlo: el equipo se detectó porque se anunció solo, sin responder a nuestras pruebas.")
+        ms < 10 -> tr("Menos de 10 ms es excelente dentro de casa.")
+        ms < 50 -> tr("Es un valor normal.")
+        ms < 200 -> tr("Es algo lento. Puede estar lejos del router, con señal débil o en reposo (los celulares tardan en despertar).")
+        else -> tr("Es muy lento. Puede estar en reposo, muy lejos del router o con la red saturada.")
     }
 }

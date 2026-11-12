@@ -1,5 +1,6 @@
 package com.lupadered.app.monitor
 
+import com.lupadered.app.i18n.tr
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -26,10 +27,10 @@ object Notifier {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         val channel = NotificationChannel(
             CHANNEL_INTRUDERS,
-            "Equipos nuevos en tu red",
+            tr("Equipos nuevos en tu red"),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Te avisa cuando un dispositivo desconocido se conecta a la red que vigilas."
+            description = tr("Te avisa cuando un dispositivo desconocido se conecta a la red que vigilas.")
         }
         nm.createNotificationChannel(channel)
     }
@@ -45,12 +46,12 @@ object Notifier {
     @SuppressLint("MissingPermission")
     fun notifyNewDevices(context: Context, devices: List<Device>, networkName: String?) {
         if (devices.isEmpty() || !canNotify(context)) return
-        val title = if (devices.size == 1) "Se conectó un equipo desconocido"
-        else "Se conectaron ${devices.size} equipos desconocidos"
+        val title = if (devices.size == 1) tr("Se conectó un equipo desconocido")
+        else tr("Se conectaron %1\$s equipos desconocidos", devices.size)
         val names = devices.take(4).joinToString(", ") { "${it.displayName} (${it.ip})" } +
-            if (devices.size > 4) " y ${devices.size - 4} más" else ""
-        val where = networkName?.let { " a $it" } ?: " a tu red"
-        val text = "Apareció$where: $names. Si no es tuyo, revisa quién tiene tu clave WiFi."
+            if (devices.size > 4) tr(" y %1\$s más", devices.size - 4) else ""
+        val where = networkName?.let { tr(" a %1\$s", it) } ?: tr(" a tu red")
+        val text = tr("Apareció%1\$s: %2\$s. Si no es tuyo, revisa quién tiene tu clave WiFi.", where, names)
 
         val open = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP

@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.components
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,7 +46,7 @@ fun rememberIsPremium(): Boolean {
 /** Etiqueta pequeña "Premium" junto a un título. */
 @Composable
 fun PremiumTag(modifier: Modifier = Modifier) {
-    Tag("Premium", PremiumGold, modifier)
+    Tag(tr("Premium"), PremiumGold, modifier)
 }
 
 /**
@@ -70,7 +71,7 @@ fun LockedCard(title: String, text: String, modifier: Modifier = Modifier) {
             Button(onClick = openPremium) {
                 Icon(Icons.Outlined.WorkspacePremium, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Ver Premium")
+                Text(tr("Ver Premium"))
             }
         }
     }

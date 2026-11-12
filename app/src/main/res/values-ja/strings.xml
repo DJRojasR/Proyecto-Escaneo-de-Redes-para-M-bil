@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">ネットワークに接続している機器の数と、未確認の機器の数。</string>
+</resources>

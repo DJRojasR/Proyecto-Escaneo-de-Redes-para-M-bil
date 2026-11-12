@@ -1,5 +1,6 @@
 package com.lupadered.app.ui
 
+import com.lupadered.app.i18n.tr
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
@@ -96,13 +97,13 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             var running: CheckItem? = null
             try {
                 // 1) Equipos conectados
-                val netItem = CheckItem("net", "Buscando los equipos conectados a tu red", CheckStatus.RUNNING)
+                val netItem = CheckItem("net", tr("Buscando los equipos conectados a tu red"), CheckStatus.RUNNING)
                 running = netItem
                 setCheck(netItem)
                 val data = current()
                 delay(500)
                 if (data == null) {
-                    setCheck(netItem.copy(status = CheckStatus.BAD, result = "No estás conectado a un WiFi."))
+                    setCheck(netItem.copy(status = CheckStatus.BAD, result = tr("No estás conectado a un WiFi.")))
                     running = null
                     return@launch
                 }
@@ -111,9 +112,9 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 setCheck(
                     netItem.copy(
                         status = if (targets.isEmpty()) CheckStatus.WARN else CheckStatus.OK,
-                        result = if (targets.isEmpty()) "No hay equipos en el último escaneo. Escanea tu red primero."
-                        else "${targets.size} equipos en línea" +
-                            (data.lastScanAt?.let { " (escaneo ${com.lupadered.app.ui.components.relativeTime(it)})" } ?: ""),
+                        result = if (targets.isEmpty()) tr("No hay equipos en el último escaneo. Escanea tu red primero.")
+                        else tr("%1\$s equipos en línea", targets.size) +
+                            (data.lastScanAt?.let { tr(" (escaneo %1\$s)", com.lupadered.app.ui.components.relativeTime(it)) } ?: ""),
                     )
                 )
                 running = null
@@ -125,9 +126,9 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 targets.forEachIndexed { i, d ->
                     val item = CheckItem(
                         "d${d.id}",
-                        "Revisando ${d.displayName} · ${d.ip}",
+                        tr("Revisando %1\$s · %2\$s", d.displayName, d.ip),
                         CheckStatus.RUNNING,
-                        "Probando ${PortKnowledge.COMMON_PORTS.size} puertos…",
+                        tr("Probando %1\$s puertos…", PortKnowledge.COMMON_PORTS.size),
                         0f,
                     )
                     running = item
@@ -155,15 +156,15 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                             },
                             progress = null,
                             result = when {
-                                open.isEmpty() && !responded -> "No respondió (puede estar dormido)."
-                                open.isEmpty() -> "Sin puertos abiertos. Bien protegido."
-                                else -> "${open.size} abiertos: " +
+                                open.isEmpty() && !responded -> tr("No respondió (puede estar dormido).")
+                                open.isEmpty() -> tr("Sin puertos abiertos. Bien protegido.")
+                                else -> tr("%1\$s abiertos: ", open.size) +
                                     infos.take(4).joinToString(", ") { "${it.port} ${it.service}" } +
                                     (if (open.size > 4) "…" else "") +
                                     when {
-                                        h > 0 -> " · $h de riesgo alto"
-                                        m > 0 -> " · $m para revisar"
-                                        else -> " · normales"
+                                        h > 0 -> tr(" · %1\$s de riesgo alto", h)
+                                        m > 0 -> tr(" · %1\$s para revisar", m)
+                                        else -> tr(" · normales")
                                     }
                             },
                         )
@@ -172,7 +173,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 }
 
                 // 3) Equipos desconocidos
-                val unknownItem = CheckItem("unknown", "Buscando equipos que no conoces", CheckStatus.RUNNING)
+                val unknownItem = CheckItem("unknown", tr("Buscando equipos que no conoces"), CheckStatus.RUNNING)
                 running = unknownItem
                 setCheck(unknownItem)
                 delay(400)
@@ -180,14 +181,14 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 setCheck(
                     unknownItem.copy(
                         status = if (unknown > 0) CheckStatus.WARN else CheckStatus.OK,
-                        result = if (unknown > 0) "$unknown sin revisar. Ábrelos y márcalos si son tuyos."
-                        else "Todos los equipos conectados son conocidos.",
+                        result = if (unknown > 0) tr("%1\$s sin revisar. Ábrelos y márcalos si son tuyos.", unknown)
+                        else tr("Todos los equipos conectados son conocidos."),
                     )
                 )
                 running = null
 
                 // 4) Puntaje
-                val scoreItem = CheckItem("score", "Calculando el puntaje de seguridad", CheckStatus.RUNNING)
+                val scoreItem = CheckItem("score", tr("Calculando el puntaje de seguridad"), CheckStatus.RUNNING)
                 running = scoreItem
                 setCheck(scoreItem)
                 val fresh = current()
@@ -211,16 +212,16 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                     it.copy(
                         report = report,
                         progress = 1f,
-                        summary = "Revisé ${targets.size} equipos y $portsChecked puertos en $secs s. " + when {
-                            high > 0 -> "Encontré $high ${if (high == 1) "servicio de riesgo alto" else "servicios de riesgo alto"}" +
-                                (if (medium > 0) " y $medium para revisar." else ".")
-                            medium > 0 -> "Encontré $medium ${if (medium == 1) "detalle" else "detalles"} para revisar."
-                            else -> "No encontré servicios riesgosos."
+                        summary = tr("Revisé %1\$s equipos y %2\$s puertos en %3\$s s. ", targets.size, portsChecked, secs) + when {
+                            high > 0 -> tr("Encontré %1\$s %2\$s", high, if (high == 1) tr("servicio de riesgo alto") else tr("servicios de riesgo alto")) +
+                                (if (medium > 0) tr(" y %1\$s para revisar.", medium) else ".")
+                            medium > 0 -> tr("Encontré %1\$s %2\$s para revisar.", medium, if (medium == 1) "detalle" else "detalles")
+                            else -> tr("No encontré servicios riesgosos.")
                         },
                     )
                 }
             } finally {
-                running?.let { setCheck(it.copy(status = CheckStatus.PENDING, progress = null, result = "Detenido")) }
+                running?.let { setCheck(it.copy(status = CheckStatus.PENDING, progress = null, result = tr("Detenido"))) }
                 _state.update { it.copy(scanning = false) }
                 if (_state.value.summary == null) load()
             }
@@ -315,14 +316,11 @@ class LatencyViewModel(application: Application) : AndroidViewModel(application)
         val wifiBad = r.lossPercent >= 10 || (r.avg ?: 0) > 60 || (r.jitter ?: 0) > 40
         val netBad = i.lossPercent >= 10 || (i.avg ?: 0) > 150 || (i.jitter ?: 0) > 50
         return when {
-            r.avg == null -> "Tu router no responde. Revisa que estés conectado al WiFi correcto o reinicia el router."
-            wifiBad -> "El problema está dentro de tu casa: la conexión entre tu teléfono y el router es inestable. " +
-                "Acércate al router, aléjalo de paredes gruesas y microondas, o usa un repetidor."
-            i.avg == null -> "Tu WiFi funciona, pero no hay salida a Internet. El problema es del proveedor o del módem: " +
-                "reinícialo y, si sigue igual, llama a tu proveedor."
-            netBad -> "Tu WiFi va bien; la demora viene de tu proveedor de Internet. Si pasa seguido, " +
-                "guarda una captura de este gráfico y muéstrasela a tu proveedor."
-            else -> "Todo en orden: tu WiFi y tu Internet responden rápido y estable."
+            r.avg == null -> tr("Tu router no responde. Revisa que estés conectado al WiFi correcto o reinicia el router.")
+            wifiBad -> tr("El problema está dentro de tu casa: la conexión entre tu teléfono y el router es inestable. Acércate al router, aléjalo de paredes gruesas y microondas, o usa un repetidor.")
+            i.avg == null -> tr("Tu WiFi funciona, pero no hay salida a Internet. El problema es del proveedor o del módem: reinícialo y, si sigue igual, llama a tu proveedor.")
+            netBad -> tr("Tu WiFi va bien; la demora viene de tu proveedor de Internet. Si pasa seguido, guarda una captura de este gráfico y muéstrasela a tu proveedor.")
+            else -> tr("Todo en orden: tu WiFi y tu Internet responden rápido y estable.")
         }
     }
 
@@ -449,17 +447,17 @@ class ExportViewModel(application: Application) : AndroidViewModel(application) 
             _state.update { it.copy(working = true, message = null) }
             val ok = withContext(Dispatchers.IO) {
                 runCatching {
-                    val data = ReportExporter.collect(repo, key) ?: error("Red no encontrada")
+                    val data = ReportExporter.collect(repo, key) ?: error(tr("Red no encontrada"))
                     app.contentResolver.openOutputStream(uri)?.use { out ->
                         if (pdf) ReportExporter.writePdf(data, out) else ReportExporter.writeCsv(data, out)
-                    } ?: error("No se pudo abrir el archivo")
+                    } ?: error(tr("No se pudo abrir el archivo"))
                 }.isSuccess
             }
             _state.update {
                 it.copy(
                     working = false,
-                    message = if (ok) "Reporte guardado. Ábrelo desde tu carpeta de descargas o desde donde lo guardaste."
-                    else "No se pudo guardar el reporte. Inténtalo de nuevo.",
+                    message = if (ok) tr("Reporte guardado. Ábrelo desde tu carpeta de descargas o desde donde lo guardaste.")
+                    else tr("No se pudo guardar el reporte. Inténtalo de nuevo."),
                 )
             }
         }

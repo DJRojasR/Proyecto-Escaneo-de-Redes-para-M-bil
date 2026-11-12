@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.screens
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,10 +55,10 @@ import com.lupadered.app.ui.components.relativeTime
 import com.lupadered.app.ui.theme.MonoStyle
 
 private enum class IpFilter(val label: String) {
-    ALL("Todas"),
-    IN_USE("En uso"),
-    KNOWN("Vistas antes"),
-    EMPTY("Sin respuesta"),
+    ALL(tr("Todas")),
+    IN_USE(tr("En uso")),
+    KNOWN(tr("Vistas antes")),
+    EMPTY(tr("Sin respuesta")),
 }
 
 /**
@@ -76,22 +77,22 @@ fun IpManagerScreen(
     var help by remember { mutableStateOf(false) }
 
     ScreenScaffold(
-        title = "IP Manager",
+        title = tr("IP Manager"),
         actions = {
-            IconButton(onClick = { help = true }) { Icon(Icons.Outlined.Info, contentDescription = "Ayuda") }
+            IconButton(onClick = { help = true }) { Icon(Icons.Outlined.Info, contentDescription = tr("Ayuda")) }
             if (s.scanning) {
                 RadarSpinner(size = 28.dp, modifier = Modifier.padding(horizontal = 12.dp))
             } else {
                 IconButton(onClick = onScan, enabled = s.network != null) {
-                    Icon(Icons.Outlined.Refresh, contentDescription = "Escanear")
+                    Icon(Icons.Outlined.Refresh, contentDescription = tr("Escanear"))
                 }
             }
         },
     ) { padding ->
         if (s.network == null) {
             EmptyState(
-                Icons.Outlined.Lan, "Sin red local",
-                "Conéctate a un WiFi para ver el mapa de direcciones IP.",
+                Icons.Outlined.Lan, tr("Sin red local"),
+                tr("Conéctate a un WiFi para ver el mapa de direcciones IP."),
                 Modifier.padding(padding),
             )
             return@ScreenScaffold
@@ -127,15 +128,15 @@ fun IpManagerScreen(
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Stat("En uso", inUse.toString(), Modifier.weight(1f))
-                    Stat("Vistas antes", known.toString(), Modifier.weight(1f))
-                    Stat("Sin respuesta", empty.toString(), Modifier.weight(1f))
+                    Stat(tr("En uso"), inUse.toString(), Modifier.weight(1f))
+                    Stat(tr("Vistas antes"), known.toString(), Modifier.weight(1f))
+                    Stat(tr("Sin respuesta"), empty.toString(), Modifier.weight(1f))
                 }
             }
             item {
                 Text(
-                    "Rango ${s.network?.scanSubnet?.cidr} · ${rows.size} direcciones" +
-                        (s.lastScan?.let { " · escaneado ${relativeTime(it.startedAt)}" } ?: " · aún sin escanear"),
+                    tr("Rango %1\$s · %2\$s direcciones", s.network?.scanSubnet?.cidr, rows.size) +
+                        (s.lastScan?.let { tr(" · escaneado %1\$s", relativeTime(it.startedAt)) } ?: tr(" · aún sin escanear")),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 8.dp),
@@ -158,8 +159,7 @@ fun IpManagerScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                 ) {
                     Text(
-                        "\"Sin respuesta\" no siempre significa \"libre\": un equipo apagado o dormido tampoco responde. " +
-                            "Antes de usar una IP fija, elige una que nunca hayamos visto ocupada y mejor aún, resérvala en tu router.",
+                        tr("\"Sin respuesta\" no siempre significa \"libre\": un equipo apagado o dormido tampoco responde. Antes de usar una IP fija, elige una que nunca hayamos visto ocupada y mejor aún, resérvala en tu router."),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(12.dp),
                     )
@@ -169,9 +169,9 @@ fun IpManagerScreen(
                 item {
                     Text(
                         when {
-                            s.scanning -> "Buscando…"
-                            filter == IpFilter.IN_USE && s.lastScan == null -> "Aún no hay IPs en uso. Toca el botón de escanear (arriba a la derecha)."
-                            else -> "No hay direcciones en esta categoría."
+                            s.scanning -> tr("Buscando…")
+                            filter == IpFilter.IN_USE && s.lastScan == null -> tr("Aún no hay IPs en uso. Toca el botón de escanear (arriba a la derecha).")
+                            else -> tr("No hay direcciones en esta categoría.")
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -194,14 +194,8 @@ fun IpManagerScreen(
 
     if (help) {
         ExplainDialog(
-            title = "¿Para qué sirve el IP Manager?",
-            text = "Muestra TODAS las direcciones de tu red y cuáles están ocupadas.\n\n" +
-                "• En uso: un equipo respondió en el último escaneo.\n" +
-                "• Vistas antes: un equipo la usó antes, pero ahora no respondió (puede estar apagado).\n" +
-                "• Sin respuesta: nunca vimos un equipo ahí.\n\n" +
-                "Toca una IP ocupada para ver el dispositivo, o una sin respuesta para analizarla a fondo.\n\n" +
-                "Consejo: si quieres que un equipo (por ejemplo la impresora) tenga siempre la misma IP, configura una " +
-                "\"reserva DHCP\" en tu router. Así no chocará con otros equipos.",
+            title = tr("¿Para qué sirve el IP Manager?"),
+            text = tr("Muestra TODAS las direcciones de tu red y cuáles están ocupadas.\n\n• En uso: un equipo respondió en el último escaneo.\n• Vistas antes: un equipo la usó antes, pero ahora no respondió (puede estar apagado).\n• Sin respuesta: nunca vimos un equipo ahí.\n\nToca una IP ocupada para ver el dispositivo, o una sin respuesta para analizarla a fondo.\n\nConsejo: si quieres que un equipo (por ejemplo la impresora) tenga siempre la misma IP, configura una \"reserva DHCP\" en tu router. Así no chocará con otros equipos."),
             onDismiss = { help = false },
         )
     }
@@ -234,7 +228,7 @@ private fun IpRowItem(row: IpRow, onClick: () -> Unit) {
         val d = row.device
         Column(Modifier.weight(1f)) {
             Text(
-                d?.title ?: "Sin respuesta",
+                d?.title ?: tr("Sin respuesta"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (d == null) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -242,14 +236,14 @@ private fun IpRowItem(row: IpRow, onClick: () -> Unit) {
             )
             if (d != null && row.presence == Presence.OFFLINE) {
                 Text(
-                    "Visto ${relativeTime(d.lastSeen)}",
+                    tr("Visto %1\$s", relativeTime(d.lastSeen)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
         if (d == null) {
-            TextButton(onClick = onClick) { Text("Analizar") }
+            TextButton(onClick = onClick) { Text(tr("Analizar")) }
         }
     }
 }

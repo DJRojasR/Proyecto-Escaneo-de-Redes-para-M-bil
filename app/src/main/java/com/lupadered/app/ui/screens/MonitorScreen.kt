@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.screens
 
+import com.lupadered.app.i18n.tr
 import android.Manifest
 import android.app.TimePickerDialog
 import android.os.Build
@@ -69,7 +70,7 @@ fun MonitorScreen(onBack: () -> Unit) {
         withContext(Dispatchers.IO) {
             val net = NetworkInfoProvider.current(app)
             currentKey = net?.key
-            currentName = net?.let { app.repository.network(it.key)?.displayName ?: "Red ${it.scanSubnet.cidr}" }
+            currentName = net?.let { app.repository.network(it.key)?.displayName ?: tr("Red %1\$s", it.scanSubnet.cidr) }
             watchedName = m.networkKey?.let { k -> app.repository.network(k)?.displayName }
         }
     }
@@ -96,21 +97,20 @@ fun MonitorScreen(onBack: () -> Unit) {
         if (base.notifyIntruders) ensureNotificationPermission()
     }
 
-    ScreenScaffold(title = "Vigilancia de la red", onBack = onBack) { padding ->
+    ScreenScaffold(title = tr("Vigilancia de la red"), onBack = onBack) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                "Lupa de Red puede revisar tu red sola, aunque no abras la app, y avisarte si se conecta alguien que no conoces.",
+                tr("Lupa de Red puede revisar tu red sola, aunque no abras la app, y avisarte si se conecta alguien que no conoces."),
                 style = MaterialTheme.typography.bodyMedium,
             )
 
             if (!isPremium) {
                 LockedCard(
-                    title = "Vigilancia y alerta de intrusos",
-                    text = "Escaneos automáticos cada 15, 30 o 60 minutos, un escaneo diario a la hora que elijas " +
-                        "y una notificación cuando aparece un equipo desconocido.",
+                    title = tr("Vigilancia y alerta de intrusos"),
+                    text = tr("Escaneos automáticos cada 15, 30 o 60 minutos, un escaneo diario a la hora que elijas y una notificación cuando aparece un equipo desconocido."),
                     modifier = Modifier.padding(top = 12.dp),
                 )
                 return@Column
@@ -125,25 +125,24 @@ fun MonitorScreen(onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Wifi, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
-                        Text("Red vigilada", style = MaterialTheme.typography.titleSmall)
+                        Text(tr("Red vigilada"), style = MaterialTheme.typography.titleSmall)
                     }
                     Text(
                         when {
-                            m.networkKey == null -> "Aún ninguna. Al activar la vigilancia usaremos la red a la que estás conectado."
-                            m.networkKey == currentKey -> "${watchedName ?: currentName ?: "Tu red"} (estás conectado a ella)"
-                            else -> "${watchedName ?: "Otra red"}. Ahora estás en otra red: los escaneos automáticos " +
-                                "esperarán a que vuelvas a ella."
+                            m.networkKey == null -> tr("Aún ninguna. Al activar la vigilancia usaremos la red a la que estás conectado.")
+                            m.networkKey == currentKey -> tr("%1\$s (estás conectado a ella)", watchedName ?: currentName ?: tr("Tu red"))
+                            else -> tr("%1\$s. Ahora estás en otra red: los escaneos automáticos esperarán a que vuelvas a ella.", watchedName ?: tr("Otra red"))
                         },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     if (currentKey != null && m.networkKey != null && m.networkKey != currentKey) {
                         Button(onClick = { save(m.copy(networkKey = currentKey)) }) {
-                            Text("Vigilar la red actual" + (currentName?.let { " ($it)" } ?: ""))
+                            Text(tr("Vigilar la red actual") + (currentName?.let { " ($it)" } ?: ""))
                         }
                     }
                     if (currentKey == null && m.networkKey == null) {
                         Text(
-                            "Conéctate a tu WiFi para elegir la red que quieres vigilar.",
+                            tr("Conéctate a tu WiFi para elegir la red que quieres vigilar."),
                             style = MaterialTheme.typography.bodySmall,
                             color = StatusColors.warn,
                         )
@@ -152,10 +151,10 @@ fun MonitorScreen(onBack: () -> Unit) {
             }
 
             // ---------- Escaneo automático
-            SectionTitle("Escaneo automático")
+            SectionTitle(tr("Escaneo automático"))
             ListItem(
-                headlineContent = { Text("Revisar mi red automáticamente") },
-                supportingContent = { Text("Cada ${m.intervalMinutes} minutos, solo cuando estás conectado a la red vigilada.") },
+                headlineContent = { Text(tr("Revisar mi red automáticamente")) },
+                supportingContent = { Text(tr("Cada %1\$s minutos, solo cuando estás conectado a la red vigilada.", m.intervalMinutes)) },
                 trailingContent = {
                     Switch(
                         checked = m.autoEnabled,
@@ -169,21 +168,21 @@ fun MonitorScreen(onBack: () -> Unit) {
                     FilterChip(
                         selected = m.intervalMinutes == min,
                         onClick = { save(m.copy(intervalMinutes = min)) },
-                        label = { Text(if (min == 60) "1 hora" else "$min min") },
+                        label = { Text(if (min == 60) tr("1 hora") else "$min min") },
                     )
                 }
             }
 
             // ---------- Escaneo programado
-            SectionTitle("Escaneo diario")
+            SectionTitle(tr("Escaneo diario"))
             ListItem(
                 modifier = Modifier.clickable {
                     TimePickerDialog(context, { _, h, min ->
                         save(m.copy(dailyHour = h, dailyMinute = min))
                     }, m.dailyHour, m.dailyMinute, true).show()
                 },
-                headlineContent = { Text("Escanear todos los días a las %02d:%02d".format(m.dailyHour, m.dailyMinute)) },
-                supportingContent = { Text("Toca para cambiar la hora. Útil para revisar la red de noche, cuando todos duermen.") },
+                headlineContent = { Text(tr("Escanear todos los días a las %02d:%02d").format(m.dailyHour, m.dailyMinute)) },
+                supportingContent = { Text(tr("Toca para cambiar la hora. Útil para revisar la red de noche, cuando todos duermen.")) },
                 trailingContent = {
                     Switch(
                         checked = m.dailyEnabled,
@@ -194,14 +193,14 @@ fun MonitorScreen(onBack: () -> Unit) {
             )
 
             // ---------- Alertas
-            SectionTitle("Alerta de intrusos")
+            SectionTitle(tr("Alerta de intrusos"))
             ListItem(
-                headlineContent = { Text("Avisarme si se conecta un equipo desconocido") },
+                headlineContent = { Text(tr("Avisarme si se conecta un equipo desconocido")) },
                 supportingContent = {
                     Text(
                         if (m.notifyIntruders && !canNotify)
-                            "Las notificaciones están desactivadas. Toca el interruptor de nuevo o actívalas en los ajustes del teléfono."
-                        else "Recibirás una notificación con el nombre y la IP del equipo nuevo.",
+                            tr("Las notificaciones están desactivadas. Toca el interruptor de nuevo o actívalas en los ajustes del teléfono.")
+                        else tr("Recibirás una notificación con el nombre y la IP del equipo nuevo."),
                     )
                 },
                 trailingContent = {
@@ -216,8 +215,7 @@ fun MonitorScreen(onBack: () -> Unit) {
             )
 
             Text(
-                "Para ahorrar batería, Android puede retrasar un poco los escaneos automáticos y no los hace " +
-                    "con la batería baja. Cada escaneo dura unos segundos y usa muy pocos datos (todo queda dentro de tu red).",
+                tr("Para ahorrar batería, Android puede retrasar un poco los escaneos automáticos y no los hace con la batería baja. Cada escaneo dura unos segundos y usa muy pocos datos (todo queda dentro de tu red)."),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 16.dp),

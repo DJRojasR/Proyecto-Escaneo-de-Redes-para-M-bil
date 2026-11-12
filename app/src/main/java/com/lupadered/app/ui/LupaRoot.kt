@@ -1,5 +1,6 @@
 package com.lupadered.app.ui
 
+import com.lupadered.app.i18n.tr
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -61,10 +62,10 @@ import com.lupadered.app.ui.screens.ToolsScreen
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
 
 private val tabs = listOf(
-    Tab("red", "Red", Icons.Outlined.Wifi),
+    Tab("red", tr("Red"), Icons.Outlined.Wifi),
     Tab("ips", "IPs", Icons.Outlined.Lan),
-    Tab("historial", "Historial", Icons.Outlined.History),
-    Tab("herramientas", "Herramientas", Icons.Outlined.Handyman),
+    Tab("historial", tr("Historial"), Icons.Outlined.History),
+    Tab("herramientas", tr("Herramientas"), Icons.Outlined.Handyman),
 )
 
 fun Context.findActivity(): Activity? {
@@ -282,7 +283,7 @@ fun ScreenScaffold(
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = tr("Atrás"))
                         }
                     }
                 },

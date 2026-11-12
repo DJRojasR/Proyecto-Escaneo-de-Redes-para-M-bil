@@ -1,5 +1,6 @@
 package com.lupadered.app.data
 
+import com.lupadered.app.i18n.tr
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -7,16 +8,16 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** Colores de la app (RF-35). El primero es el gratuito; los demás son Premium. */
 enum class ThemeColor(val label: String) {
-    TEAL("Verde azulado"),
-    BLUE("Azul océano"),
-    PURPLE("Violeta"),
-    ORANGE("Atardecer"),
+    TEAL(tr("Verde azulado")),
+    BLUE(tr("Azul océano")),
+    PURPLE(tr("Violeta")),
+    ORANGE(tr("Atardecer")),
 }
 
 enum class DarkMode(val label: String) {
-    SYSTEM("Como el teléfono"),
-    LIGHT("Claro"),
-    DARK("Oscuro"),
+    SYSTEM(tr("Como el teléfono")),
+    LIGHT(tr("Claro")),
+    DARK(tr("Oscuro")),
 }
 
 data class Appearance(val color: ThemeColor = ThemeColor.TEAL, val dark: DarkMode = DarkMode.SYSTEM)

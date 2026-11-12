@@ -4,6 +4,7 @@ import android.app.Application
 import com.lupadered.app.ads.AdsManager
 import com.lupadered.app.data.AppSettings
 import com.lupadered.app.data.DeviceRepository
+import com.lupadered.app.i18n.I18n
 import com.lupadered.app.monitor.MonitorScheduler
 import com.lupadered.app.monitor.Notifier
 import com.lupadered.app.net.NetworkScanner
@@ -37,6 +38,8 @@ class LupaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Primero el idioma: todos los textos de la app dependen de él.
+        I18n.init(this)
         repository = DeviceRepository(this)
         settings = AppSettings(this)
         premium = PremiumManager(this)

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Combien d’appareils sont connectés à votre réseau et combien ne sont pas vérifiés.</string>
+</resources>

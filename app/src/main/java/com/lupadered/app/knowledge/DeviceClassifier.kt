@@ -1,21 +1,23 @@
 package com.lupadered.app.knowledge
+import com.lupadered.app.i18n.tr
+
 
 /** Tipos de dispositivo, con nombre y explicación para el usuario. */
 enum class DeviceType(val label: String, val description: String) {
-    THIS_PHONE("Este teléfono", "El dispositivo desde el que usas la app."),
-    ROUTER("Router", "El aparato que reparte el WiFi y conecta tu casa con Internet. Todos los demás pasan por él."),
-    PHONE("Celular", "Un teléfono inteligente conectado a tu WiFi."),
-    TABLET("Tablet", "Una tablet conectada a tu WiFi."),
-    COMPUTER("Computadora", "Una PC o laptop."),
-    TV("TV / Streaming", "Un televisor inteligente, Chromecast, Fire TV, Roku, Apple TV o similar."),
-    SPEAKER("Parlante", "Un parlante inteligente o de música (Google/Nest, Alexa, Sonos, HomePod…)."),
-    PRINTER("Impresora", "Una impresora o escáner de red."),
-    CAMERA("Cámara", "Una cámara de seguridad o grabador de video."),
-    CONSOLE("Consola", "Una consola de videojuegos."),
-    NAS("Almacenamiento", "Un disco de red (NAS) para guardar y compartir archivos."),
-    IOT("Hogar inteligente", "Enchufes, focos, sensores u otros aparatos inteligentes."),
-    NETWORK("Equipo de red", "Un repetidor, punto de acceso o switch que ayuda a llevar el WiFi a más lugares."),
-    UNKNOWN("Tipo sin identificar", "No pudimos identificarlo. Puede ser cualquier equipo que no se anuncia. Si no lo reconoces, revisa sus puertos o apaga tus equipos uno por uno para ver cuál desaparece."),
+    THIS_PHONE(tr("Este teléfono"), tr("El dispositivo desde el que usas la app.")),
+    ROUTER(tr("Router"), tr("El aparato que reparte el WiFi y conecta tu casa con Internet. Todos los demás pasan por él.")),
+    PHONE(tr("Celular"), tr("Un teléfono inteligente conectado a tu WiFi.")),
+    TABLET(tr("Tablet"), tr("Una tablet conectada a tu WiFi.")),
+    COMPUTER(tr("Computadora"), tr("Una PC o laptop.")),
+    TV(tr("TV / Streaming"), tr("Un televisor inteligente, Chromecast, Fire TV, Roku, Apple TV o similar.")),
+    SPEAKER(tr("Parlante"), tr("Un parlante inteligente o de música (Google/Nest, Alexa, Sonos, HomePod…).")),
+    PRINTER(tr("Impresora"), tr("Una impresora o escáner de red.")),
+    CAMERA(tr("Cámara"), tr("Una cámara de seguridad o grabador de video.")),
+    CONSOLE(tr("Consola"), tr("Una consola de videojuegos.")),
+    NAS(tr("Almacenamiento"), tr("Un disco de red (NAS) para guardar y compartir archivos.")),
+    IOT(tr("Hogar inteligente"), tr("Enchufes, focos, sensores u otros aparatos inteligentes.")),
+    NETWORK(tr("Equipo de red"), tr("Un repetidor, punto de acceso o switch que ayuda a llevar el WiFi a más lugares.")),
+    UNKNOWN(tr("Tipo sin identificar"), tr("No pudimos identificarlo. Puede ser cualquier equipo que no se anuncia. Si no lo reconoces, revisa sus puertos o apaga tus equipos uno por uno para ver cuál desaparece.")),
 }
 
 /** Datos con los que adivinamos el tipo de un equipo. */
@@ -84,30 +86,30 @@ object DeviceClassifier {
 
     /** Explicación de un servicio mDNS/Bonjour encontrado. */
     fun serviceLabel(type: String): String = when (type) {
-        "_googlecast._tcp" -> "Google Cast: puedes enviarle videos o música desde tu celular"
-        "_airplay._tcp" -> "AirPlay: recibe pantalla o video desde un iPhone/Mac"
-        "_raop._tcp" -> "AirPlay audio: recibe música desde dispositivos Apple"
-        "_companion-link._tcp" -> "Servicio de Apple para comunicarse con tus otros equipos Apple"
-        "_apple-mobdev2._tcp" -> "Sincronización de iPhone/iPad por WiFi"
-        "_device-info._tcp" -> "Publica información del modelo del equipo"
-        "_ipp._tcp", "_ipps._tcp", "_printer._tcp", "_pdl-datastream._tcp" -> "Impresión por red"
-        "_scanner._tcp" -> "Escaneo de documentos por red"
-        "_http._tcp" -> "Tiene una página web (panel de configuración)"
-        "_smb._tcp" -> "Comparte carpetas o archivos"
-        "_afpovertcp._tcp" -> "Comparte archivos (protocolo de Apple)"
-        "_workstation._tcp" -> "Computadora o servidor en la red"
-        "_ssh._tcp" -> "Acceso remoto por SSH"
-        "_spotify-connect._tcp" -> "Spotify Connect: puedes reproducir música en él desde Spotify"
-        "_sonos._tcp" -> "Parlante Sonos"
-        "_hap._tcp", "_homekit._tcp" -> "Accesorio de Apple Home (HomeKit)"
-        "_matter._tcp" -> "Dispositivo de hogar inteligente compatible con Matter"
-        "_androidtvremote2._tcp" -> "Google TV / Android TV (control remoto desde el celular)"
-        "_amzn-wplay._tcp" -> "Amazon Fire TV / Echo"
-        "_roku._tcp" -> "Dispositivo Roku"
-        "_esphomelib._tcp" -> "Dispositivo ESPHome (domótica casera)"
-        "_rdlink._tcp" -> "Escritorio remoto de Apple"
-        "_sleep-proxy._udp" -> "Mantiene visibles a equipos Apple dormidos"
-        "_nvstream._tcp" -> "NVIDIA GameStream / Moonlight"
+        "_googlecast._tcp" -> tr("Google Cast: puedes enviarle videos o música desde tu celular")
+        "_airplay._tcp" -> tr("AirPlay: recibe pantalla o video desde un iPhone/Mac")
+        "_raop._tcp" -> tr("AirPlay audio: recibe música desde dispositivos Apple")
+        "_companion-link._tcp" -> tr("Servicio de Apple para comunicarse con tus otros equipos Apple")
+        "_apple-mobdev2._tcp" -> tr("Sincronización de iPhone/iPad por WiFi")
+        "_device-info._tcp" -> tr("Publica información del modelo del equipo")
+        "_ipp._tcp", "_ipps._tcp", "_printer._tcp", "_pdl-datastream._tcp" -> tr("Impresión por red")
+        "_scanner._tcp" -> tr("Escaneo de documentos por red")
+        "_http._tcp" -> tr("Tiene una página web (panel de configuración)")
+        "_smb._tcp" -> tr("Comparte carpetas o archivos")
+        "_afpovertcp._tcp" -> tr("Comparte archivos (protocolo de Apple)")
+        "_workstation._tcp" -> tr("Computadora o servidor en la red")
+        "_ssh._tcp" -> tr("Acceso remoto por SSH")
+        "_spotify-connect._tcp" -> tr("Spotify Connect: puedes reproducir música en él desde Spotify")
+        "_sonos._tcp" -> tr("Parlante Sonos")
+        "_hap._tcp", "_homekit._tcp" -> tr("Accesorio de Apple Home (HomeKit)")
+        "_matter._tcp" -> tr("Dispositivo de hogar inteligente compatible con Matter")
+        "_androidtvremote2._tcp" -> tr("Google TV / Android TV (control remoto desde el celular)")
+        "_amzn-wplay._tcp" -> tr("Amazon Fire TV / Echo")
+        "_roku._tcp" -> tr("Dispositivo Roku")
+        "_esphomelib._tcp" -> tr("Dispositivo ESPHome (domótica casera)")
+        "_rdlink._tcp" -> tr("Escritorio remoto de Apple")
+        "_sleep-proxy._udp" -> tr("Mantiene visibles a equipos Apple dormidos")
+        "_nvstream._tcp" -> tr("NVIDIA GameStream / Moonlight")
         else -> type.removePrefix("_").substringBefore("._")
     }
 }

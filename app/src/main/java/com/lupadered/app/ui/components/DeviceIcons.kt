@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.components
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.ChildCare
@@ -26,22 +27,22 @@ object DeviceIcons {
     data class Option(val key: String, val label: String, val icon: ImageVector)
 
     val options: List<Option> = listOf(
-        Option("laptop", "Laptop", Icons.Outlined.Laptop),
-        Option("desktop", "PC de escritorio", Icons.Outlined.DesktopWindows),
-        Option("watch", "Reloj", Icons.Outlined.Watch),
-        Option("headphones", "Audífonos", Icons.Outlined.Headphones),
-        Option("camera", "Cámara", Icons.Outlined.CameraAlt),
-        Option("light", "Foco", Icons.Outlined.Lightbulb),
-        Option("thermostat", "Clima", Icons.Outlined.Thermostat),
-        Option("kitchen", "Cocina / refri", Icons.Outlined.Kitchen),
-        Option("laundry", "Lavadora", Icons.Outlined.LocalLaundryService),
-        Option("home", "Casa", Icons.Outlined.Home),
-        Option("work", "Trabajo", Icons.Outlined.Work),
-        Option("school", "Estudios", Icons.Outlined.School),
-        Option("kids", "Niños", Icons.Outlined.ChildCare),
-        Option("pets", "Mascotas", Icons.Outlined.Pets),
-        Option("lock", "Seguridad", Icons.Outlined.Lock),
-        Option("star", "Favorito", Icons.Outlined.Star),
+        Option("laptop", tr("Laptop"), Icons.Outlined.Laptop),
+        Option("desktop", tr("PC de escritorio"), Icons.Outlined.DesktopWindows),
+        Option("watch", tr("Reloj"), Icons.Outlined.Watch),
+        Option("headphones", tr("Audífonos"), Icons.Outlined.Headphones),
+        Option("camera", tr("Cámara"), Icons.Outlined.CameraAlt),
+        Option("light", tr("Foco"), Icons.Outlined.Lightbulb),
+        Option("thermostat", tr("Clima"), Icons.Outlined.Thermostat),
+        Option("kitchen", tr("Cocina / refri"), Icons.Outlined.Kitchen),
+        Option("laundry", tr("Lavadora"), Icons.Outlined.LocalLaundryService),
+        Option("home", tr("Casa"), Icons.Outlined.Home),
+        Option("work", tr("Trabajo"), Icons.Outlined.Work),
+        Option("school", tr("Estudios"), Icons.Outlined.School),
+        Option("kids", tr("Niños"), Icons.Outlined.ChildCare),
+        Option("pets", tr("Mascotas"), Icons.Outlined.Pets),
+        Option("lock", tr("Seguridad"), Icons.Outlined.Lock),
+        Option("star", tr("Favorito"), Icons.Outlined.Star),
     )
 
     private val byKey = options.associateBy { it.key }

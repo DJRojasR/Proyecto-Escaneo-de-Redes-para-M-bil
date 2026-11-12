@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">有多少台设备连接到你的网络，以及有多少台未检查。</string>
+</resources>

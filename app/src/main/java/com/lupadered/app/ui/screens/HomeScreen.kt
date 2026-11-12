@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.screens
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -86,21 +87,20 @@ fun HomeScreen(
     }
 
     ScreenScaffold(
-        title = "Lupa de Red",
+        title = tr("Lupa de Red"),
         actions = {
             IconButton(onClick = onLearn) {
-                Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "¿Qué estoy viendo?")
+                Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = tr("¿Qué estoy viendo?"))
             }
         },
     ) { padding ->
         if (s.networkChecked && s.network == null && !s.scanning) {
             EmptyState(
                 icon = Icons.Outlined.WifiOff,
-                title = "No estás conectado a un WiFi",
-                text = "Para ver los dispositivos de tu casa, conecta este teléfono a tu red WiFi. " +
-                    "Con datos móviles no hay una red local que revisar.",
+                title = tr("No estás conectado a un WiFi"),
+                text = tr("Para ver los dispositivos de tu casa, conecta este teléfono a tu red WiFi. Con datos móviles no hay una red local que revisar."),
                 modifier = Modifier.padding(padding),
-                action = { Button(onClick = { vm.refreshNetwork() }) { Text("Reintentar") } },
+                action = { Button(onClick = { vm.refreshNetwork() }) { Text(tr("Reintentar")) } },
             )
             return@ScreenScaffold
         }
@@ -123,8 +123,8 @@ fun HomeScreen(
                             Icon(Icons.Outlined.SwapHoriz, contentDescription = null)
                             Spacer(Modifier.width(10.dp))
                             Text(
-                                if (s.profile == null) "Te conectaste a una red nueva. Escanéala para guardarla en \"Mis redes\"."
-                                else "Cambiaste a la red \"${s.profile?.displayName}\". Te mostramos sus equipos.",
+                                if (s.profile == null) tr("Te conectaste a una red nueva. Escanéala para guardarla en \"Mis redes\".")
+                                else tr("Cambiaste a la red \"%1\$s\". Te mostramos sus equipos.", s.profile?.displayName),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f),
                             )
@@ -167,7 +167,7 @@ fun HomeScreen(
                             FilterChip(
                                 selected = s.selectedGroup == null,
                                 onClick = { vm.selectGroup(null) },
-                                label = { Text("Todos") },
+                                label = { Text(tr("Todos")) },
                             )
                         }
                         items(s.groups) { g ->
@@ -185,24 +185,23 @@ fun HomeScreen(
                 item {
                     EmptyState(
                         icon = Icons.Outlined.Devices,
-                        title = "Aún no hay dispositivos",
-                        text = "Toca \"Escanear red\" para descubrir quién está conectado a tu WiFi. " +
-                            "La app recordará los dispositivos para mostrártelos al instante la próxima vez.",
+                        title = tr("Aún no hay dispositivos"),
+                        text = tr("Toca \"Escanear red\" para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez."),
                     )
                 }
             }
 
             if (online.isNotEmpty()) {
-                item { SectionTitle(if (s.scanning) "Encontrados (${s.onlineCount})" else "En línea (${online.size})") }
+                item { SectionTitle(if (s.scanning) tr("Encontrados (%1\$s)", s.onlineCount) else tr("En línea (%1\$s)", online.size)) }
                 items(online, key = { "on-" + (it.id?.toString() ?: it.ip) }) { d ->
                     DeviceRow(d, onClick = { d.id?.let(onOpenDevice) })
                 }
             }
             if (offline.isNotEmpty()) {
                 item {
-                    SectionTitle("Vistos antes (${offline.size})")
+                    SectionTitle(tr("Vistos antes (%1\$s)", offline.size))
                     Text(
-                        "No respondieron en el último escaneo. Pueden estar apagados, dormidos o fuera de casa.",
+                        tr("No respondieron en el último escaneo. Pueden estar apagados, dormidos o fuera de casa."),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
@@ -224,41 +223,41 @@ private fun NetworkCard(s: HomeState, onRename: () -> Unit) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                 Text(
-                    s.profile?.displayName ?: "Tu red",
+                    s.profile?.displayName ?: tr("Tu red"),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 if (net != null && s.profile == null) {
                     Spacer(Modifier.width(8.dp))
-                    Tag("Red nueva", StatusColors.warn)
+                    Tag(tr("Red nueva"), StatusColors.warn)
                 }
                 Spacer(Modifier.weight(1f))
                 if (s.profile != null) {
                     IconButton(onClick = onRename) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Cambiar el nombre de la red")
+                        Icon(Icons.Outlined.Edit, contentDescription = tr("Cambiar el nombre de la red"))
                     }
                 }
             }
             if (net == null) {
-                Text("Buscando tu red…", style = MaterialTheme.typography.bodyMedium)
+                Text(tr("Buscando tu red…"), style = MaterialTheme.typography.bodyMedium)
                 return@Column
             }
             ExplainRow(
-                "Rango que revisamos",
-                net.scanSubnet.cidr + " · ${net.scanSubnet.usableCount} direcciones",
-                "Tu red usa estas direcciones IP. La app revisa cada una para saber si hay un equipo." +
-                    if (net.reducedRange) "\n\nTu red es muy grande (/${net.prefix}), así que revisamos solo el bloque donde está tu teléfono para que el escaneo sea rápido."
+                tr("Rango que revisamos"),
+                net.scanSubnet.cidr + tr(" · %1\$s direcciones", net.scanSubnet.usableCount),
+                tr("Tu red usa estas direcciones IP. La app revisa cada una para saber si hay un equipo.") +
+                    if (net.reducedRange) tr("\n\nTu red es muy grande (/%1\$s), así que revisamos solo el bloque donde está tu teléfono para que el escaneo sea rápido.", net.prefix)
                     else "",
             )
             ExplainRow(
-                "Router",
-                net.gateway ?: "No encontrado",
-                "El router es la \"puerta\" de tu casa hacia Internet. Desde esta dirección puedes entrar a su configuración con un navegador.",
+                tr("Router"),
+                net.gateway ?: tr("No encontrado"),
+                tr("El router es la \"puerta\" de tu casa hacia Internet. Desde esta dirección puedes entrar a su configuración con un navegador."),
             )
             ExplainRow(
-                "Tu teléfono",
+                tr("Tu teléfono"),
                 net.selfIp,
-                "Es la dirección IP que el router le dio a este teléfono dentro de tu red.",
+                tr("Es la dirección IP que el router le dio a este teléfono dentro de tu red."),
             )
         }
     }
@@ -286,14 +285,14 @@ private fun ScanCard(s: HomeState, onScan: () -> Unit, onCancel: () -> Unit) {
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "${s.onlineCount} dispositivos encontrados",
+                        tr("%1\$s dispositivos encontrados", s.onlineCount),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = onCancel) { Text("Detener") }
+                    TextButton(onClick = onCancel) { Text(tr("Detener")) }
                 }
                 Text(
-                    "Usamos varios métodos a la vez y revisamos dos veces a los que no responden, para no dejar a nadie fuera.",
+                    tr("Usamos varios métodos a la vez y revisamos dos veces a los que no responden, para no dejar a nadie fuera."),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 )
@@ -305,13 +304,13 @@ private fun ScanCard(s: HomeState, onScan: () -> Unit, onCancel: () -> Unit) {
                 ) {
                     Icon(Icons.Outlined.Search, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Escanear red")
+                    Text(tr("Escanear red"))
                 }
                 val last = s.lastScan
                 if (last != null) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Último escaneo ${relativeTime(last.startedAt)} · ${last.found} dispositivos · ${(last.durationMs + 500) / 1000} s",
+                        tr("Último escaneo %1\$s · %2\$s dispositivos · %3\$s s", relativeTime(last.startedAt), last.found, (last.durationMs + 500) / 1000),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -319,7 +318,7 @@ private fun ScanCard(s: HomeState, onScan: () -> Unit, onCancel: () -> Unit) {
                 if (s.untrustedOnline > 0 && s.newDevices.isEmpty()) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Hay ${s.untrustedOnline} dispositivo(s) sin revisar en línea. Ábrelos para marcarlos como conocidos.",
+                        tr("Hay %1\$s dispositivo(s) sin revisar en línea. Ábrelos para marcarlos como conocidos.", s.untrustedOnline),
                         style = MaterialTheme.typography.bodySmall,
                         color = StatusColors.warn,
                     )
@@ -347,13 +346,13 @@ private fun NewDevicesCard(
                     Icon(Icons.Outlined.NewReleases, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (s.newDevices.size == 1) "Se conectó un dispositivo nuevo"
-                        else "Se conectaron ${s.newDevices.size} dispositivos nuevos",
+                        if (s.newDevices.size == 1) tr("Se conectó un dispositivo nuevo")
+                        else tr("Se conectaron %1\$s dispositivos nuevos", s.newDevices.size),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
                 Text(
-                    "No los habíamos visto antes en esta red. Si son tuyos, márcalos como conocidos. Si no los reconoces, revisa quién tiene tu clave WiFi.",
+                    tr("No los habíamos visto antes en esta red. Si son tuyos, márcalos como conocidos. Si no los reconoces, revisa quién tiene tu clave WiFi."),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
@@ -366,13 +365,13 @@ private fun NewDevicesCard(
                             Text(d.displayName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(d.ip, style = MaterialTheme.typography.bodySmall)
                         }
-                        TextButton(onClick = { onTrust(d.id) }) { Text("Es mío") }
+                        TextButton(onClick = { onTrust(d.id) }) { Text(tr("Es mío")) }
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Más tarde") }
+                    TextButton(onClick = onDismiss) { Text(tr("Más tarde")) }
                     if (s.newDevices.size > 1) {
-                        OutlinedButton(onClick = onTrustAll) { Text("Todos son míos") }
+                        OutlinedButton(onClick = onTrustAll) { Text(tr("Todos son míos")) }
                     }
                 }
             }
@@ -402,7 +401,7 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
                 )
                 if (d.isNew && d.presence == Presence.ONLINE) {
                     Spacer(Modifier.width(6.dp))
-                    Tag(if (d.id == null) "Nuevo" else "Sin revisar", StatusColors.warn)
+                    Tag(if (d.id == null) tr("Nuevo") else tr("Sin revisar"), StatusColors.warn)
                 }
             }
             Text(
@@ -440,14 +439,14 @@ private fun NamePromptCard(onSave: (String) -> Unit, onLater: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text("¿Cómo se llama esta red?", style = MaterialTheme.typography.titleMedium)
+            Text(tr("¿Cómo se llama esta red?"), style = MaterialTheme.typography.titleMedium)
             Text(
-                "Ponle un nombre para reconocerla en \"Mis redes\", por ejemplo si tienes dos routers.",
+                tr("Ponle un nombre para reconocerla en \"Mis redes\", por ejemplo si tienes dos routers."),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(vertical = 6.dp),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Casa", "Router 2", "Trabajo").forEach { suggestion ->
+                listOf(tr("Casa"), tr("Router 2"), tr("Trabajo")).forEach { suggestion ->
                     AssistChip(onClick = { onSave(suggestion) }, label = { Text(suggestion) })
                 }
             }
@@ -455,12 +454,12 @@ private fun NamePromptCard(onSave: (String) -> Unit, onLater: () -> Unit) {
                 value = text,
                 onValueChange = { text = it.take(30) },
                 singleLine = true,
-                placeholder = { Text("Otro nombre") },
+                placeholder = { Text(tr("Otro nombre")) },
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onLater) { Text("Ahora no") }
-                TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text("Guardar") }
+                TextButton(onClick = onLater) { Text(tr("Ahora no")) }
+                TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text(tr("Guardar")) }
             }
         }
     }
@@ -471,16 +470,16 @@ fun NetworkNameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -
     var text by remember { mutableStateOf(current) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nombre de la red") },
+        title = { Text(tr("Nombre de la red")) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it.take(30) },
                 singleLine = true,
-                placeholder = { Text("Ej. Casa, Router 2") },
+                placeholder = { Text(tr("Ej. Casa, Router 2")) },
             )
         },
-        confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(onClick = { onSave(text) }) { Text(tr("Guardar")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }

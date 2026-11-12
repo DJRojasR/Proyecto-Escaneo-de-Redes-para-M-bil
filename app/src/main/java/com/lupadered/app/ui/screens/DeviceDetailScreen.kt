@@ -1,5 +1,6 @@
 package com.lupadered.app.ui.screens
 
+import com.lupadered.app.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -114,20 +115,20 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
 
     val d = s.device
     ScreenScaffold(
-        title = d?.displayName ?: "Dispositivo",
+        title = d?.displayName ?: tr("Dispositivo"),
         onBack = {
             onChanged()
             onBack()
         },
         actions = {
             if (d != null) {
-                IconButton(onClick = { renaming = true }) { Icon(Icons.Outlined.Edit, contentDescription = "Cambiar nombre") }
+                IconButton(onClick = { renaming = true }) { Icon(Icons.Outlined.Edit, contentDescription = tr("Cambiar nombre")) }
             }
         },
     ) { padding ->
         if (d == null) {
             Column(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
-                if (s.loading) CircularProgressIndicator() else Text("Este dispositivo ya no existe.")
+                if (s.loading) CircularProgressIndicator() else Text(tr("Este dispositivo ya no existe."))
             }
             return@ScreenScaffold
         }
@@ -154,19 +155,19 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                         modifier = Modifier.clickable { choosingType = true },
                     ) {
                         Text(
-                            d.type.label + (if (d.userType == null) " (automático)" else ""),
+                            d.type.label + (if (d.userType == null) tr(" (automático)") else ""),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(Modifier.width(4.dp))
                         Icon(
-                            Icons.Outlined.Edit, contentDescription = "Cambiar tipo",
+                            Icons.Outlined.Edit, contentDescription = tr("Cambiar tipo"),
                             tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp),
                         )
                     }
                     if (!d.isSelf) {
                         Tag(
-                            if (d.trusted) "✓ Equipo conocido" else "Sin revisar",
+                            if (d.trusted) tr("✓ Equipo conocido") else tr("Sin revisar"),
                             if (d.trusted) StatusColors.good else StatusColors.warn,
                             Modifier.padding(top = 4.dp),
                         )
@@ -175,15 +176,14 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             }
             Text(
                 if (d.type == DeviceType.UNKNOWN && d.trusted)
-                    "Ya lo marcaste como conocido. No pudimos saber qué tipo de equipo es: toca \"Tipo sin identificar\" " +
-                        "y elige si es un celular, una laptop, una TV… para que tenga el ícono correcto."
+                    tr("Ya lo marcaste como conocido. No pudimos saber qué tipo de equipo es: toca \"Tipo sin identificar\" y elige si es un celular, una laptop, una TV… para que tenga el ícono correcto.")
                 else d.type.description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
             if (d.alias == null && !d.isSelf) {
-                TextButton(onClick = { renaming = true }) { Text("Ponle un nombre (ej. \"Celular de mamá\")") }
+                TextButton(onClick = { renaming = true }) { Text(tr("Ponle un nombre (ej. \"Celular de mamá\")")) }
             }
 
             // ---------- Grupo e ícono (Premium, RF-32)
@@ -193,13 +193,13 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             ) {
                 AssistChip(
                     onClick = { if (isPremium) choosingGroup = true else openPremium() },
-                    label = { Text(d.groupName?.let { "Grupo: $it" } ?: "Agregar a un grupo") },
+                    label = { Text(d.groupName?.let { tr("Grupo: %1\$s", it) } ?: tr("Agregar a un grupo")) },
                     leadingIcon = { Icon(Icons.Outlined.Category, contentDescription = null) },
                 )
                 Spacer(Modifier.width(8.dp))
                 AssistChip(
                     onClick = { if (isPremium) choosingIcon = true else openPremium() },
-                    label = { Text("Cambiar ícono") },
+                    label = { Text(tr("Cambiar ícono")) },
                     leadingIcon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
                 )
                 if (!isPremium) {
@@ -215,9 +215,9 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             ) {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Es un equipo conocido", style = MaterialTheme.typography.titleSmall)
+                        Text(tr("Es un equipo conocido"), style = MaterialTheme.typography.titleSmall)
                         Text(
-                            "Márcalo si sabes de quién es. Los equipos no marcados aparecen como \"sin revisar\".",
+                            tr("Márcalo si sabes de quién es. Los equipos no marcados aparecen como \"sin revisar\"."),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -227,37 +227,36 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             }
 
             // ---------- Datos
-            SectionTitle("Información")
+            SectionTitle(tr("Información"))
             ExplainRow(
-                "Dirección IP", d.ip,
-                "Es su \"número de casa\" dentro de tu red. Puede cambiar con el tiempo si el router reparte las direcciones automáticamente. " +
-                    "Si tiene un nombre en la red, lo reconoceremos aunque cambie de IP.",
+                tr("Dirección IP"), d.ip,
+                tr("Es su \"número de casa\" dentro de tu red. Puede cambiar con el tiempo si el router reparte las direcciones automáticamente. Si tiene un nombre en la red, lo reconoceremos aunque cambie de IP."),
             )
             d.name?.let {
                 ExplainRow(
-                    "Nombre en la red", it,
-                    "Es el nombre con el que el propio equipo se presenta (por Bonjour, NetBIOS, UPnP o el router). Lo eligió el fabricante o su dueño.",
+                    tr("Nombre en la red"), it,
+                    tr("Es el nombre con el que el propio equipo se presenta (por Bonjour, NetBIOS, UPnP o el router). Lo eligió el fabricante o su dueño."),
                 )
             }
             val brand = listOfNotNull(d.vendor, d.model).distinct().joinToString(" · ")
             if (brand.isNotBlank()) {
-                ExplainRow("Fabricante / modelo", brand, "Información que el propio equipo anunció en la red.")
+                ExplainRow(tr("Fabricante / modelo"), brand, tr("Información que el propio equipo anunció en la red."))
             }
-            ExplainRow("Tiempo de respuesta", latencyText(d.latencyMs), latencyExplanation(d.latencyMs))
+            ExplainRow(tr("Tiempo de respuesta"), latencyText(d.latencyMs), latencyExplanation(d.latencyMs))
             if (d.methods.isNotEmpty()) {
                 ExplainRow(
-                    "Cómo lo encontramos",
+                    tr("Cómo lo encontramos"),
                     d.methods.joinToString(", ") { it.label },
                     d.methods.joinToString("\n\n") { "• ${it.label}: ${it.explanation}" },
                 )
             }
             ExplainRow(
-                "Visto por primera vez", dateTime(d.firstSeen),
-                "La primera vez que esta app lo encontró en esta red.",
+                tr("Visto por primera vez"), dateTime(d.firstSeen),
+                tr("La primera vez que esta app lo encontró en esta red."),
             )
             ExplainRow(
-                "Visto por última vez", relativeTime(d.lastSeen),
-                "La última vez que respondió en un escaneo.",
+                tr("Visto por última vez"), relativeTime(d.lastSeen),
+                tr("La última vez que respondió en un escaneo."),
             )
 
             // ---------- Acceso web
@@ -274,23 +273,22 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 ) {
                     Icon(Icons.Outlined.OpenInBrowser, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(if (d.isGateway) "Abrir configuración del router" else "Abrir su página web")
+                    Text(if (d.isGateway) tr("Abrir configuración del router") else tr("Abrir su página web"))
                 }
             }
 
             // ---------- Servicios
             if (d.services.isNotEmpty()) {
-                SectionTitle("Lo que sabe hacer")
+                SectionTitle(tr("Lo que sabe hacer"))
                 d.services.sorted().forEach { svc ->
                     Text("• " + DeviceClassifier.serviceLabel(svc), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
                 }
             }
 
             // ---------- Puertos
-            SectionTitle("Puertos abiertos")
+            SectionTitle(tr("Puertos abiertos"))
             Text(
-                "Un puerto abierto es una \"puerta\" por la que el equipo ofrece un servicio. No es malo por sí mismo; " +
-                    "te avisamos cuando alguno merece una revisión.",
+                tr("Un puerto abierto es una \"puerta\" por la que el equipo ofrece un servicio. No es malo por sí mismo; te avisamos cuando alguno merece una revisión."),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -299,26 +297,26 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 RadarStatus("${s.portScanLabel} ${(s.portScanProgress * 100).toInt()}%")
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(progress = { s.portScanProgress }, modifier = Modifier.fillMaxWidth())
-                TextButton(onClick = vm::cancelPortScan) { Text("Detener") }
+                TextButton(onClick = vm::cancelPortScan) { Text(tr("Detener")) }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Button(onClick = vm::scanPorts) {
                         Icon(Icons.Outlined.Security, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text(if (d.portsScannedAt == null) "Analizar puertos" else "Volver a analizar")
+                        Text(if (d.portsScannedAt == null) tr("Analizar puertos") else tr("Volver a analizar"))
                     }
                     Spacer(Modifier.width(8.dp))
                     OutlinedButton(onClick = { if (isPremium) choosingExtended = true else openPremium() }) {
-                        Text("A fondo")
+                        Text(tr("A fondo"))
                         if (!isPremium) {
                             Spacer(Modifier.width(6.dp))
-                            Icon(Icons.Outlined.Lock, contentDescription = "Premium", modifier = Modifier.size(16.dp))
+                            Icon(Icons.Outlined.Lock, contentDescription = tr("Premium"), modifier = Modifier.size(16.dp))
                         }
                     }
                 }
                 d.portsScannedAt?.let {
                     Text(
-                        "Último análisis: ${relativeTime(it)}",
+                        tr("Último análisis: %1\$s", relativeTime(it)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp),
@@ -333,7 +331,7 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 d.openPorts.sorted().forEach { PortCard(it) }
             } else if (d.portsScannedAt == null) {
                 Text(
-                    "Aún no analizamos sus puertos a fondo.",
+                    tr("Aún no analizamos sus puertos a fondo."),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -341,11 +339,11 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
 
             // ---------- Línea de tiempo (RF-27)
             if (s.events.isNotEmpty() || s.hiddenEvents > 0) {
-                SectionTitle("Línea de tiempo")
+                SectionTitle(tr("Línea de tiempo"))
                 val connections = s.events.count { it.type == EventType.NEW || it.type == EventType.BACK }
                 if (isPremium && connections > 0) {
                     Text(
-                        "Se ha conectado $connections ${if (connections == 1) "vez" else "veces"} desde ${dateTime(d.firstSeen)}.",
+                        tr("Se ha conectado %1\$s %2\$s desde %3\$s.", connections, if (connections == 1) tr("vez") else tr("veces"), dateTime(d.firstSeen)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
@@ -354,9 +352,8 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 Timeline(s.events)
                 if (s.hiddenEvents > 0) {
                     LockedCard(
-                        title = "Línea de tiempo completa",
-                        text = "Hay ${s.hiddenEvents} eventos de más de ${AppSettings.FREE_HISTORY_DAYS} días. " +
-                            "Con Premium ves toda la historia de este equipo.",
+                        title = tr("Línea de tiempo completa"),
+                        text = tr("Hay %1\$s eventos de más de %2\$s días. Con Premium ves toda la historia de este equipo.", s.hiddenEvents, AppSettings.FREE_HISTORY_DAYS),
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
@@ -364,7 +361,7 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
 
             if (!d.isSelf) {
                 TextButton(onClick = { confirmDelete = true }, modifier = Modifier.padding(top = 16.dp)) {
-                    Text("Olvidar este dispositivo", color = MaterialTheme.colorScheme.error)
+                    Text(tr("Olvidar este dispositivo"), color = MaterialTheme.colorScheme.error)
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -420,15 +417,15 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("¿Olvidar este dispositivo?") },
-            text = { Text("Se borrarán su nombre personalizado y su historial. Si vuelve a conectarse, aparecerá como nuevo.") },
+            title = { Text(tr("¿Olvidar este dispositivo?")) },
+            text = { Text(tr("Se borrarán su nombre personalizado y su historial. Si vuelve a conectarse, aparecerá como nuevo.")) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
                     vm.delete()
-                }) { Text("Olvidar") }
+                }) { Text(tr("Olvidar")) }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(tr("Cancelar")) } },
         )
     }
 }
@@ -447,7 +444,7 @@ fun PortCard(port: Int) {
             }
             Text(info.whatItMeans, style = MaterialTheme.typography.bodyMedium)
             info.advice?.let {
-                Text("Consejo: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(tr("Consejo: %1\$s", it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -458,11 +455,11 @@ private fun RenameDialog(d: Device, onDismiss: () -> Unit, onSave: (String) -> U
     var text by remember { mutableStateOf(d.alias ?: "") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nombre del dispositivo") },
+        title = { Text(tr("Nombre del dispositivo")) },
         text = {
             Column {
                 Text(
-                    "Ponle un nombre que reconozcas. Se mantiene aunque vuelvas a escanear.",
+                    tr("Ponle un nombre que reconozcas. Se mantiene aunque vuelvas a escanear."),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -470,12 +467,12 @@ private fun RenameDialog(d: Device, onDismiss: () -> Unit, onSave: (String) -> U
                     value = text,
                     onValueChange = { text = it.take(40) },
                     singleLine = true,
-                    placeholder = { Text(d.name ?: "Ej. TV de la sala") },
+                    placeholder = { Text(d.name ?: tr("Ej. TV de la sala")) },
                 )
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(onClick = { onSave(text) }) { Text(tr("Guardar")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }
 
@@ -485,7 +482,7 @@ private fun TypeDialog(d: Device, onDismiss: () -> Unit, onSelect: (DeviceType?)
         DeviceType.entries.filter { it != DeviceType.THIS_PHONE }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("¿Qué tipo de equipo es?") },
+        title = { Text(tr("¿Qué tipo de equipo es?")) },
         text = {
             LazyColumn(Modifier.heightIn(max = 420.dp)) {
                 items(options) { t ->
@@ -494,12 +491,12 @@ private fun TypeDialog(d: Device, onDismiss: () -> Unit, onSelect: (DeviceType?)
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = d.userType == t, onClick = { onSelect(t) })
-                        Text(if (t == null) "Automático (${d.autoType.label})" else t.label)
+                        Text(if (t == null) tr("Automático (%1\$s)", d.autoType.label) else t.label)
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Cerrar")) } },
     )
 }
 
@@ -525,7 +522,7 @@ private fun Timeline(events: List<DeviceEvent>) {
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f).padding(bottom = 12.dp)) {
                     Text(
-                        e.type.label + if (e.detail != null) " (antes ${e.detail} → ahora ${e.ip})" else "",
+                        e.type.label + if (e.detail != null) tr(" (antes %1\$s → ahora %2\$s)", e.detail, e.ip) else "",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
@@ -544,11 +541,11 @@ private fun GroupDialog(current: String?, groups: List<String>, onDismiss: () ->
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Grupo") },
+        title = { Text(tr("Grupo")) },
         text = {
             Column {
                 Text(
-                    "Agrupa tus equipos para encontrarlos rápido, por ejemplo \"Cámaras\" o \"Cuarto de mamá\".",
+                    tr("Agrupa tus equipos para encontrarlos rápido, por ejemplo \"Cámaras\" o \"Cuarto de mamá\"."),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -559,7 +556,7 @@ private fun GroupDialog(current: String?, groups: List<String>, onDismiss: () ->
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(selected = current == null, onClick = { onSelect(null) })
-                            Text("Sin grupo")
+                            Text(tr("Sin grupo"))
                         }
                     }
                     items(groups) { g ->
@@ -576,15 +573,15 @@ private fun GroupDialog(current: String?, groups: List<String>, onDismiss: () ->
                     value = text,
                     onValueChange = { text = it.take(30) },
                     singleLine = true,
-                    label = { Text("Nuevo grupo") },
-                    placeholder = { Text("Ej. Cámaras") },
+                    label = { Text(tr("Nuevo grupo")) },
+                    placeholder = { Text(tr("Ej. Cámaras")) },
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSelect(text.trim()) }, enabled = text.isNotBlank()) { Text("Crear y usar") }
+            TextButton(onClick = { onSelect(text.trim()) }, enabled = text.isNotBlank()) { Text(tr("Crear y usar")) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }
 
@@ -592,7 +589,7 @@ private fun GroupDialog(current: String?, groups: List<String>, onDismiss: () ->
 private fun IconDialog(d: Device, onDismiss: () -> Unit, onSelect: (String?) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Elige un ícono") },
+        title = { Text(tr("Elige un ícono")) },
         text = {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
@@ -601,14 +598,14 @@ private fun IconDialog(d: Device, onDismiss: () -> Unit, onSelect: (String?) -> 
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    IconChoice(DeviceIcons.iconFor(d.type, null), "Automático", d.customIcon == null) { onSelect(null) }
+                    IconChoice(DeviceIcons.iconFor(d.type, null), tr("Automático"), d.customIcon == null) { onSelect(null) }
                 }
                 items(DeviceIcons.options) { o ->
                     IconChoice(o.icon, o.label, d.customIcon == o.key) { onSelect(o.key) }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Cerrar")) } },
     )
 }
 
@@ -637,29 +634,29 @@ private fun ExtendedPortsDialog(onDismiss: () -> Unit, onCommonExtended: () -> U
     val f = from.toIntOrNull()
     val t = to.toIntOrNull()
     val rangeError = when {
-        f == null || t == null -> "Escribe dos números."
-        f !in 1..65535 || t !in 1..65535 -> "Los puertos van del 1 al 65535."
-        f > t -> "\"Desde\" debe ser menor o igual que \"Hasta\"."
+        f == null || t == null -> tr("Escribe dos números.")
+        f !in 1..65535 || t !in 1..65535 -> tr("Los puertos van del 1 al 65535.")
+        f > t -> tr("\"Desde\" debe ser menor o igual que \"Hasta\".")
         else -> null
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Análisis de puertos a fondo") },
+        title = { Text(tr("Análisis de puertos a fondo")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Revisa muchos más puertos que el análisis normal. Puede tardar de 30 segundos a unos minutos.",
+                    tr("Revisa muchos más puertos que el análisis normal. Puede tardar de 30 segundos a unos minutos."),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Button(onClick = onCommonExtended, modifier = Modifier.fillMaxWidth()) {
-                    Text("${PortKnowledge.EXTENDED_PORTS.size} puertos más usados")
+                    Text(tr("%1\$s puertos más usados", PortKnowledge.EXTENDED_PORTS.size))
                 }
-                Text("O elige un rango:", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+                Text(tr("O elige un rango:"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = from,
                         onValueChange = { from = it.filter(Char::isDigit).take(5) },
-                        label = { Text("Desde") },
+                        label = { Text(tr("Desde")) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -668,7 +665,7 @@ private fun ExtendedPortsDialog(onDismiss: () -> Unit, onCommonExtended: () -> U
                     OutlinedTextField(
                         value = to,
                         onValueChange = { to = it.filter(Char::isDigit).take(5) },
-                        label = { Text("Hasta") },
+                        label = { Text(tr("Hasta")) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -677,7 +674,7 @@ private fun ExtendedPortsDialog(onDismiss: () -> Unit, onCommonExtended: () -> U
                 rangeError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 if (rangeError == null && f != null && t != null && t - f > 20000) {
                     Text(
-                        "Es un rango grande: puede tardar varios minutos.",
+                        tr("Es un rango grande: puede tardar varios minutos."),
                         style = MaterialTheme.typography.bodySmall,
                         color = StatusColors.warn,
                     )
@@ -688,8 +685,8 @@ private fun ExtendedPortsDialog(onDismiss: () -> Unit, onCommonExtended: () -> U
             TextButton(
                 onClick = { if (f != null && t != null) onRange(f, t) },
                 enabled = rangeError == null,
-            ) { Text("Analizar rango") }
+            ) { Text(tr("Analizar rango")) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }

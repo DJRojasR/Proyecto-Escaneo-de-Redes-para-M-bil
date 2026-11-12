@@ -141,8 +141,7 @@ private fun schemeFor(color: ThemeColor, dark: Boolean): ColorScheme {
 }
 
 /**
- * Tema de la app. Los colores distintos al verde azulado son Premium (RF-35):
- * si el usuario deja de ser Premium, la app vuelve al color original.
+ * Tema de la app. Todos los colores y el modo oscuro son gratis.
  */
 @Composable
 fun LupaTheme(
@@ -155,7 +154,7 @@ fun LupaTheme(
         DarkMode.LIGHT -> false
         DarkMode.DARK -> true
     }
-    val color = if (premium) appearance.color else ThemeColor.TEAL
+    val color = appearance.color
     CompositionLocalProvider(LocalIsDark provides dark) {
         MaterialTheme(
             colorScheme = schemeFor(color, dark),

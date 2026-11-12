@@ -1,5 +1,6 @@
 package com.lupadered.app.premium
 
+import com.lupadered.app.i18n.tr
 import android.app.Activity
 import android.content.Context
 import android.util.Log
@@ -149,8 +150,8 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
             val trialPhase = phases.firstOrNull { it.priceAmountMicros == 0L }
             PlanInfo(
                 productId = pd.productId,
-                price = recurring?.formattedPrice?.let { "$it al mes" } ?: "",
-                trial = trialPhase?.let { "Prueba gratis de ${periodText(it.billingPeriod)}" },
+                price = recurring?.formattedPrice?.let { tr("%1\$s al mes", it) } ?: "",
+                trial = trialPhase?.let { tr("Prueba gratis de %1\$s", periodText(it.billingPeriod)) },
             )
         }
         val lifetime = lifetimeDetails?.let { pd ->
@@ -185,9 +186,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
             setTestPremium(true)
             _state.update {
                 it.copy(
-                    message = "Compra simulada (" + (if (lifetime) "Pro de por vida" else "mensual") + "). " +
-                        "Ya puedes probar todas las funciones Premium. No se cobró nada: en la versión de " +
-                        "pruebas los pagos no pasan por Google Play.",
+                    message = tr("Compra simulada (") + (if (lifetime) tr("Pro de por vida") else "mensual") + tr("). Ya puedes probar todas las funciones Premium. No se cobró nada: en la versión de pruebas los pagos no pasan por Google Play."),
                 )
             }
             return
@@ -195,7 +194,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         val pd = if (lifetime) lifetimeDetails else monthlyDetails
         if (pd == null) {
             _state.update {
-                it.copy(message = "Aún no podemos conectar con Google Play. Revisa tu Internet e inténtalo de nuevo.")
+                it.copy(message = tr("Aún no podemos conectar con Google Play. Revisa tu Internet e inténtalo de nuevo."))
             }
             refresh()
             return
@@ -210,7 +209,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
             .build()
         val result = client.launchBillingFlow(activity, flow)
         if (result.responseCode != BillingResponseCode.OK) {
-            _state.update { it.copy(message = "No se pudo abrir el pago (${result.debugMessage}).") }
+            _state.update { it.copy(message = tr("No se pudo abrir el pago (%1\$s).", result.debugMessage)) }
         }
     }
 
@@ -219,7 +218,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
             BillingResponseCode.OK -> applyPurchases(purchases.orEmpty(), fromQuery = false)
             BillingResponseCode.USER_CANCELED -> Unit
             BillingResponseCode.ITEM_ALREADY_OWNED -> queryPurchases()
-            else -> _state.update { it.copy(message = "El pago no se completó. Inténtalo de nuevo.") }
+            else -> _state.update { it.copy(message = tr("El pago no se completó. Inténtalo de nuevo.")) }
         }
     }
 
@@ -249,8 +248,8 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
                 source = source ?: if (test) PremiumSource.TEST else null,
                 pendingPayment = pending,
                 message = when {
-                    !fromQuery && source != null -> "¡Gracias! Ya tienes Lupa de Red Premium."
-                    pending -> "Tu pago está pendiente. Activaremos Premium apenas Google Play lo confirme."
+                    !fromQuery && source != null -> tr("¡Gracias! Ya tienes Lupa de Red Premium.")
+                    pending -> tr("Tu pago está pendiente. Activaremos Premium apenas Google Play lo confirme.")
                     else -> it.message
                 },
             )
@@ -316,9 +315,9 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         // Formato ISO 8601: P7D, P1W, P1M…
         val n = iso.filter { it.isDigit() }.toIntOrNull() ?: return iso
         return when {
-            iso.endsWith("D") -> if (n == 1) "1 día" else "$n días"
-            iso.endsWith("W") -> if (n == 1) "1 semana" else "$n semanas"
-            iso.endsWith("M") -> if (n == 1) "1 mes" else "$n meses"
+            iso.endsWith("D") -> if (n == 1) tr("1 día") else tr("%1\$s días", n)
+            iso.endsWith("W") -> if (n == 1) tr("1 semana") else tr("%1\$s semanas", n)
+            iso.endsWith("M") -> if (n == 1) tr("1 mes") else tr("%1\$s meses", n)
             else -> iso
         }
     }

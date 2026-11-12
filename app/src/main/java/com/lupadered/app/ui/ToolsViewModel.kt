@@ -1,5 +1,6 @@
 package com.lupadered.app.ui
 
+import com.lupadered.app.i18n.tr
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -59,11 +60,10 @@ class ToolsViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Valida la IP. Devuelve un mensaje de error o null si es válida. */
     fun validate(ip: String): String? = when {
-        ip.isBlank() -> "Escribe una dirección IP, por ejemplo 192.168.1.10"
-        !Ipv4.isValid(ip.trim()) -> "Eso no parece una IP. Debe tener 4 números entre 0 y 255 separados por puntos."
+        ip.isBlank() -> tr("Escribe una dirección IP, por ejemplo 192.168.1.10")
+        !Ipv4.isValid(ip.trim()) -> tr("Eso no parece una IP. Debe tener 4 números entre 0 y 255 separados por puntos.")
         !Ipv4.isPrivate(ip.trim()) ->
-            "Solo puedes analizar direcciones de redes locales (como 192.168.x.x o 10.x.x.x). " +
-                "Esta app es para revisar TU red, no equipos de Internet."
+            tr("Solo puedes analizar direcciones de redes locales (como 192.168.x.x o 10.x.x.x). Esta app es para revisar TU red, no equipos de Internet.")
         else -> null
     }
 
@@ -75,15 +75,15 @@ class ToolsViewModel(application: Application) : AndroidViewModel(application) {
         }
         if (manualJob?.isActive == true) return
         manualJob = viewModelScope.launch {
-            _manual.value = ManualState(running = true, step = "Preparando…")
+            _manual.value = ManualState(running = true, step = tr("Preparando…"))
             try {
                 val dns = withContext(Dispatchers.IO) {
                     NetworkInfoProvider.current(app)?.let { listOfNotNull(it.gateway) + it.dnsServers }.orEmpty()
                 }
                 val titles = listOf(
-                    "Midiendo cuánto tarda en responder (4 pings)",
-                    "Revisando ${PortKnowledge.COMMON_PORTS.size} puertos comunes",
-                    "Buscando su nombre en la red",
+                    tr("Midiendo cuánto tarda en responder (4 pings)"),
+                    tr("Revisando %1\$s puertos comunes", PortKnowledge.COMMON_PORTS.size),
+                    tr("Buscando su nombre en la red"),
                 )
                 val result = inspector.inspect(
                     clean, dns,
@@ -126,7 +126,7 @@ class ToolsViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
                 if (net == null) {
-                    _diag.value = DiagState(error = "No estás conectado a un WiFi. Conéctate a tu red para hacer el diagnóstico.")
+                    _diag.value = DiagState(error = tr("No estás conectado a un WiFi. Conéctate a tu red para hacer el diagnóstico."))
                     return@launch
                 }
                 val items = Diagnostics().run(net.gateway, net.dnsServers, net.wifiRssi) { p ->

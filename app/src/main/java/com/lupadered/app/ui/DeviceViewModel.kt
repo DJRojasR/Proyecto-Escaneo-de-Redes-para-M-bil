@@ -1,5 +1,6 @@
 package com.lupadered.app.ui
 
+import com.lupadered.app.i18n.tr
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -93,21 +94,21 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
     /** Análisis de los ~90 puertos más comunes (gratis). */
     fun scanPorts() = runPortScan(
         PortKnowledge.COMMON_PORTS,
-        "Revisando ${PortKnowledge.COMMON_PORTS.size} puertos comunes…",
+        tr("Revisando %1\$s puertos comunes…", PortKnowledge.COMMON_PORTS.size),
         timeoutMs = 1200, inFlight = 128,
     )
 
     /** Análisis extendido de más de 1100 puertos (Premium, RF-28). */
     fun scanPortsExtended() = runPortScan(
         PortKnowledge.EXTENDED_PORTS,
-        "Análisis extendido: ${PortKnowledge.EXTENDED_PORTS.size} puertos…",
+        tr("Análisis extendido: %1\$s puertos…", PortKnowledge.EXTENDED_PORTS.size),
         timeoutMs = 900, inFlight = 256,
     )
 
     /** Rango elegido por el usuario, por ejemplo 8000–9000 (Premium, RF-28). */
     fun scanPortRange(from: Int, to: Int) {
         val ports = (from.coerceIn(1, 65535)..to.coerceIn(1, 65535)).toList()
-        runPortScan(ports, "Revisando los puertos $from a $to (${ports.size})…", timeoutMs = 800, inFlight = 256)
+        runPortScan(ports, tr("Revisando los puertos %1\$s a %2\$s (%3\$s)…", from, to, ports.size), timeoutMs = 800, inFlight = 256)
     }
 
     private fun runPortScan(ports: List<Int>, label: String, timeoutMs: Long, inFlight: Int) {
@@ -127,8 +128,8 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
                 app.ads.onScanCompleted()
                 val msg = when {
                     open.isNotEmpty() -> null
-                    responded -> "No encontramos puertos abiertos entre los ${ports.size} revisados. Es buena señal: ofrece pocos servicios."
-                    else -> "El equipo no respondió. Puede estar apagado, dormido o haber cambiado de IP. Vuelve a escanear la red."
+                    responded -> tr("No encontramos puertos abiertos entre los %1\$s revisados. Es buena señal: ofrece pocos servicios.", ports.size)
+                    else -> tr("El equipo no respondió. Puede estar apagado, dormido o haber cambiado de IP. Vuelve a escanear la red.")
                 }
                 _state.update { it.copy(portScanMessage = msg) }
             } finally {

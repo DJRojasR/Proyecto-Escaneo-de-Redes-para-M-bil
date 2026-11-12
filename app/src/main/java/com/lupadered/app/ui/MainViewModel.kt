@@ -1,5 +1,6 @@
 package com.lupadered.app.ui
 
+import com.lupadered.app.i18n.tr
 import android.app.Application
 import android.net.ConnectivityManager
 import android.net.LinkProperties
@@ -295,7 +296,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 HistoryState(
                     scans = repo.scans(net.key, limit = if (premium) 500 else 50, since = since),
                     events = repo.events(net.key, limit = if (premium) 1000 else 200, since = since)
-                        .map { it to (names[it.deviceId] ?: "Dispositivo eliminado") },
+                        .map { it to (names[it.deviceId] ?: tr("Dispositivo eliminado")) },
                     hiddenEvents = if (premium) 0 else repo.countEventsBefore(net.key, since),
                     hiddenScans = if (premium) 0 else repo.countScansBefore(net.key, since),
                 )
@@ -374,8 +375,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
                 val title = when {
-                    h.isSelf -> "Este teléfono (${phoneModel()})"
-                    h.isGateway && h.bestName() == null -> "Router"
+                    h.isSelf -> tr("Este teléfono (%1\$s)", phoneModel())
+                    h.isGateway && h.bestName() == null -> tr("Router")
                     else -> h.bestName() ?: type.label
                 }
                 items += DeviceItem(

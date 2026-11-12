@@ -1,5 +1,6 @@
 package com.lupadered.app.widget
 
+import com.lupadered.app.i18n.tr
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -43,9 +44,9 @@ class DevicesWidget : AppWidgetProvider() {
             val views = RemoteViews(app.packageName, R.layout.widget_devices)
 
             if (!app.premium.isPremium) {
-                views.setTextViewText(R.id.widget_title, "Lupa de Red")
-                views.setTextViewText(R.id.widget_count, "Premium")
-                views.setTextViewText(R.id.widget_detail, "Toca para activar el widget de tu red")
+                views.setTextViewText(R.id.widget_title, tr("Lupa de Red"))
+                views.setTextViewText(R.id.widget_count, tr("Premium"))
+                views.setTextViewText(R.id.widget_detail, tr("Toca para activar el widget de tu red"))
                 views.setTextViewText(R.id.widget_alert, "")
                 views.setOnClickPendingIntent(R.id.widget_root, openApp(app, "premium"))
                 return views
@@ -55,9 +56,9 @@ class DevicesWidget : AppWidgetProvider() {
             val currentKey = NetworkInfoProvider.current(app)?.key
             val profile = currentKey?.let { repo.network(it) } ?: repo.networks().firstOrNull()
             if (profile == null) {
-                views.setTextViewText(R.id.widget_title, "Lupa de Red")
+                views.setTextViewText(R.id.widget_title, tr("Lupa de Red"))
                 views.setTextViewText(R.id.widget_count, "—")
-                views.setTextViewText(R.id.widget_detail, "Toca para escanear tu red")
+                views.setTextViewText(R.id.widget_detail, tr("Toca para escanear tu red"))
                 views.setTextViewText(R.id.widget_alert, "")
                 views.setOnClickPendingIntent(R.id.widget_root, openApp(app, "red"))
                 return views
@@ -71,14 +72,14 @@ class DevicesWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_count, online.size.toString())
             views.setTextViewText(
                 R.id.widget_detail,
-                if (last == null) "Aún sin escanear"
-                else (if (online.size == 1) "equipo conectado" else "equipos conectados") + " · " + relativeTime(last.startedAt),
+                if (last == null) tr("Aún sin escanear")
+                else (if (online.size == 1) tr("equipo conectado") else tr("equipos conectados")) + " · " + relativeTime(last.startedAt),
             )
             views.setTextViewText(
                 R.id.widget_alert,
                 when {
-                    unknown == 1 -> "1 sin revisar"
-                    unknown > 1 -> "$unknown sin revisar"
+                    unknown == 1 -> tr("1 sin revisar")
+                    unknown > 1 -> tr("%1\$s sin revisar", unknown)
                     else -> ""
                 },
             )
