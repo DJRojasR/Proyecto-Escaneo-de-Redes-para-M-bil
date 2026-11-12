@@ -58,7 +58,7 @@ private data class Benefit(val icon: ImageVector, val title: String, val text: S
 
 private val benefits = listOf(
     Benefit(Icons.Outlined.Block, "Sin anuncios", "Escanea todas las veces que quieras sin interrupciones."),
-    Benefit(Icons.Outlined.Speed, "Pruebas de velocidad ilimitadas", "Con historial, gráfico y comparación con la velocidad de tu plan."),
+    Benefit(Icons.Outlined.Speed, "Pruebas de velocidad ilimitadas", "Mide cuantas veces quieras, con historial y gráfico."),
     Benefit(Icons.Outlined.NotificationsActive, "Alerta de intrusos", "Revisamos tu red cada 15, 30 o 60 minutos y te avisamos si se conecta alguien desconocido."),
     Benefit(Icons.Outlined.CalendarMonth, "Escaneos programados", "Un escaneo automático cada día a la hora que elijas."),
     Benefit(Icons.Outlined.History, "Historial completo", "Todo el historial, no solo 7 días, y la línea de tiempo de cada equipo."),

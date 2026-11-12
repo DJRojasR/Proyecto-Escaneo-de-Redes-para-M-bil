@@ -147,7 +147,7 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
                     LockedCard(
                         "Pruebas ilimitadas",
                         "La versión gratis incluye ${AppSettings.FREE_SPEED_TESTS_PER_DAY} pruebas por día y ya las usaste. " +
-                            "Con Premium mides cuantas veces quieras, guardas el historial y lo comparas con tu plan.",
+                            "Con Premium mides cuantas veces quieras y guardas el historial con gráfico.",
                     )
                 } else {
                     Text(
@@ -173,10 +173,6 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
 
             if (s.phase == SpeedPhase.DONE) {
                 Explanation(s)
-                if (isPremium) PlanComparison(s, vm::setPlan) else LockedCard(
-                    "¿Te dan lo que pagas?",
-                    "Escribe la velocidad de tu plan y te diremos qué porcentaje recibes de verdad, con un historial para reclamar a tu proveedor.",
-                )
             }
 
             // ---------- Pasos en vivo
@@ -323,88 +319,18 @@ private fun ResultTile(icon: ImageVector, label: String, value: String?, unit: S
     }
 }
 
-/** Traduce los números a lo que el usuario puede hacer con su Internet. */
+/** Consejo para medir bien la velocidad. */
 @Composable
 private fun Explanation(s: SpeedTestState) {
-    val down = s.downloadMbps ?: return
-    val up = s.uploadMbps ?: 0.0
-    val ping = s.pingMs
-    val lines = buildList {
-        add(
-            when {
-                down < 5 -> "Bajada lenta: alcanza para WhatsApp, música y navegar; los videos en HD pueden trabarse."
-                down < 25 -> "Bajada buena: videos en HD y videollamadas en uno o dos equipos a la vez."
-                down < 100 -> "Bajada muy buena: video 4K, videollamadas y juegos en varios equipos."
-                else -> "Bajada excelente: sobra para toda la familia, con 4K en varias pantallas y descargas rápidas."
-            }
-        )
-        add(
-            when {
-                up < 2 -> "Subida baja: las videollamadas pueden verse pixeladas y subir fotos tarda."
-                up < 10 -> "Subida correcta para videollamadas y subir fotos."
-                else -> "Subida muy buena: ideal para transmitir en vivo, trabajar en la nube y videollamadas en HD."
-            }
-        )
-        if (ping != null) add(
-            when {
-                ping < 30 -> "Latencia excelente: ideal para juegos en línea."
-                ping < 80 -> "Latencia buena: juegos y videollamadas sin problemas."
-                else -> "Latencia alta: en juegos en línea notarás retraso."
-            }
-        )
-        s.server?.let { add("Servidor usado: $it.") }
-    }
+    if (s.downloadMbps == null) return
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("¿Qué significa?", style = MaterialTheme.typography.titleSmall)
-            lines.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+            Text("Consejo", style = MaterialTheme.typography.titleSmall)
             Text(
-                "Consejo: para medir tu plan real, haz la prueba cerca del router. Lejos del router verás menos " +
+                "Para medir la velocidad real de tu Internet, haz la prueba cerca del router. Lejos del router verás menos " +
                     "velocidad por la señal WiFi, no por tu proveedor.",
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp),
             )
-        }
-    }
-}
-
-/** Compara la bajada medida con la velocidad contratada (Premium). */
-@Composable
-private fun PlanComparison(s: SpeedTestState, onSetPlan: (Int) -> Unit) {
-    var text by remember(s.planMbps) { mutableStateOf(if (s.planMbps > 0) s.planMbps.toString() else "") }
-    val down = s.downloadMbps ?: return
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("¿Te dan lo que pagas?", style = MaterialTheme.typography.titleSmall)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.filter(Char::isDigit).take(5) },
-                    label = { Text("Mbps de tu plan") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(8.dp))
-                TextButton(onClick = { onSetPlan(text.toIntOrNull() ?: 0) }) { Text("Guardar") }
-            }
-            if (s.planMbps > 0) {
-                val pct = (down / s.planMbps * 100).toInt()
-                val color = when {
-                    pct >= 80 -> StatusColors.good
-                    pct >= 50 -> StatusColors.warn
-                    else -> StatusColors.bad
-                }
-                Text("Recibes el $pct% de tu plan", style = MaterialTheme.typography.titleMedium, color = color)
-                Text(
-                    when {
-                        pct >= 80 -> "¡Bien! Recibes lo que pagas."
-                        pct >= 50 -> "Un poco por debajo. Prueba cerca del router o con cable; si sigue igual a distintas horas, consulta a tu proveedor."
-                        else -> "Muy por debajo de lo contratado. Repite la prueba cerca del router; si se mantiene, guarda el historial y reclama a tu proveedor."
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
         }
     }
 }

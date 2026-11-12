@@ -88,7 +88,7 @@ Actívalo.
 | RF-32 | Grupos e íconos | `data/DeviceRepository.kt`, `ui/components/DeviceIcons.kt` |
 | RF-33 | Mis redes | `ui/screens/PremiumToolScreens.kt` (`NetworksScreen`) |
 | RF-34 | Exportar PDF / CSV | `export/ReportExporter.kt` |
-| RF-46 | Prueba de velocidad (gratis 2 por día; Premium ilimitada, historial y comparación con el plan) | `net/SpeedTest.kt`, `ui/screens/SpeedTestScreen.kt` |
+| RF-46 | Prueba de velocidad (gratis 2 por día; Premium ilimitada con historial y gráfico) | `net/SpeedTest.kt`, `ui/screens/SpeedTestScreen.kt` |
 | RF-35 | Widget y temas | `widget/DevicesWidget.kt`, `ui/theme/Theme.kt` |
 
 RF-31 (analizador de canales WiFi) queda para más adelante: necesitaría el permiso de ubicación.
