@@ -88,6 +88,7 @@ Actívalo.
 | RF-32 | Grupos e íconos | `data/DeviceRepository.kt`, `ui/components/DeviceIcons.kt` |
 | RF-33 | Mis redes | `ui/screens/PremiumToolScreens.kt` (`NetworksScreen`) |
 | RF-34 | Exportar PDF / CSV | `export/ReportExporter.kt` |
+| RF-46 | Prueba de velocidad (gratis 2 por día; Premium ilimitada, historial y comparación con el plan) | `net/SpeedTest.kt`, `ui/screens/SpeedTestScreen.kt` |
 | RF-35 | Widget y temas | `widget/DevicesWidget.kt`, `ui/theme/Theme.kt` |
 
 RF-31 (analizador de canales WiFi) queda para más adelante: necesitaría el permiso de ubicación.
@@ -98,3 +99,12 @@ RF-31 (analizador de canales WiFi) queda para más adelante: necesitaría el per
   lo pide, y mantén "datos no compartidos" para la información de la red.
 - **Descripción**: menciona que la app es gratis con compras dentro de la app.
 - **Política de privacidad**: ya está actualizada en `docs/POLITICA_DE_PRIVACIDAD.md`; vuelve a publicarla.
+
+## Prueba de velocidad y la ficha de Google Play
+
+La prueba usa M-Lab, que publica la IP pública de quien hace la prueba. En el formulario
+**Seguridad de los datos** de Play Console declara:
+- **Datos recopilados:** "Dirección IP" no aparece como tipo propio; márcalo en **Ubicación aproximada**
+  solo si Google lo pide para IPs. Indica que se **comparte con terceros (M-Lab)** con fines de
+  **análisis/funcionalidad de la app**, y que es **opcional** (el usuario lo acepta antes de la primera prueba).
+- Revisa el texto con calma al llenar el formulario: si tienes dudas, describe exactamente lo que hace la app.

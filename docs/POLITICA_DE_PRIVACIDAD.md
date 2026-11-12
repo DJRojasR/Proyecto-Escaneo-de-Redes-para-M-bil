@@ -50,6 +50,15 @@ Si activas la *Vigilancia de la red*, la app escanea **solo la red que elegiste*
 no la tienes abierta, y te envía una notificación si aparece un equipo desconocido. Estos escaneos se quedan dentro
 de tu red local y sus resultados se guardan solo en tu teléfono. Puedes desactivarlo en cualquier momento.
 
+## 4.1 Prueba de velocidad (M-Lab)
+
+La *Prueba de velocidad* usa los servidores de **Measurement Lab (M-Lab)**, una plataforma abierta de
+investigación sobre Internet. Antes de la primera prueba la app te pide permiso, porque M-Lab **guarda y publica**
+el resultado de cada prueba como datos abiertos junto con la **dirección IP pública** de tu conexión a Internet
+y la fecha y hora. La app no envía tu nombre, tu correo ni información de tu red local.
+Más información: <https://www.measurementlab.net/privacy/>.
+Los resultados también se guardan en tu teléfono para mostrarte el historial.
+
 ## 5. Reportes exportados (Premium)
 
 Cuando exportas un reporte en PDF o CSV, el archivo se guarda donde tú elijas. A partir de ahí, lo que hagas con él

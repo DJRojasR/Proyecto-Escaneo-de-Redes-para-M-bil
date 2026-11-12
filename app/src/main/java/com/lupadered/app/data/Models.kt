@@ -99,3 +99,14 @@ data class ScanSummary(
     val newDevices: List<Device>,
     val firstScan: Boolean,
 )
+
+/** Una prueba de velocidad guardada en el historial. */
+data class SpeedTestRecord(
+    val id: Long = 0,
+    val networkKey: String?,
+    val at: Long,
+    val downloadMbps: Double,
+    val uploadMbps: Double,
+    val pingMs: Double?,
+    val server: String?,
+)

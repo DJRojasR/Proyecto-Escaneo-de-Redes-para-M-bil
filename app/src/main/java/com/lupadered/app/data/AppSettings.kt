@@ -65,6 +65,16 @@ class AppSettings(context: Context) {
         _monitor.value = m
     }
 
+    /** El usuario aceptó que M-Lab publique su IP pública al hacer pruebas de velocidad. */
+    var speedTestConsent: Boolean
+        get() = prefs.getBoolean("speed_consent", false)
+        set(v) = prefs.edit().putBoolean("speed_consent", v).apply()
+
+    /** Velocidad de bajada contratada (Mbps) para comparar; 0 = no indicada. */
+    var planMbps: Int
+        get() = prefs.getInt("plan_mbps", 0)
+        set(v) = prefs.edit().putInt("plan_mbps", v).apply()
+
     private fun readAppearance() = Appearance(
         color = prefs.getString("theme_color", null)
             ?.let { n -> ThemeColor.entries.firstOrNull { it.name == n } } ?: ThemeColor.TEAL,
@@ -86,5 +96,8 @@ class AppSettings(context: Context) {
         /** Días de historial que ve la versión gratis (RF-27). */
         const val FREE_HISTORY_DAYS = 7
         val INTERVALS = listOf(15, 30, 60)
+
+        /** Pruebas de velocidad por día en la versión gratis. */
+        const val FREE_SPEED_TESTS_PER_DAY = 2
     }
 }

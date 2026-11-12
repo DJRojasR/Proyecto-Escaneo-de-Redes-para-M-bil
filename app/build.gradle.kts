@@ -111,6 +111,7 @@ dependencies {
     implementation(libs.ump)
     implementation(libs.billing)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.okhttp)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)

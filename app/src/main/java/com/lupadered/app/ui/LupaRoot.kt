@@ -32,6 +32,7 @@ import com.lupadered.app.ui.screens.NetworkDetailScreen
 import com.lupadered.app.ui.screens.NetworksScreen
 import com.lupadered.app.ui.screens.PremiumScreen
 import com.lupadered.app.ui.screens.SecurityScreen
+import com.lupadered.app.ui.screens.SpeedTestScreen
 import com.lupadered.app.ui.screens.ToolsActions
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -168,6 +169,7 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                         onLatency = { nav.navigate("latencia") },
                         onNetworks = { nav.navigate("redes") },
                         onExport = { nav.navigate("exportar") },
+                        onSpeed = { nav.navigate("velocidad") },
                     )
                 )
             }
@@ -210,6 +212,9 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
                     onBack = { nav.popBackStack() },
                 )
+            }
+            composable("velocidad") {
+                SpeedTestScreen(vm = viewModel(), onBack = { nav.popBackStack() })
             }
             composable("exportar") {
                 ExportScreen(vm = viewModel(), onBack = { nav.popBackStack() })

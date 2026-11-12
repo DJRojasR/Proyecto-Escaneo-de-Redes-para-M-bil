@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.NetworkCheck
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.NotificationsActive
@@ -85,6 +86,7 @@ class ToolsActions(
     val onLatency: () -> Unit,
     val onNetworks: () -> Unit,
     val onExport: () -> Unit,
+    val onSpeed: () -> Unit,
 )
 
 @Composable
@@ -113,6 +115,11 @@ fun ToolsScreen(a: ToolsActions) {
                     }
                 }
             }
+            ToolCard(
+                Icons.Outlined.NetworkCheck, "Prueba de velocidad",
+                "¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos.",
+                a.onSpeed,
+            )
             ToolCard(
                 Icons.AutoMirrored.Outlined.ManageSearch, "Analizar una IP",
                 "¿Conoces una dirección IP de tu red? Revisa si responde, cuánto tarda, su nombre y sus puertos abiertos.",

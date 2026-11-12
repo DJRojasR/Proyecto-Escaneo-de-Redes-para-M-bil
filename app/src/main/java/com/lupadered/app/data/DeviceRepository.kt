@@ -12,7 +12,7 @@ import com.lupadered.app.net.DiscoveryMethod
 import com.lupadered.app.net.HostSnapshot
 import com.lupadered.app.net.NetworkScanner
 
-private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 2) {
+private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 3) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE devices (
@@ -67,11 +67,29 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         db.execSQL("CREATE INDEX idx_events_net ON events(network_key, at)")
         db.execSQL("CREATE INDEX idx_events_dev ON events(device_id, at)")
         migrateToV2(db)
+        migrateToV3(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Nunca borramos datos del usuario: solo agregamos columnas y tablas.
         if (oldVersion < 2) migrateToV2(db)
+        if (oldVersion < 3) migrateToV3(db)
+    }
+
+    /** Versión 3: historial de pruebas de velocidad. */
+    private fun migrateToV3(db: SQLiteDatabase) {
+        db.execSQL(
+            """CREATE TABLE speed_tests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                network_key TEXT,
+                at INTEGER NOT NULL,
+                download_mbps REAL NOT NULL,
+                upload_mbps REAL NOT NULL,
+                ping_ms REAL,
+                server TEXT
+            )"""
+        )
+        db.execSQL("CREATE INDEX idx_speed_at ON speed_tests(at)")
     }
 
     /** Versión 2 (Premium): grupos e íconos, origen del escaneo y redes guardadas. */
@@ -266,7 +284,39 @@ class DeviceRepository(context: Context) {
         db.delete("devices", "id = ?", arrayOf(id.toString()))
     }
 
+    // -------------------------------------------------------------- velocidad
+
+    fun insertSpeedTest(t: SpeedTestRecord): Long =
+        db.insert("speed_tests", null, ContentValues().apply {
+            put("network_key", t.networkKey)
+            put("at", t.at)
+            put("download_mbps", t.downloadMbps)
+            put("upload_mbps", t.uploadMbps)
+            t.pingMs?.let { put("ping_ms", it) }
+            put("server", t.server)
+        })
+
+    fun speedTests(limit: Int = 100): List<SpeedTestRecord> =
+        db.query("speed_tests", null, null, null, null, null, "at DESC", limit.toString()).use { c ->
+            generateSequence {
+                if (!c.moveToNext()) null else SpeedTestRecord(
+                    id = c.long("id"),
+                    networkKey = c.str("network_key"),
+                    at = c.long("at"),
+                    downloadMbps = c.getDouble(c.getColumnIndexOrThrow("download_mbps")),
+                    uploadMbps = c.getDouble(c.getColumnIndexOrThrow("upload_mbps")),
+                    pingMs = c.getColumnIndexOrThrow("ping_ms").let { i -> if (c.isNull(i)) null else c.getDouble(i) },
+                    server = c.str("server"),
+                )
+            }.toList()
+        }
+
+    /** Cuántas pruebas se hicieron desde [since] (para el límite diario de la versión gratis). */
+    fun countSpeedTestsSince(since: Long): Int =
+        count("SELECT COUNT(*) FROM speed_tests WHERE at >= ?", since.toString())
+
     fun clearAll() {
+        db.delete("speed_tests", null, null)
         db.delete("networks", null, null)
         db.delete("events", null, null)
         db.delete("scans", null, null)
