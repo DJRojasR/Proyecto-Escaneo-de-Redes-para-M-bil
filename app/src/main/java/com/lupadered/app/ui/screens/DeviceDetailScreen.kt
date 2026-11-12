@@ -148,16 +148,36 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(d.displayName, style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        d.type.label + (if (d.userType == null) " (detectado)" else ""),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                    // Tipo de equipo (qué es) — distinto de si es conocido (de quién es)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable { choosingType = true },
-                    )
+                    ) {
+                        Text(
+                            d.type.label + (if (d.userType == null) " (automático)" else ""),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            Icons.Outlined.Edit, contentDescription = "Cambiar tipo",
+                            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp),
+                        )
+                    }
+                    if (!d.isSelf) {
+                        Tag(
+                            if (d.trusted) "✓ Equipo conocido" else "Sin revisar",
+                            if (d.trusted) StatusColors.good else StatusColors.warn,
+                            Modifier.padding(top = 4.dp),
+                        )
+                    }
                 }
             }
             Text(
-                d.type.description,
+                if (d.type == DeviceType.UNKNOWN && d.trusted)
+                    "Ya lo marcaste como conocido. No pudimos saber qué tipo de equipo es: toca \"Tipo sin identificar\" " +
+                        "y elige si es un celular, una laptop, una TV… para que tenga el ícono correcto."
+                else d.type.description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),

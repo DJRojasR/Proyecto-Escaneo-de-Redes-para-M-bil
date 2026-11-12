@@ -15,7 +15,7 @@ enum class DeviceType(val label: String, val description: String) {
     NAS("Almacenamiento", "Un disco de red (NAS) para guardar y compartir archivos."),
     IOT("Hogar inteligente", "Enchufes, focos, sensores u otros aparatos inteligentes."),
     NETWORK("Equipo de red", "Un repetidor, punto de acceso o switch que ayuda a llevar el WiFi a más lugares."),
-    UNKNOWN("Desconocido", "No pudimos identificarlo. Puede ser cualquier equipo que no se anuncia. Si no lo reconoces, revisa sus puertos o apaga tus equipos uno por uno para ver cuál desaparece."),
+    UNKNOWN("Tipo sin identificar", "No pudimos identificarlo. Puede ser cualquier equipo que no se anuncia. Si no lo reconoces, revisa sus puertos o apaga tus equipos uno por uno para ver cuál desaparece."),
 }
 
 /** Datos con los que adivinamos el tipo de un equipo. */

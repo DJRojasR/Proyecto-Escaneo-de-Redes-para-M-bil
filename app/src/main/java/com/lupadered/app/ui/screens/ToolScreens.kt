@@ -25,6 +25,10 @@ import androidx.compose.material.icons.automirrored.outlined.ManageSearch
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.outlined.NetworkCheck
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Description
@@ -115,9 +119,16 @@ fun ToolsScreen(a: ToolsActions) {
                     }
                 }
             }
+            ToolSection(
+                title = "Herramientas gratis",
+                subtitle = "Disponibles para todos, sin pagar.",
+                icon = Icons.Outlined.LockOpen,
+                color = MaterialTheme.colorScheme.primary,
+            )
             ToolCard(
                 Icons.Outlined.NetworkCheck, "Prueba de velocidad",
-                "¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos.",
+                "¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos." +
+                    if (isPremium) "" else " Gratis: 2 pruebas al día.",
                 a.onSpeed,
             )
             ToolCard(
@@ -129,6 +140,19 @@ fun ToolsScreen(a: ToolsActions) {
                 Icons.Outlined.Speed, "Diagnóstico de conexión",
                 "¿Internet va lento? Descubre si el problema es la señal WiFi, el router, tu proveedor o el DNS.",
                 a.onDiagnostics,
+            )
+            ToolCard(
+                Icons.Outlined.Wifi, "Mis redes",
+                "Casa, trabajo… cada red con su propio inventario y nombre.",
+                a.onNetworks,
+            )
+
+            ToolSection(
+                title = "Herramientas Premium",
+                subtitle = if (isPremium) "Incluidas en tu Premium. ¡Gracias por apoyar la app!"
+                else "Desbloquéalas todas con Premium.",
+                icon = Icons.Outlined.WorkspacePremium,
+                color = PremiumGold,
             )
             ToolCard(
                 Icons.Outlined.NotificationsActive, "Vigilancia de la red",
@@ -146,14 +170,16 @@ fun ToolsScreen(a: ToolsActions) {
                 a.onLatency, premium = !isPremium,
             )
             ToolCard(
-                Icons.Outlined.Wifi, "Mis redes",
-                "Casa, trabajo… cada red con su propio inventario y nombre.",
-                a.onNetworks,
-            )
-            ToolCard(
                 Icons.Outlined.Description, "Exportar reporte",
                 "Inventario, seguridad e historial en PDF o CSV.",
                 a.onExport, premium = !isPremium,
+            )
+
+            ToolSection(
+                title = "Ayuda y ajustes",
+                subtitle = null,
+                icon = Icons.Outlined.Settings,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             ToolCard(
                 Icons.Outlined.School, "¿Qué estoy viendo?",
@@ -166,6 +192,27 @@ fun ToolsScreen(a: ToolsActions) {
                 a.onSettings,
             )
         }
+    }
+}
+
+/** Subtítulo de sección en Herramientas: separa lo gratis de lo Premium. */
+@Composable
+private fun ToolSection(title: String, subtitle: String?, icon: ImageVector, color: Color) {
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(title, style = MaterialTheme.typography.titleMedium, color = color)
+        }
+        subtitle?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 28.dp),
+            )
+        }
+        HorizontalDivider(Modifier.padding(top = 8.dp), color = color.copy(alpha = 0.35f))
     }
 }
 
