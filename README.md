@@ -92,8 +92,8 @@ Hay imágenes para la ficha en `docs/play-store/`.
 La app es gratis con anuncios y ofrece **Premium** (suscripción mensual con 7 días gratis o pago único
 "Pro de por vida"): sin anuncios, vigilancia automática con alerta de intrusos, escaneo diario programado,
 historial completo, análisis de puertos extendido, revisión de seguridad (ahora con vulnerabilidades
-del router: Telnet, UPnP, HTTP sin cifrar, firmware viejo y contraseña de fábrica), detector de cámaras
-ocultas (red + magnetómetro), alertas personalizadas por dispositivo (desconexión, puerto nuevo,
+del router: Telnet, UPnP, HTTP sin cifrar, firmware viejo y contraseña de fábrica), aviso de posibles cámaras en la revisión de seguridad, mapa de calor WiFi (realidad aumentada o
+modo caminata, exportable como imagen), alertas personalizadas por dispositivo (desconexión, puerto nuevo,
 reconexión, cambio de IP), monitor de latencia, grupos e íconos, varias redes, reportes PDF/CSV, widget
 y temas de color.
 

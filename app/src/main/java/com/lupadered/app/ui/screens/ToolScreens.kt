@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
@@ -35,7 +36,6 @@ import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import com.lupadered.app.ui.components.PremiumGold
@@ -93,7 +93,7 @@ class ToolsActions(
     val onNetworks: () -> Unit,
     val onExport: () -> Unit,
     val onSpeed: () -> Unit,
-    val onCameras: () -> Unit,
+    val onHeatMap: () -> Unit,
 )
 
 @Composable
@@ -173,14 +173,14 @@ fun ToolsScreen(a: ToolsActions) {
                 a.onLatency, premium = !isPremium,
             )
             ToolCard(
+                Icons.Outlined.Map, tr("Mapa de calor WiFi"),
+                tr("Camina por tu casa midiendo la señal y descubre en colores las zonas muertas, piso por piso."),
+                a.onHeatMap, premium = !isPremium,
+            )
+            ToolCard(
                 Icons.Outlined.Description, tr("Exportar reporte"),
                 tr("Inventario, seguridad e historial en PDF o CSV."),
                 a.onExport, premium = !isPremium,
-            )
-            ToolCard(
-                Icons.Outlined.Videocam, tr("Detector de cámaras ocultas"),
-                tr("Busca cámaras IP conectadas a tu red y usa el sensor magnético para rastrear lentes ocultas."),
-                a.onCameras, premium = !isPremium,
             )
 
             ToolSection(

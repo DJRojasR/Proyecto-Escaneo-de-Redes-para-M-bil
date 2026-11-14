@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Category
@@ -27,7 +28,6 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
-import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.AlertDialog
@@ -63,9 +63,9 @@ private val benefits = listOf(
     Benefit(Icons.Outlined.NotificationsActive, tr("Alerta de intrusos"), tr("Revisamos tu red cada 15, 30 o 60 minutos y te avisamos si se conecta alguien desconocido.")),
     Benefit(Icons.Outlined.CalendarMonth, tr("Escaneos programados"), tr("Un escaneo automático cada día a la hora que elijas.")),
     Benefit(Icons.Outlined.History, tr("Historial completo"), tr("Todo el historial, no solo 7 días, y la línea de tiempo de cada equipo.")),
-    Benefit(Icons.Outlined.TravelExplore, tr("Puertos a fondo"), tr("Más de 1100 puertos o el rango que tú elijas.")),
     Benefit(Icons.Outlined.Security, tr("Revisión de seguridad"), tr("Un puntaje de tu red y los pasos para corregir lo riesgoso.")),
     Benefit(Icons.AutoMirrored.Outlined.ShowChart, tr("Monitor de latencia"), tr("Gráfico en vivo para saber si la culpa es del WiFi o del proveedor.")),
+    Benefit(Icons.Outlined.Map, tr("Mapa de calor WiFi"), tr("Mide la señal en cada habitación y cada piso, y encuentra las zonas muertas.")),
     Benefit(Icons.Outlined.Category, tr("Grupos e íconos"), tr("Ordena tus equipos: \"Cámaras\", \"Cuarto de mamá\"…")),
     Benefit(Icons.Outlined.Wifi, tr("Varias redes"), tr("Casa, trabajo, casa de los abuelos: cada una con su inventario.")),
     Benefit(Icons.Outlined.Description, tr("Reportes PDF y CSV"), tr("Exporta el inventario y el historial.")),

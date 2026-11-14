@@ -112,6 +112,8 @@ dependencies {
     implementation(libs.billing)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.okhttp)
+    // Realidad aumentada para el mapa de calor (opcional: si el teléfono no la soporta, se usa el modo caminata)
+    implementation(libs.arcore)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)

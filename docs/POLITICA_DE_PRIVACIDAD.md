@@ -67,9 +67,22 @@ explícitamente (hay un aviso antes de hacerlo), la app puede probar un pequeño
 contraseñas de fábrica muy conocidas contra el panel de tu propio router, solo dentro de tu red
 local. No guardamos ninguna contraseña: solo si alguna combinación fue aceptada.
 
-El *Detector de cámaras ocultas* usa el sensor magnético del teléfono (sin pedir ningún permiso)
-para mostrarte un medidor de campo magnético orientativo. No usa la cámara ni infrarrojo, y esa
-lectura no sale de tu teléfono.
+La revisión de seguridad también te avisa si algún equipo de tu red parece una cámara o un grabador,
+según sus puertos y su fabricante. Esa información no sale de tu teléfono.
+
+## 4.3 Mapa de calor WiFi (Premium)
+
+- El mapa guarda en tu teléfono la intensidad de la señal WiFi (dBm) medida en cada punto
+  del plano y, si lo indicas, dónde está tu router. No se envía a ningún servidor.
+- **Modo caminata:** usa el acelerómetro y el giroscopio/brújula del teléfono para contar
+  pasos y giros mientras caminas. Los datos de los sensores se usan al momento y no se guardan.
+- **Realidad aumentada:** si tu teléfono es compatible, la app pide permiso para usar la
+  **cámara** solo dentro de esa pantalla. Las imágenes de la cámara se procesan en el
+  teléfono para seguir tu recorrido; no se graban, no se guardan y no se envían. Esta función
+  usa los Servicios de Google Play para RA (ARCore), proporcionados por Google LLC y regidos
+  por la [Política de Privacidad de Google](https://policies.google.com/privacy).
+- **Compartir el mapa:** si tocas "Compartir mapa" o "Guardar imagen", la app crea una imagen del
+  mapa en tu teléfono. Solo sale de él si tú eliges a dónde enviarla.
 
 ## 5. Reportes exportados (Premium)
 

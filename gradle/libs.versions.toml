@@ -13,6 +13,7 @@ ump = "3.2.0"
 billing = "9.1.0"
 work = "2.10.1"
 okhttp = "4.12.0"
+arcore = "1.48.0"
 junit = "4.13.2"
 
 [libraries]
@@ -35,6 +36,7 @@ ump = { group = "com.google.android.ump", name = "user-messaging-platform", vers
 billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+arcore = { group = "com.google.ar", name = "core", version.ref = "arcore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]

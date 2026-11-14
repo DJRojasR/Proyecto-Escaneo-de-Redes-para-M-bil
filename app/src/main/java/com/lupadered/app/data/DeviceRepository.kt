@@ -12,7 +12,7 @@ import com.lupadered.app.net.DiscoveryMethod
 import com.lupadered.app.net.HostSnapshot
 import com.lupadered.app.net.NetworkScanner
 
-private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 4) {
+private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 6) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE devices (
@@ -69,6 +69,8 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         migrateToV2(db)
         migrateToV3(db)
         migrateToV4(db)
+        migrateToV5(db)
+        migrateToV6(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -76,6 +78,41 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         if (oldVersion < 2) migrateToV2(db)
         if (oldVersion < 3) migrateToV3(db)
         if (oldVersion < 4) migrateToV4(db)
+        if (oldVersion < 5) migrateToV5(db)
+        if (oldVersion < 6) migrateToV6(db)
+    }
+
+    /** Versión 6: ancho aproximado de cada piso, para pasar pasos y metros al plano. */
+    private fun migrateToV6(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE heat_floors ADD COLUMN width_m REAL NOT NULL DEFAULT 12")
+    }
+
+    /** Versión 5: mapa de calor del WiFi (pisos y puntos medidos). */
+    private fun migrateToV5(db: SQLiteDatabase) {
+        db.execSQL(
+            """CREATE TABLE heat_floors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                network_key TEXT NOT NULL,
+                name TEXT NOT NULL,
+                position INTEGER NOT NULL DEFAULT 0,
+                router_x REAL,
+                router_y REAL,
+                created_at INTEGER NOT NULL
+            )"""
+        )
+        db.execSQL("CREATE INDEX idx_heat_floors_net ON heat_floors(network_key)")
+        db.execSQL(
+            """CREATE TABLE heat_points (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                floor_id INTEGER NOT NULL,
+                x REAL NOT NULL,
+                y REAL NOT NULL,
+                rssi INTEGER NOT NULL,
+                ping_ms INTEGER,
+                at INTEGER NOT NULL
+            )"""
+        )
+        db.execSQL("CREATE INDEX idx_heat_points_floor ON heat_points(floor_id)")
     }
 
     /** Versión 4 (Premium): alertas personalizadas por dispositivo. */
@@ -358,6 +395,101 @@ class DeviceRepository(context: Context) {
         if (db.update("alert_state", values, "rule_id = ?", arrayOf(ruleId.toString())) == 0) {
             db.insert("alert_state", null, values)
         }
+    }
+
+    // -------------------------------------------------------------- mapa de calor
+
+    fun heatFloors(networkKey: String): List<HeatFloor> =
+        db.rawQuery(
+            "SELECT id, name, position, router_x, router_y, width_m FROM heat_floors WHERE network_key = ? ORDER BY position, id",
+            arrayOf(networkKey),
+        ).use { c ->
+            buildList {
+                while (c.moveToNext()) add(
+                    HeatFloor(
+                        id = c.getLong(0), name = c.getString(1), position = c.getInt(2),
+                        routerX = if (c.isNull(3)) null else c.getFloat(3),
+                        routerY = if (c.isNull(4)) null else c.getFloat(4),
+                        widthM = c.getFloat(5),
+                    )
+                )
+            }
+        }
+
+    fun addHeatFloor(networkKey: String, name: String): Long {
+        val next = db.rawQuery(
+            "SELECT COALESCE(MAX(position), -1) + 1 FROM heat_floors WHERE network_key = ?", arrayOf(networkKey),
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+        return db.insert("heat_floors", null, ContentValues().apply {
+            put("network_key", networkKey)
+            put("name", name)
+            put("position", next)
+            put("created_at", System.currentTimeMillis())
+        })
+    }
+
+    fun heatFloor(id: Long): HeatFloor? =
+        db.rawQuery(
+            "SELECT id, name, position, router_x, router_y, width_m FROM heat_floors WHERE id = ?", arrayOf(id.toString()),
+        ).use { c ->
+            if (!c.moveToFirst()) null else HeatFloor(
+                id = c.getLong(0), name = c.getString(1), position = c.getInt(2),
+                routerX = if (c.isNull(3)) null else c.getFloat(3),
+                routerY = if (c.isNull(4)) null else c.getFloat(4),
+                widthM = c.getFloat(5),
+            )
+        }
+
+    fun setHeatFloorWidth(id: Long, widthM: Float) {
+        db.update("heat_floors", ContentValues().apply { put("width_m", widthM) }, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun renameHeatFloor(id: Long, name: String) {
+        db.update("heat_floors", ContentValues().apply { put("name", name) }, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun setHeatRouter(id: Long, x: Float?, y: Float?) {
+        db.update("heat_floors", ContentValues().apply {
+            if (x == null || y == null) { putNull("router_x"); putNull("router_y") } else { put("router_x", x); put("router_y", y) }
+        }, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun deleteHeatFloor(id: Long) {
+        db.delete("heat_points", "floor_id = ?", arrayOf(id.toString()))
+        db.delete("heat_floors", "id = ?", arrayOf(id.toString()))
+    }
+
+    fun heatPoints(floorId: Long): List<HeatPoint> =
+        db.rawQuery(
+            "SELECT id, x, y, rssi, ping_ms, at FROM heat_points WHERE floor_id = ? ORDER BY at",
+            arrayOf(floorId.toString()),
+        ).use { c ->
+            buildList {
+                while (c.moveToNext()) add(
+                    HeatPoint(
+                        id = c.getLong(0), x = c.getFloat(1), y = c.getFloat(2), rssi = c.getInt(3),
+                        pingMs = if (c.isNull(4)) null else c.getInt(4), at = c.getLong(5),
+                    )
+                )
+            }
+        }
+
+    fun addHeatPoint(floorId: Long, x: Float, y: Float, rssi: Int, pingMs: Int?): Long =
+        db.insert("heat_points", null, ContentValues().apply {
+            put("floor_id", floorId)
+            put("x", x)
+            put("y", y)
+            put("rssi", rssi)
+            pingMs?.let { put("ping_ms", it) }
+            put("at", System.currentTimeMillis())
+        })
+
+    fun deleteHeatPoint(id: Long) {
+        db.delete("heat_points", "id = ?", arrayOf(id.toString()))
+    }
+
+    fun clearHeatPoints(floorId: Long) {
+        db.delete("heat_points", "floor_id = ?", arrayOf(floorId.toString()))
     }
 
     // -------------------------------------------------------------- velocidad

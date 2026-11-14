@@ -130,3 +130,24 @@ data class SpeedTestRecord(
     val pingMs: Double?,
     val server: String?,
 )
+
+/** Un piso (o zona) del mapa de calor WiFi. Las coordenadas van de 0 a 1 dentro del plano. */
+data class HeatFloor(
+    val id: Long,
+    val name: String,
+    val position: Int,
+    val routerX: Float? = null,
+    val routerY: Float? = null,
+    /** Ancho aproximado del piso en metros (de izquierda a derecha del plano). */
+    val widthM: Float = 12f,
+)
+
+/** Una medición del mapa de calor: dónde estaba el usuario y qué señal había. */
+data class HeatPoint(
+    val id: Long,
+    val x: Float,
+    val y: Float,
+    val rssi: Int,
+    val pingMs: Int?,
+    val at: Long,
+)

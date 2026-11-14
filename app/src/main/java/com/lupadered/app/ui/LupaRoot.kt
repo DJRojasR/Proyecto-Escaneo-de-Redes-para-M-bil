@@ -27,7 +27,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import com.lupadered.app.ui.components.LocalOpenPremium
 import com.lupadered.app.ui.screens.ExportScreen
-import com.lupadered.app.ui.screens.HiddenCameraScreen
+import com.lupadered.app.ar.ArHeatScreen
+import com.lupadered.app.ui.screens.HeatMapScreen
 import com.lupadered.app.ui.screens.LatencyScreen
 import com.lupadered.app.ui.screens.MonitorScreen
 import com.lupadered.app.ui.screens.NetworkDetailScreen
@@ -172,7 +173,7 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                         onNetworks = { nav.navigate("redes") },
                         onExport = { nav.navigate("exportar") },
                         onSpeed = { nav.navigate("velocidad") },
-                        onCameras = { nav.navigate("camaras") },
+                        onHeatMap = { nav.navigate("mapa_calor") },
                     )
                 )
             }
@@ -189,15 +190,25 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onBack = { nav.popBackStack() },
                 )
             }
-            composable("latencia") {
-                LatencyScreen(vm = viewModel(), onBack = { nav.popBackStack() })
-            }
-            composable("camaras") {
-                HiddenCameraScreen(
+            composable("mapa_calor") {
+                HeatMapScreen(
                     vm = viewModel(),
-                    onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
+                    onOpenAr = { floorId, x, y -> nav.navigate("mapa_calor_ar/$floorId/$x/$y") },
                     onBack = { nav.popBackStack() },
                 )
+            }
+            composable("mapa_calor_ar/{floor}/{x}/{y}") { entry ->
+                val args = entry.arguments
+                ArHeatScreen(
+                    vm = viewModel(),
+                    floorId = args?.getString("floor")?.toLongOrNull() ?: -1L,
+                    startX = args?.getString("x")?.toFloatOrNull() ?: 0.5f,
+                    startY = args?.getString("y")?.toFloatOrNull() ?: 0.5f,
+                    onDone = { nav.popBackStack() },
+                )
+            }
+            composable("latencia") {
+                LatencyScreen(vm = viewModel(), onBack = { nav.popBackStack() })
             }
             composable("redes") { entry ->
                 val vm: NetworksViewModel = viewModel(entry)

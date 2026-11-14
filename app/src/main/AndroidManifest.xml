@@ -10,6 +10,11 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- Premium: avisar cuando un equipo desconocido se conecta (se pide solo al activar la vigilancia) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Premium: mapa de calor con realidad aumentada (se pide solo al usarlo) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- La cámara y la realidad aumentada son opcionales: la app se instala en cualquier teléfono -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
 
     <application
         android:name=".LupaApp"
@@ -21,6 +26,11 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.LupaDeRed">
+
+        <!-- ARCore opcional: no obliga a instalar Servicios de Google Play para RA -->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
@@ -37,6 +47,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Para compartir la imagen del mapa de calor con otras apps -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <!-- Widget de pantalla de inicio (Premium) -->
         <receiver

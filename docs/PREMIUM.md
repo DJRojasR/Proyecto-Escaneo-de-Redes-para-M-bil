@@ -91,8 +91,9 @@ Actívalo.
 | RF-46 | Prueba de velocidad (gratis 2 por día; Premium ilimitada con historial y gráfico) | `net/SpeedTest.kt`, `ui/screens/SpeedTestScreen.kt` |
 | RF-35 | Widget y temas | `widget/DevicesWidget.kt`, `ui/theme/Theme.kt` |
 | RF-47 | Vulnerabilidades del router (Telnet, UPnP, HTTP sin cifrar, firmware viejo, contraseña de fábrica) | `knowledge/RouterKnowledge.kt`, `net/RouterAuthProbe.kt`, `knowledge/SecurityReview.kt` |
-| RF-48 | Detector de cámaras ocultas (red + magnetómetro) | `knowledge/CameraKnowledge.kt`, `ui/screens/HiddenCameraScreen.kt` |
+| RF-48 | ~~Cámaras en tu WiFi~~ (retirada como herramienta; la revisión de seguridad sigue avisando de posibles cámaras) | `knowledge/CameraKnowledge.kt` |
 | RF-49 | Alertas personalizadas por dispositivo (desconexión, puerto nuevo, reconexión, cambio de IP) | `monitor/AlertEngine.kt`, `data/DeviceRepository.kt` (tabla `alert_rules`), `ui/screens/DeviceDetailScreen.kt` |
+| RF-50 | Mapa de calor WiFi por pisos: realidad aumentada si el teléfono la soporta; si no, modo caminata (pasos + brújula) o punto por punto | `ui/HeatMapViewModel.kt`, `ui/screens/HeatMapScreen.kt`, `ar/ArHeatScreen.kt`, `ar/ArCameraRenderer.kt`, `ar/ArHeatViewModel.kt`, `data/DeviceRepository.kt` (tablas `heat_floors`, `heat_points`, BD v6) |
 
 RF-31 (analizador de canales WiFi) queda para más adelante: necesitaría el permiso de ubicación.
 
@@ -110,13 +111,12 @@ probar un puñado de credenciales de fábrica comunes contra el panel del router
 red actual, por HTTP/HTTPS con Basic Auth). No se guarda ninguna contraseña, solo si alguna fue
 aceptada.
 
-### RF-48: detector de cámaras ocultas
+### RF-48: cámaras (retirada como herramienta)
 
-`CameraKnowledge` identifica cámaras IP y grabadores por puertos típicos de streaming (554, 8554,
-37777, 34567, 9527, 8000) y por fabricante/servidor (Hikvision, Dahua, Reolink, Tapo, Wyze…). Esos
-hallazgos aparecen en la revisión de seguridad y en la pantalla dedicada `HiddenCameraScreen`, que
-además incluye un medidor de campo magnético (`Sensor.TYPE_MAGNETIC_FIELD`) para ayudar a rastrear
-lentes escondidas. No usa cámara ni infrarrojo, así que no pide el permiso `CAMERA`.
+La pantalla dedicada se retiró para no prometer algo que una app no puede garantizar (solo ve
+cámaras conectadas a la misma red). `CameraKnowledge` se mantiene: la revisión de seguridad
+sigue avisando si un equipo de la red parece una cámara o un grabador (puertos 554, 8554,
+37777, 34567, 9527 o fabricantes como Hikvision, Dahua, Tapo…).
 
 ### RF-49: alertas personalizadas por dispositivo
 
@@ -143,3 +143,29 @@ La prueba usa M-Lab, que publica la IP pública de quien hace la prueba. En el f
   solo si Google lo pide para IPs. Indica que se **comparte con terceros (M-Lab)** con fines de
   **análisis/funcionalidad de la app**, y que es **opcional** (el usuario lo acepta antes de la primera prueba).
 - Revisa el texto con calma al llenar el formulario: si tienes dudas, describe exactamente lo que hace la app.
+
+### RF-50: mapa de calor WiFi
+
+El plano es un recuadro 3:4 que representa la casa vista desde arriba. El usuario toca dónde está
+parado y pulsa "Medir aquí": durante 4 segundos se lee la señal (RSSI) 8 veces y se hace ping al
+router 3 veces; se guarda la mediana. El mapa se pinta interpolando los puntos por distancia
+inversa (IDW) sobre una cuadrícula de 48×64 y se desvanece lejos de las mediciones, para no
+inventar señal donde no se midió. Cada red tiene sus propios pisos; cada piso guarda sus puntos y,
+opcionalmente, dónde está el router. Con varios pisos se muestra una comparación y se sugiere un
+repetidor o nodo mesh en el piso más débil.
+
+**Recorrido automático.** Al tocar el punto de partida y mirar hacia la parte de arriba del plano:
+
+- *Realidad aumentada* (si `ArCoreApk.checkAvailability` dice que el teléfono es compatible):
+  ARCore da la posición del teléfono en metros; cada ~30 cm se guarda la señal y se pinta un disco
+  de color sobre el piso real (proyectando con las matrices de vista y proyección de la cámara).
+  Las muestras se pasan al plano usando el ancho del piso (`width_m`). ARCore es opcional en el
+  manifiesto (`com.google.ar.core = optional`), así que la app se instala en cualquier teléfono.
+- *Vista del mapa*: el plano se ajusta solo para mostrar todo lo medido aunque el recorrido salga
+  del recuadro de la casa (`ui/heat/HeatGeometry.kt`). Se pinta con baldosas de 25 cm, marca
+  dónde está la mejor y la peor señal y tiene una escala en metros.
+- *Exportar*: "Compartir mapa" y "Guardar imagen" generan una imagen PNG con el mapa, el router,
+  la leyenda y el resumen (`ui/heat/HeatExport.kt`), compartida mediante `FileProvider`.
+- *Modo caminata* (si no hay RA): pasos detectados con el acelerómetro (picos sobre 10,8 m/s²),
+  pasos de 0,65 m y dirección con el vector de rotación del juego (giroscopio). Tocar el plano
+  durante el recorrido corrige la posición si se desvía.

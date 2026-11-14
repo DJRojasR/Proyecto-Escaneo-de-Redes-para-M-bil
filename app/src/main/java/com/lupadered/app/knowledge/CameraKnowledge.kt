@@ -1,5 +1,7 @@
 package com.lupadered.app.knowledge
 
+import com.lupadered.app.i18n.tr
+
 /**
  * Conocimiento para detectar cámaras IP / grabadores en la red (Premium, RF-48).
  * Se apoya en puertos típicos de streaming y en fabricantes/servidores conocidos.
@@ -22,7 +24,7 @@ object CameraKnowledge {
     /** Devuelve el motivo por el que parece cámara, o null si no hay indicios. */
     fun reason(openPorts: Set<Int>, vararg textFields: String?): String? {
         val strong = openPorts.firstOrNull { it in STRONG_PORTS }
-        if (strong != null) return "puerto $strong"
+        if (strong != null) return tr("puerto %1\$s", strong)
         val text = textFields.filterNotNull().joinToString(" ").lowercase()
         val brand = BRANDS.firstOrNull { text.contains(it) }
         if (brand != null) return brand.trim()
