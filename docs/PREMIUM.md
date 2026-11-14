@@ -90,8 +90,43 @@ Actívalo.
 | RF-34 | Exportar PDF / CSV | `export/ReportExporter.kt` |
 | RF-46 | Prueba de velocidad (gratis 2 por día; Premium ilimitada con historial y gráfico) | `net/SpeedTest.kt`, `ui/screens/SpeedTestScreen.kt` |
 | RF-35 | Widget y temas | `widget/DevicesWidget.kt`, `ui/theme/Theme.kt` |
+| RF-47 | Vulnerabilidades del router (Telnet, UPnP, HTTP sin cifrar, firmware viejo, contraseña de fábrica) | `knowledge/RouterKnowledge.kt`, `net/RouterAuthProbe.kt`, `knowledge/SecurityReview.kt` |
+| RF-48 | Detector de cámaras ocultas (red + magnetómetro) | `knowledge/CameraKnowledge.kt`, `ui/screens/HiddenCameraScreen.kt` |
+| RF-49 | Alertas personalizadas por dispositivo (desconexión, puerto nuevo, reconexión, cambio de IP) | `monitor/AlertEngine.kt`, `data/DeviceRepository.kt` (tabla `alert_rules`), `ui/screens/DeviceDetailScreen.kt` |
 
 RF-31 (analizador de canales WiFi) queda para más adelante: necesitaría el permiso de ubicación.
+
+### RF-47: vulnerabilidades del router
+
+Para el equipo marcado como `is_gateway`, la revisión de seguridad avisa si tiene Telnet (23),
+FTP (21), panel sin HTTPS, UPnP activo, gestión remota TR-069 (7547) o firmware/servidores web
+antiguos conocidos (`RouterKnowledge.outdatedFirmware`, a partir del encabezado `Server` de SSDP).
+También sugiere revisar la contraseña si la marca del router suele traer una clave de fábrica
+conocida (`RouterKnowledge.factoryDefaultBrand`), sin probar nada.
+
+Además, con el **consentimiento explícito del usuario** (diálogo en `SecurityScreen`), se puede
+probar un puñado de credenciales de fábrica comunes contra el panel del router
+(`RouterAuthProbe.probeDefaultCredentials`, máx. 10 combinaciones, solo contra el gateway de la
+red actual, por HTTP/HTTPS con Basic Auth). No se guarda ninguna contraseña, solo si alguna fue
+aceptada.
+
+### RF-48: detector de cámaras ocultas
+
+`CameraKnowledge` identifica cámaras IP y grabadores por puertos típicos de streaming (554, 8554,
+37777, 34567, 9527, 8000) y por fabricante/servidor (Hikvision, Dahua, Reolink, Tapo, Wyze…). Esos
+hallazgos aparecen en la revisión de seguridad y en la pantalla dedicada `HiddenCameraScreen`, que
+además incluye un medidor de campo magnético (`Sensor.TYPE_MAGNETIC_FIELD`) para ayudar a rastrear
+lentes escondidas. No usa cámara ni infrarrojo, así que no pide el permiso `CAMERA`.
+
+### RF-49: alertas personalizadas por dispositivo
+
+Desde la ficha de un equipo (`DeviceDetailScreen`) el usuario puede crear reglas: avisar si el
+equipo se desconecta más de N minutos, si abre un puerto nuevo, si vuelve a conectarse o si cambia
+de IP. Las reglas se guardan en la tabla `alert_rules` (migración v4 de la base) y se evalúan en
+cada vuelta de la vigilancia automática (`BackgroundScanWorker`) con `AlertEngine`, que usa
+`alert_state` para no repetir la misma alerta. La granularidad depende del intervalo de vigilancia
+elegido (mínimo 15 minutos): una regla de desconexión más corta que el intervalo no puede dispararse
+más seguido que eso. Las notificaciones usan el canal `alertas_dispositivo`.
 
 ## 7. Cambios en la ficha de Google Play
 

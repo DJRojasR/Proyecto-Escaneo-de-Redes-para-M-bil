@@ -58,6 +58,15 @@ class BackgroundScanWorker(context: Context, params: WorkerParameters) : Corouti
                 val netName = withContext(Dispatchers.IO) { app.repository.network(net.key)?.displayName }
                 Notifier.notifyNewDevices(app, summary.newDevices, netName)
             }
+            withContext(Dispatchers.IO) {
+                val now = System.currentTimeMillis()
+                val devices = app.repository.devices(net.key)
+                val eventsThisScan = app.repository.eventsBetween(net.key, started, now)
+                val alerts = AlertEngine.evaluate(app.repository, net.key, devices, eventsThisScan, now)
+                for (a in alerts) {
+                    Notifier.notifyDeviceAlert(app, a.device.id, a.device.displayName, a.message)
+                }
+            }
             DevicesWidget.updateAll(app)
             return Result.success()
         } catch (e: CancellationException) {

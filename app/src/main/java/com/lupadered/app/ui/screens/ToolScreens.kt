@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import com.lupadered.app.ui.components.PremiumGold
@@ -92,6 +93,7 @@ class ToolsActions(
     val onNetworks: () -> Unit,
     val onExport: () -> Unit,
     val onSpeed: () -> Unit,
+    val onCameras: () -> Unit,
 )
 
 @Composable
@@ -174,6 +176,11 @@ fun ToolsScreen(a: ToolsActions) {
                 Icons.Outlined.Description, tr("Exportar reporte"),
                 tr("Inventario, seguridad e historial en PDF o CSV."),
                 a.onExport, premium = !isPremium,
+            )
+            ToolCard(
+                Icons.Outlined.Videocam, tr("Detector de cámaras ocultas"),
+                tr("Busca cámaras IP conectadas a tu red y usa el sensor magnético para rastrear lentes ocultas."),
+                a.onCameras, premium = !isPremium,
             )
 
             ToolSection(

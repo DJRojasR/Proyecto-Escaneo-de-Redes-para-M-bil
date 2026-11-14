@@ -59,6 +59,18 @@ y la fecha y hora. La app no envía tu nombre, tu correo ni información de tu r
 Más información: <https://www.measurementlab.net/privacy/>.
 Los resultados también se guardan en tu teléfono para mostrarte el historial.
 
+## 4.2 Revisión de seguridad del router y detector de cámaras (Premium)
+
+La *Revisión de seguridad* puede mostrarte sugerencias sobre tu propio router (puertos abiertos,
+firmware y marca) a partir de la información que el router ya anuncia en tu red. Si tú lo decides
+explícitamente (hay un aviso antes de hacerlo), la app puede probar un pequeño grupo de usuarios y
+contraseñas de fábrica muy conocidas contra el panel de tu propio router, solo dentro de tu red
+local. No guardamos ninguna contraseña: solo si alguna combinación fue aceptada.
+
+El *Detector de cámaras ocultas* usa el sensor magnético del teléfono (sin pedir ningún permiso)
+para mostrarte un medidor de campo magnético orientativo. No usa la cámara ni infrarrojo, y esa
+lectura no sale de tu teléfono.
+
 ## 5. Reportes exportados (Premium)
 
 Cuando exportas un reporte en PDF o CSV, el archivo se guarda donde tú elijas. A partir de ahí, lo que hagas con él

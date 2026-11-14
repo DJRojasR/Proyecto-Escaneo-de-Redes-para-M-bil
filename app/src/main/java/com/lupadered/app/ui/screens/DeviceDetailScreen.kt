@@ -43,6 +43,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Security
@@ -98,6 +99,7 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
     var confirmDelete by remember { mutableStateOf(false) }
     var choosingGroup by remember { mutableStateOf(false) }
     var choosingIcon by remember { mutableStateOf(false) }
+    var addingRule by remember { mutableStateOf(false) }
     val uri = LocalUriHandler.current
     val isPremium = rememberIsPremium()
     val openPremium = LocalOpenPremium.current
@@ -325,6 +327,49 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 )
             }
 
+            // ---------- Alertas personalizadas (Premium, RF-49)
+            if (!d.isSelf) {
+                SectionTitle(tr("Alertas de este equipo"))
+                if (!isPremium) {
+                    LockedCard(
+                        tr("Alertas de este equipo"),
+                        tr("Avísame si este equipo se desconecta, abre un puerto nuevo, vuelve a conectarse o cambia de IP."),
+                    )
+                } else {
+                    if (!s.monitorActive) {
+                        Text(
+                            tr("Activa la vigilancia de la red en \"Herramientas\" para que estas alertas se revisen automáticamente."),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    s.alertRules.forEach { rule ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                        ) {
+                            Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        if (rule.type == com.lupadered.app.data.AlertType.OFFLINE_FOR)
+                                            tr("Avísame si se desconecta más de %1\$s min", rule.thresholdMin)
+                                        else rule.type.label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                                Switch(checked = rule.enabled, onCheckedChange = { vm.setAlertRuleEnabled(rule, it) })
+                                IconButton(onClick = { vm.deleteAlertRule(rule) }) {
+                                    Icon(Icons.Outlined.Delete, contentDescription = tr("Borrar"))
+                                }
+                            }
+                        }
+                    }
+                    TextButton(onClick = { addingRule = true }, modifier = Modifier.padding(top = 6.dp)) {
+                        Text(tr("Agregar alerta"))
+                    }
+                }
+            }
+
             // ---------- Línea de tiempo (RF-27)
             if (s.events.isNotEmpty() || s.hiddenEvents > 0) {
                 SectionTitle(tr("Línea de tiempo"))
@@ -389,6 +434,16 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             },
         )
     }
+    if (addingRule) {
+        AddAlertRuleDialog(
+            existing = s.alertRules.map { it.type },
+            onDismiss = { addingRule = false },
+            onAdd = { type, minutes ->
+                vm.addAlertRule(type, minutes)
+                addingRule = false
+            },
+        )
+    }
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
@@ -403,6 +458,48 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(tr("Cancelar")) } },
         )
     }
+}
+
+@Composable
+private fun AddAlertRuleDialog(
+    existing: List<com.lupadered.app.data.AlertType>,
+    onDismiss: () -> Unit,
+    onAdd: (com.lupadered.app.data.AlertType, Int) -> Unit,
+) {
+    var selected by remember { mutableStateOf(com.lupadered.app.data.AlertType.entries.firstOrNull { it !in existing }) }
+    var minutesText by remember { mutableStateOf("15") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr("Nueva alerta")) },
+        text = {
+            Column {
+                com.lupadered.app.data.AlertType.entries.filter { it !in existing }.forEach { type ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable { selected = type },
+                    ) {
+                        RadioButton(selected = selected == type, onClick = { selected = type })
+                        Text(type.label, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                if (selected == com.lupadered.app.data.AlertType.OFFLINE_FOR) {
+                    OutlinedTextField(
+                        value = minutesText,
+                        onValueChange = { minutesText = it.filter(Char::isDigit).take(4) },
+                        label = { Text(tr("Minutos desconectado")) },
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = selected != null,
+                onClick = { selected?.let { onAdd(it, minutesText.toIntOrNull()?.coerceAtLeast(1) ?: 15) } },
+            ) { Text(tr("Agregar")) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
+    )
 }
 
 @Composable

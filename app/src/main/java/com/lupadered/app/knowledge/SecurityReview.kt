@@ -16,7 +16,12 @@ data class Finding(
     val detail: String,
     val steps: List<String>,
     val deviceId: Long? = null,
+    /** Identificador estable del tipo de hallazgo (p. ej. "router.telnet"); vacío = genérico por puerto. */
+    val id: String = "",
+    val category: FindingCategory = FindingCategory.PORT,
 )
+
+enum class FindingCategory { PORT, DEVICE, ROUTER, CAMERA }
 
 data class SecurityReport(
     /** 0 a 100: mientras más alto, más segura la red. */
@@ -36,13 +41,28 @@ data class SecurityReport(
  */
 object SecurityReview {
 
-    fun evaluate(devices: List<Device>, onlineIds: Set<Long>): SecurityReport {
+    /**
+     * @param defaultPasswordFound resultado de la prueba activa de credenciales del
+     * router: true = el router acepta una clave de fábrica, false = no, null = no se probó.
+     */
+    fun evaluate(
+        devices: List<Device>,
+        onlineIds: Set<Long>,
+        defaultPasswordFound: Boolean? = null,
+    ): SecurityReport {
         val online = devices.filter { it.id in onlineIds }
         val findings = ArrayList<Finding>()
         var penalty = 0
 
+        // Cámaras y router tienen sus propios hallazgos: no repetimos los genéricos por puerto.
+        val cameras = online.filter { isCamera(it) }
+        val cameraIds = cameras.map { it.id }.toSet()
+        val gatewayRisky = setOf(21, 23, 80, 8080, 7547)
+
         for (d in online) {
             for (port in d.openPorts.sorted()) {
+                if (d.id in cameraIds && port in CameraKnowledge.STRONG_PORTS) continue
+                if (d.isGateway && port in gatewayRisky) continue
                 val info = PortKnowledge.info(port)
                 when (info.risk) {
                     Risk.HIGH -> {
@@ -87,6 +107,26 @@ object SecurityReview {
                 }
             }
         }
+
+        for (cam in cameras) {
+            penalty += 6
+            val why = CameraKnowledge.reason(cam.openPorts, cam.name, cam.vendor, cam.model, cam.server, cam.alias)
+            findings += Finding(
+                Severity.MEDIUM,
+                tr("Posible cámara de vigilancia: %1\$s", cam.displayName),
+                tr("%1\$s parece una cámara o grabador (indicio: %2\$s). Verifica que sea tuya.", cam.ip, why ?: tr("tipo de equipo")),
+                listOf(
+                    tr("Si la instalaste tú, cambia su contraseña de fábrica y actualiza su firmware."),
+                    tr("Si no la reconoces, revisa el lugar donde está conectada y desconéctala."),
+                    tr("Márcala como conocida en su ficha cuando la hayas verificado."),
+                ),
+                cam.id,
+                "camera.${cam.id}",
+                FindingCategory.CAMERA,
+            )
+        }
+
+        penalty += routerFindings(online.firstOrNull { it.isGateway }, defaultPasswordFound, findings)
 
         val unknown = online.filter { !it.trusted && !it.isSelf }
         if (unknown.isNotEmpty()) {
@@ -138,5 +178,122 @@ object SecurityReview {
             reviewedDevices = reviewed,
             onlineDevices = candidates.size,
         )
+    }
+
+    /** ¿El equipo parece una cámara/grabador? (no el router ni este teléfono) */
+    fun isCamera(d: Device): Boolean {
+        if (d.isGateway || d.isSelf) return false
+        if (d.type == DeviceType.CAMERA) return true
+        return CameraKnowledge.looksLikeCamera(d.openPorts, d.name, d.vendor, d.model, d.server, d.alias)
+    }
+
+    /** Añade los hallazgos del router y devuelve los puntos a restar. */
+    private fun routerFindings(gw: Device?, defaultPasswordFound: Boolean?, out: MutableList<Finding>): Int {
+        if (gw == null) return 0
+        var penalty = 0
+        val name = gw.displayName
+        val cat = FindingCategory.ROUTER
+
+        if (23 in gw.openPorts) {
+            penalty += 20
+            out += Finding(
+                Severity.HIGH, tr("Telnet abierto en tu router"),
+                tr("%1\$s acepta conexiones Telnet (puerto 23): control remoto sin cifrar.", gw.ip),
+                listOf(
+                    tr("Entra al panel de tu router y desactiva Telnet (suele estar en Administración o Acceso remoto)."),
+                    tr("Si no puedes desactivarlo, pide a tu operador que lo haga o cambia de router."),
+                    tr("Cambia la contraseña de administración por una larga y única."),
+                ),
+                gw.id, "router.telnet", cat,
+            )
+        }
+        if (21 in gw.openPorts) {
+            penalty += 6
+            out += Finding(
+                Severity.MEDIUM, tr("FTP abierto en tu router"),
+                tr("%1\$s ofrece FTP (puerto 21), que envía contraseñas sin cifrar.", gw.ip),
+                listOf(tr("Desactiva el servidor FTP del router si no compartes un disco USB.")),
+                gw.id, "router.ftp", cat,
+            )
+        }
+        val http = 80 in gw.openPorts || 8080 in gw.openPorts
+        val https = 443 in gw.openPorts || 8443 in gw.openPorts
+        if (http && !https) {
+            penalty += 6
+            out += Finding(
+                Severity.MEDIUM, tr("Panel del router sin cifrado (HTTP)"),
+                tr("El panel de %1\$s solo responde por HTTP: la clave de administración viaja sin cifrar por tu WiFi.", gw.ip),
+                listOf(
+                    tr("Activa HTTPS en el panel del router si tiene esa opción."),
+                    tr("Administra el router solo desde equipos de confianza."),
+                    tr("Usa una clave de WiFi WPA2/WPA3 fuerte para que nadie extraño entre a tu red."),
+                ),
+                gw.id, "router.http", cat,
+            )
+        }
+        if (gw.openPorts.any { it in RouterKnowledge.UPNP_PORTS }) {
+            penalty += 6
+            out += Finding(
+                Severity.MEDIUM, tr("UPnP activo en tu router"),
+                tr("%1\$s anuncia UPnP: cualquier programa de tu red puede abrir puertos hacia Internet sin avisarte.", gw.ip),
+                listOf(
+                    tr("Si no usas juegos en línea o servidores en casa, desactiva UPnP en el router."),
+                    tr("Si lo necesitas, revisa la tabla de puertos abiertos del router de vez en cuando."),
+                ),
+                gw.id, "router.upnp", cat,
+            )
+        }
+        if (RouterKnowledge.TR069_PORT in gw.openPorts) {
+            penalty += 6
+            out += Finding(
+                Severity.MEDIUM, tr("Gestión remota (TR-069) visible"),
+                tr("El puerto 7547 de %1\$s está abierto. Es la gestión remota del operador y ha sido muy atacada.", gw.ip),
+                listOf(tr("Pregunta a tu operador si puede desactivarla o actualizar el firmware del router.")),
+                gw.id, "router.tr069", cat,
+            )
+        }
+        val outdated = RouterKnowledge.outdatedFirmware(gw.server, gw.model, gw.name)
+        if (outdated != null) {
+            penalty += 6
+            out += Finding(
+                Severity.MEDIUM, tr("Firmware del router posiblemente desactualizado"),
+                tr("%1\$s usa componentes antiguos: %2\$s.", name, outdated),
+                listOf(
+                    tr("Entra al panel del router y busca \"Actualización de firmware\"."),
+                    tr("Si ya no hay actualizaciones para tu modelo, considera cambiarlo."),
+                    tr("Anota la versión actual y compárala con la última en la web del fabricante."),
+                ),
+                gw.id, "router.firmware", cat,
+            )
+        }
+        val brand = RouterKnowledge.factoryDefaultBrand(gw.vendor, gw.model, gw.name, gw.server)
+        when (defaultPasswordFound) {
+            true -> {
+                penalty += 25
+                out += Finding(
+                    Severity.HIGH, tr("Tu router acepta una contraseña de fábrica"),
+                    tr("Se pudo entrar a %1\$s con un usuario y clave comunes. Cualquiera en tu red podría hacerlo.", gw.ip),
+                    listOf(
+                        tr("Entra ahora al panel del router y cambia la contraseña de administración."),
+                        tr("Usa una clave larga y distinta a la de tu WiFi."),
+                        tr("Revisa que no haya equipos o reglas que no reconozcas."),
+                    ),
+                    gw.id, "router.default_password", cat,
+                )
+            }
+            false -> Unit
+            null -> if (brand != null) {
+                out += Finding(
+                    Severity.LOW, tr("Revisa la contraseña de tu router (%1\$s)", brand),
+                    tr("Los routers de esta marca suelen venir con usuario y clave de fábrica conocidos. No probamos nada: es solo una sugerencia."),
+                    listOf(
+                        tr("Cambia la contraseña de administración si nunca lo hiciste."),
+                        tr("Puedes usar \"Probar contraseñas comunes\" para comprobarlo (solo en tu router)."),
+                    ),
+                    gw.id, "router.brand_defaults", cat,
+                )
+            }
+        }
+        return penalty
     }
 }

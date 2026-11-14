@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.lupadered.app.LupaApp
+import com.lupadered.app.data.AlertRule
+import com.lupadered.app.data.AlertType
 import com.lupadered.app.data.AppSettings
 import com.lupadered.app.data.Device
 import com.lupadered.app.data.DeviceEvent
@@ -35,6 +37,10 @@ data class DeviceDetailState(
     val portScanLabel: String = "",
     val portScanMessage: String? = null,
     val deleted: Boolean = false,
+    /** Reglas de alerta configuradas para este equipo (Premium, RF-49). */
+    val alertRules: List<AlertRule> = emptyList(),
+    /** La vigilancia automática debe estar activa para que las alertas se disparen. */
+    val monitorActive: Boolean = false,
 )
 
 class DeviceViewModel(application: Application, savedState: SavedStateHandle) : AndroidViewModel(application) {
@@ -62,8 +68,10 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
                 val events = repo.eventsForDevice(deviceId, limit = if (premium) 500 else 50, since = since)
                 val hidden = if (premium) 0 else repo.countDeviceEventsBefore(deviceId, since)
                 val groups = d?.let { repo.groups(it.networkKey) }.orEmpty()
-                Loaded(d, events, hidden, groups)
+                val rules = repo.alertRules(deviceId)
+                Loaded(d, events, hidden, groups, rules)
             }
+            val monitor = app.settings.monitor.value
             _state.update {
                 it.copy(
                     loading = false,
@@ -71,12 +79,27 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
                     events = loaded.events,
                     hiddenEvents = loaded.hidden,
                     groups = loaded.groups,
+                    alertRules = loaded.rules,
+                    monitorActive = monitor.autoEnabled || monitor.dailyEnabled,
                 )
             }
         }
     }
 
-    private class Loaded(val device: Device?, val events: List<DeviceEvent>, val hidden: Int, val groups: List<String>)
+    private class Loaded(
+        val device: Device?, val events: List<DeviceEvent>, val hidden: Int,
+        val groups: List<String>, val rules: List<AlertRule>,
+    )
+
+    fun addAlertRule(type: AlertType, thresholdMin: Int = 15) = mutate {
+        repo.saveAlertRule(AlertRule(deviceId = deviceId, type = type, thresholdMin = thresholdMin))
+    }
+
+    fun setAlertRuleEnabled(rule: AlertRule, enabled: Boolean) = mutate {
+        repo.saveAlertRule(rule.copy(enabled = enabled))
+    }
+
+    fun deleteAlertRule(rule: AlertRule) = mutate { repo.deleteAlertRule(rule.id) }
 
     fun rename(alias: String) = mutate { repo.updateAlias(deviceId, alias) }
     fun setType(type: DeviceType?) = mutate { repo.updateUserType(deviceId, type) }

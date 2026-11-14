@@ -19,6 +19,7 @@ import com.lupadered.app.knowledge.SecurityReview
 import com.lupadered.app.net.HostInspector
 import com.lupadered.app.net.LatencyProbe
 import com.lupadered.app.net.NetworkInfoProvider
+import com.lupadered.app.net.RouterAuthProbe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -46,6 +47,9 @@ data class SecurityState(
     val summary: String? = null,
     /** Hace cuánto fue el último escaneo de la red (para avisar si es antiguo). */
     val lastScanAt: Long? = null,
+    /** Resultado de la prueba de credenciales del router (null = no probado). */
+    val defaultPasswordFound: Boolean? = null,
+    val checkingPassword: Boolean = false,
 )
 
 class SecurityViewModel(application: Application) : AndroidViewModel(application) {
@@ -78,8 +82,30 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 _state.update { it.copy(loading = false, noNetwork = true, report = null) }
                 return@launch
             }
-            val report = withContext(Dispatchers.Default) { SecurityReview.evaluate(data.devices, data.online) }
+            val pwd = _state.value.defaultPasswordFound
+            val report = withContext(Dispatchers.Default) { SecurityReview.evaluate(data.devices, data.online, pwd) }
             _state.update { it.copy(loading = false, noNetwork = false, report = report, lastScanAt = data.lastScanAt) }
+        }
+    }
+
+    /**
+     * Prueba un puñado de credenciales de fábrica contra el router (opt-in):
+     * solo se llama tras el consentimiento explícito del usuario en la pantalla.
+     */
+    fun probeRouterPassword() {
+        if (_state.value.checkingPassword) return
+        viewModelScope.launch {
+            _state.update { it.copy(checkingPassword = true) }
+            val data = current()
+            val gateway = data?.devices?.firstOrNull { it.isGateway && it.id in data.online }
+            val found = if (gateway != null) {
+                withContext(Dispatchers.IO) { RouterAuthProbe.probeDefaultCredentials(gateway.ip) }
+            } else null
+            _state.update { it.copy(checkingPassword = false, defaultPasswordFound = found) }
+            if (data != null) {
+                val report = withContext(Dispatchers.Default) { SecurityReview.evaluate(data.devices, data.online, found) }
+                _state.update { it.copy(report = report) }
+            }
         }
     }
 
@@ -124,26 +150,29 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 var high = 0
                 var medium = 0
                 targets.forEachIndexed { i, d ->
+                    val ports = if (d.isGateway) {
+                        (PortKnowledge.COMMON_PORTS + com.lupadered.app.knowledge.RouterKnowledge.ROUTER_PORTS).distinct().sorted()
+                    } else PortKnowledge.COMMON_PORTS
                     val item = CheckItem(
                         "d${d.id}",
                         tr("Revisando %1\$s · %2\$s", d.displayName, d.ip),
                         CheckStatus.RUNNING,
-                        tr("Probando %1\$s puertos…", PortKnowledge.COMMON_PORTS.size),
+                        tr("Probando %1\$s puertos…", ports.size),
                         0f,
                     )
                     running = item
                     setCheck(item)
-                    val (open, responded) = inspector.scanPorts(d.ip, PortKnowledge.COMMON_PORTS) { p ->
+                    val (open, responded) = inspector.scanPorts(d.ip, ports) { p ->
                         setCheck(item.copy(progress = p))
                         _state.update { it.copy(progress = (i + p) / (targets.size + 1)) }
                     }
                     // Si no respondió (dormido), conservamos los puertos que ya conocíamos
                     if (responded) {
                         withContext(Dispatchers.IO) {
-                            repo.updatePorts(d.id, open, System.currentTimeMillis(), scanned = PortKnowledge.COMMON_PORTS)
+                            repo.updatePorts(d.id, open, System.currentTimeMillis(), scanned = ports)
                         }
                     }
-                    portsChecked += PortKnowledge.COMMON_PORTS.size
+                    portsChecked += ports.size
                     val infos = open.map { PortKnowledge.info(it) }
                     val h = infos.count { it.risk == Risk.HIGH }
                     val m = infos.count { it.risk == Risk.MEDIUM }
@@ -196,7 +225,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 setCheck(scoreItem)
                 val fresh = current()
                 val report = withContext(Dispatchers.Default) {
-                    SecurityReview.evaluate(fresh?.devices.orEmpty(), fresh?.online.orEmpty())
+                    SecurityReview.evaluate(fresh?.devices.orEmpty(), fresh?.online.orEmpty(), _state.value.defaultPasswordFound)
                 }
                 delay(400)
                 setCheck(
@@ -233,6 +262,73 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     fun cancel() {
         job?.cancel()
+    }
+}
+
+// ====================================================================== Detector de cámaras ocultas (RF-48)
+
+data class CameraSuspect(val deviceId: Long, val name: String, val ip: String, val reason: String)
+
+data class HiddenCameraState(
+    val loading: Boolean = true,
+    val noNetwork: Boolean = false,
+    val suspects: List<CameraSuspect> = emptyList(),
+    /** Última lectura del magnetómetro en microteslas. */
+    val magnitude: Float = 0f,
+    val baseline: Float? = null,
+    val sensorAvailable: Boolean = true,
+)
+
+class HiddenCameraViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val app = application as LupaApp
+    private val repo = app.repository
+
+    private val _state = MutableStateFlow(HiddenCameraState())
+    val state: StateFlow<HiddenCameraState> = _state.asStateFlow()
+
+    init {
+        loadSuspects()
+    }
+
+    private fun loadSuspects() {
+        viewModelScope.launch {
+            val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+            if (net == null) {
+                _state.update { it.copy(loading = false, noNetwork = true) }
+                return@launch
+            }
+            val devices = withContext(Dispatchers.IO) { repo.devices(net.key) }
+            val last = withContext(Dispatchers.IO) { repo.latestScan(net.key) }
+            val online = devices.filter { last != null && it.lastScanId == last.id }
+            val suspects = online.filter { SecurityReview.isCamera(it) }.map { d ->
+                CameraSuspect(
+                    d.id, d.displayName, d.ip,
+                    com.lupadered.app.knowledge.CameraKnowledge.reason(d.openPorts, d.name, d.vendor, d.model, d.server, d.alias)
+                        ?: tr("tipo de equipo"),
+                )
+            }
+            _state.update { it.copy(loading = false, noNetwork = false, suspects = suspects) }
+        }
+    }
+
+    fun refresh() = loadSuspects()
+
+    /** Llamado desde la pantalla con cada lectura cruda del magnetómetro (x, y, z en µT). */
+    fun onMagnetometerReading(x: Float, y: Float, z: Float) {
+        val magnitude = kotlin.math.sqrt(x * x + y * y + z * z)
+        _state.update {
+            val baseline = it.baseline ?: magnitude
+            it.copy(magnitude = magnitude, baseline = baseline)
+        }
+    }
+
+    fun resetBaseline() {
+        _state.update { it.copy(baseline = it.magnitude) }
+    }
+
+    fun setSensorAvailable(available: Boolean) {
+        _state.update { it.copy(sensorAvailable = available) }
     }
 }
 

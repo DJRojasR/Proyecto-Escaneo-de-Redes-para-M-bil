@@ -101,6 +101,7 @@ import com.lupadered.app.ui.theme.StatusColors
 fun SecurityScreen(vm: SecurityViewModel, onOpenDevice: (Long) -> Unit, onBack: () -> Unit) {
     val s by vm.state.collectAsStateWithLifecycle()
     val isPremium = rememberIsPremium()
+    var showPasswordConsent by remember { mutableStateOf(false) }
 
     ScreenScaffold(title = tr("Revisión de seguridad"), onBack = onBack) { padding ->
         if (!isPremium) {
@@ -187,6 +188,31 @@ fun SecurityScreen(vm: SecurityViewModel, onOpenDevice: (Long) -> Unit, onBack: 
                     }
                 }
             }
+            if (!s.scanning && r != null) {
+                item {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(tr("Contraseña del router"), style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                when (s.defaultPasswordFound) {
+                                    true -> tr("Tu router acepta una contraseña de fábrica. Cámbiala ahora.")
+                                    false -> tr("No aceptó ninguna de las contraseñas comunes que probamos.")
+                                    null -> tr("Probamos un puñado de usuarios y contraseñas de fábrica conocidas, solo contra tu propio router, para avisarte si sigue con la clave original.")
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            if (s.checkingPassword) {
+                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            } else {
+                                OutlinedButton(onClick = { showPasswordConsent = true }) {
+                                    Text(if (s.defaultPasswordFound == null) tr("Probar contraseñas comunes") else tr("Probar de nuevo"))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if (!s.scanning) {
                 if (r != null && r.findings.isEmpty() && !s.loading) {
                     item {
@@ -201,6 +227,23 @@ fun SecurityScreen(vm: SecurityViewModel, onOpenDevice: (Long) -> Unit, onBack: 
                     items(list) { f -> FindingCard(f, onOpenDevice) }
                 }
             }
+        }
+        if (showPasswordConsent) {
+            AlertDialog(
+                onDismissRequest = { showPasswordConsent = false },
+                title = { Text(tr("Probar contraseñas comunes")) },
+                text = {
+                    Text(
+                        tr("Vamos a probar un puñado de usuarios y contraseñas de fábrica muy conocidos (como admin/admin) contra el router de tu propia red, solo para avisarte si sigue con la clave original. No guardamos ninguna contraseña."),
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showPasswordConsent = false; vm.probeRouterPassword() }) { Text(tr("Probar")) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showPasswordConsent = false }) { Text(tr("Cancelar")) }
+                },
+            )
         }
     }
 }

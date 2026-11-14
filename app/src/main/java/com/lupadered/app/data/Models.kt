@@ -101,6 +101,25 @@ data class ScanSummary(
     val firstScan: Boolean,
 )
 
+/** Tipo de alerta personalizada por dispositivo (Premium, RF-49). */
+enum class AlertType(val label: String) {
+    OFFLINE_FOR(tr("Se desconecta por más de N minutos")),
+    NEW_PORT(tr("Aparece un puerto nuevo abierto")),
+    BACK_ONLINE(tr("Vuelve a conectarse")),
+    IP_CHANGED(tr("Cambia de IP")),
+}
+
+/** Una regla de alerta que el usuario configuró para un equipo (RF-49). */
+data class AlertRule(
+    val id: Long = 0,
+    val deviceId: Long,
+    val type: AlertType,
+    /** Minutos de umbral; solo se usa en OFFLINE_FOR. */
+    val thresholdMin: Int = 15,
+    val enabled: Boolean = true,
+    val createdAt: Long = 0,
+)
+
 /** Una prueba de velocidad guardada en el historial. */
 data class SpeedTestRecord(
     val id: Long = 0,

@@ -12,7 +12,7 @@ import com.lupadered.app.net.DiscoveryMethod
 import com.lupadered.app.net.HostSnapshot
 import com.lupadered.app.net.NetworkScanner
 
-private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 3) {
+private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 4) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE devices (
@@ -68,12 +68,36 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         db.execSQL("CREATE INDEX idx_events_dev ON events(device_id, at)")
         migrateToV2(db)
         migrateToV3(db)
+        migrateToV4(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Nunca borramos datos del usuario: solo agregamos columnas y tablas.
         if (oldVersion < 2) migrateToV2(db)
         if (oldVersion < 3) migrateToV3(db)
+        if (oldVersion < 4) migrateToV4(db)
+    }
+
+    /** Versión 4 (Premium): alertas personalizadas por dispositivo. */
+    private fun migrateToV4(db: SQLiteDatabase) {
+        db.execSQL(
+            """CREATE TABLE alert_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_id INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                threshold_min INTEGER NOT NULL DEFAULT 15,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created_at INTEGER NOT NULL
+            )"""
+        )
+        db.execSQL("CREATE INDEX idx_alert_rules_dev ON alert_rules(device_id)")
+        db.execSQL(
+            """CREATE TABLE alert_state (
+                rule_id INTEGER PRIMARY KEY,
+                last_fired_at INTEGER,
+                last_state TEXT
+            )"""
+        )
     }
 
     /** Versión 3: historial de pruebas de velocidad. */
@@ -282,6 +306,58 @@ class DeviceRepository(context: Context) {
     fun deleteDevice(id: Long) {
         db.delete("events", "device_id = ?", arrayOf(id.toString()))
         db.delete("devices", "id = ?", arrayOf(id.toString()))
+        db.delete("alert_rules", "device_id = ?", arrayOf(id.toString()))
+    }
+
+    // ------------------------------------------------------------- alertas (RF-49)
+
+    fun alertRules(deviceId: Long): List<AlertRule> =
+        db.query("alert_rules", null, "device_id = ?", arrayOf(deviceId.toString()), null, null, "id ASC")
+            .use { c -> generateSequence { if (c.moveToNext()) c.toAlertRule() else null }.toList() }
+
+    /** Todas las reglas habilitadas de la red (para evaluarlas en el escaneo en segundo plano). */
+    fun enabledAlertRules(networkKey: String): List<AlertRule> =
+        db.rawQuery(
+            """SELECT r.* FROM alert_rules r JOIN devices d ON d.id = r.device_id
+               WHERE d.network_key = ? AND r.enabled = 1""",
+            arrayOf(networkKey),
+        ).use { c -> generateSequence { if (c.moveToNext()) c.toAlertRule() else null }.toList() }
+
+    fun saveAlertRule(rule: AlertRule): Long {
+        val values = ContentValues().apply {
+            put("device_id", rule.deviceId)
+            put("type", rule.type.name)
+            put("threshold_min", rule.thresholdMin)
+            put("enabled", if (rule.enabled) 1 else 0)
+            put("created_at", if (rule.createdAt > 0) rule.createdAt else System.currentTimeMillis())
+        }
+        return if (rule.id > 0) {
+            db.update("alert_rules", values, "id = ?", arrayOf(rule.id.toString()))
+            rule.id
+        } else {
+            db.insert("alert_rules", null, values)
+        }
+    }
+
+    fun deleteAlertRule(id: Long) {
+        db.delete("alert_rules", "id = ?", arrayOf(id.toString()))
+        db.delete("alert_state", "rule_id = ?", arrayOf(id.toString()))
+    }
+
+    /** Último estado conocido de una regla, para no repetir la misma alerta en cada escaneo. */
+    fun alertState(ruleId: Long): Pair<Long?, String?> =
+        db.query("alert_state", null, "rule_id = ?", arrayOf(ruleId.toString()), null, null, null)
+            .use { c -> if (c.moveToFirst()) c.longOrNull("last_fired_at") to c.str("last_state") else null to null }
+
+    fun setAlertState(ruleId: Long, lastFiredAt: Long?, lastState: String?) {
+        val values = ContentValues().apply {
+            put("rule_id", ruleId)
+            lastFiredAt?.let { put("last_fired_at", it) }
+            put("last_state", lastState)
+        }
+        if (db.update("alert_state", values, "rule_id = ?", arrayOf(ruleId.toString())) == 0) {
+            db.insert("alert_state", null, values)
+        }
     }
 
     // -------------------------------------------------------------- velocidad
@@ -554,6 +630,15 @@ class DeviceRepository(context: Context) {
         lastSeen = long("last_seen"),
         deviceCount = long("device_count").toInt(),
         lastFound = longOrNull("last_found")?.toInt(),
+    )
+
+    private fun Cursor.toAlertRule() = AlertRule(
+        id = long("id"),
+        deviceId = long("device_id"),
+        type = AlertType.entries.firstOrNull { it.name == str("type") } ?: AlertType.OFFLINE_FOR,
+        thresholdMin = long("threshold_min").toInt(),
+        enabled = long("enabled") != 0L,
+        createdAt = long("created_at"),
     )
 
     private fun Cursor.toEvent() = DeviceEvent(

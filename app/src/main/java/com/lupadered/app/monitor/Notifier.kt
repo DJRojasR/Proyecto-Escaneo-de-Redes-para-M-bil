@@ -17,11 +17,13 @@ import com.lupadered.app.MainActivity
 import com.lupadered.app.R
 import com.lupadered.app.data.Device
 
-/** Notificaciones de la vigilancia de la red (RF-25). */
+/** Notificaciones de la vigilancia de la red (RF-25, RF-49). */
 object Notifier {
 
     const val CHANNEL_INTRUDERS = "intrusos"
+    const val CHANNEL_DEVICE_ALERTS = "alertas_dispositivo"
     private const val ID_INTRUDERS = 1001
+    private const val ID_DEVICE_ALERT_BASE = 2000
 
     fun createChannels(context: Context) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
@@ -33,6 +35,14 @@ object Notifier {
             description = tr("Te avisa cuando un dispositivo desconocido se conecta a la red que vigilas.")
         }
         nm.createNotificationChannel(channel)
+        val deviceChannel = NotificationChannel(
+            CHANNEL_DEVICE_ALERTS,
+            tr("Alertas de tus equipos"),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply {
+            description = tr("Avisos de las reglas que configuraste en cada equipo: desconexión, puertos nuevos, reconexión o cambio de IP.")
+        }
+        nm.createNotificationChannel(deviceChannel)
     }
 
     /** ¿Puede la app mostrar notificaciones? (Android 13+ pide permiso). */
@@ -72,6 +82,33 @@ object Notifier {
             .build()
         try {
             NotificationManagerCompat.from(context).notify(ID_INTRUDERS, n)
+        } catch (_: SecurityException) {
+            // El usuario quitó el permiso justo ahora: no hacemos nada.
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun notifyDeviceAlert(context: Context, deviceId: Long, title: String, text: String) {
+        if (!canNotify(context)) return
+        val open = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra(MainActivity.EXTRA_ROUTE, "dispositivo/$deviceId")
+        }
+        val pi = PendingIntent.getActivity(
+            context, deviceId.toInt(), open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val n = NotificationCompat.Builder(context, CHANNEL_DEVICE_ALERTS)
+            .setSmallIcon(R.drawable.ic_stat_lupa)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        try {
+            NotificationManagerCompat.from(context).notify(ID_DEVICE_ALERT_BASE + (deviceId % 1000).toInt(), n)
         } catch (_: SecurityException) {
             // El usuario quitó el permiso justo ahora: no hacemos nada.
         }
