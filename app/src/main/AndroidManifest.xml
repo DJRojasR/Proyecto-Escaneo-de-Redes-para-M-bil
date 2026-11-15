@@ -6,6 +6,10 @@
     <!-- Saber si estás en WiFi, tu IP, la máscara y el router (sin pedir ubicación) -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Solo para "Seguridad de tu WiFi": Android exige ubicación para ver detalles
+         de redes WiFi (tipo de protección y WPS). No se usa ni guarda la ubicación. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Recibir anuncios mDNS/Bonjour de los dispositivos (para saber sus nombres) -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- Premium: avisar cuando un equipo desconocido se conecta (se pide solo al activar la vigilancia) -->

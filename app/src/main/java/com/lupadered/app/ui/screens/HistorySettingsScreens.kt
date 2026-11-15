@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.automirrored.outlined.Login
@@ -48,7 +49,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lupadered.app.BuildConfig
 import com.lupadered.app.ads.AdsManager
 import com.lupadered.app.data.AppSettings
-import com.lupadered.app.data.DarkMode
 import com.lupadered.app.data.ThemeColor
 import com.lupadered.app.premium.PremiumManager
 import com.lupadered.app.premium.PremiumSource
@@ -63,6 +63,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.ManageAccounts
+import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.outlined.Policy
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Switch
@@ -184,6 +194,7 @@ fun SettingsScreen(
     activity: Activity?,
     onPremium: () -> Unit,
     onMonitor: () -> Unit,
+    onLearn: () -> Unit,
     onBack: () -> Unit,
 ) {
     val uri = LocalUriHandler.current
@@ -193,9 +204,11 @@ fun SettingsScreen(
     val p by premium.state.collectAsStateWithLifecycle()
     val appearance by settings.appearance.collectAsStateWithLifecycle()
 
-    ScreenScaffold(title = tr("Ajustes y privacidad"), onBack = onBack) { padding ->
+    ScreenScaffold(title = tr("Ajustes"), onBack = onBack) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            SectionTitle(tr("Premium"), Modifier.padding(horizontal = 16.dp))
+
+            // ---------------------------------------------------------------- Tu cuenta
+            SectionTitle(tr("Tu cuenta"), Modifier.padding(horizontal = 16.dp))
             ListItem(
                 modifier = Modifier.clickable(onClick = onPremium),
                 headlineContent = { Text(if (p.isPremium) tr("Tienes Lupa de Red Premium") else tr("Hazte Premium")) },
@@ -211,52 +224,47 @@ fun SettingsScreen(
                 },
                 leadingContent = { Icon(Icons.Outlined.WorkspacePremium, contentDescription = null, tint = PremiumGold) },
             )
-            ListItem(
-                modifier = Modifier.clickable(onClick = onMonitor),
-                headlineContent = { Text(tr("Vigilancia de la red")) },
-                supportingContent = { Text(tr("Escaneos automáticos y alerta de intrusos.")) },
-            )
             if (BuildConfig.DEBUG) {
                 ListItem(
                     headlineContent = { Text(tr("Simular Premium (solo pruebas)")) },
                     supportingContent = {
                         Text(tr("Solo aparece en la versión de desarrollo. Sirve para probar las funciones Premium sin pagar."))
                     },
+                    leadingContent = { Icon(Icons.Outlined.BugReport, contentDescription = null) },
                     trailingContent = {
                         Switch(checked = premium.testPremiumEnabled, onCheckedChange = { premium.setTestPremium(it) })
                     },
                 )
             }
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
-            SectionTitle(tr("Idioma"), Modifier.padding(horizontal = 16.dp))
+            // ---------------------------------------------------------------- General
+            SectionTitle(tr("General"), Modifier.padding(horizontal = 16.dp))
             val languageChoice = remember { I18n.selected(context) }
             ListItem(
                 modifier = Modifier.clickable { choosingLanguage = true },
-                headlineContent = {
+                headlineContent = { Text(tr("Idioma")) },
+                supportingContent = {
                     Text(
-                        if (languageChoice == I18n.AUTO) tr("Automático (idioma del teléfono)")
+                        if (languageChoice == I18n.AUTO) tr("Automático (idioma del teléfono)") + " · " + I18n.nameOf(I18n.current)
                         else I18n.nameOf(languageChoice),
                     )
                 },
-                supportingContent = { Text(tr("Ahora: %1\$s. Toca para cambiarlo.", I18n.nameOf(I18n.current))) },
                 leadingContent = { Icon(Icons.Outlined.Language, contentDescription = null) },
             )
-
-            SectionTitle(tr("Apariencia"), Modifier.padding(horizontal = 16.dp))
+            ListItem(
+                modifier = Modifier.clickable(onClick = onMonitor),
+                headlineContent = { Text(tr("Vigilancia de la red")) },
+                supportingContent = { Text(tr("Escaneos automáticos y alerta de intrusos.")) },
+                leadingContent = { Icon(Icons.Outlined.Shield, contentDescription = null) },
+            )
+            ListItem(
+                headlineContent = { Text(tr("Apariencia")) },
+                supportingContent = { Text(tr("Color de la app. Se ve clara u oscura según tu teléfono.")) },
+                leadingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
+            )
             Row(
-                Modifier.padding(horizontal = 16.dp).horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                DarkMode.entries.forEach { mode ->
-                    FilterChip(
-                        selected = appearance.dark == mode,
-                        onClick = { settings.setAppearance(appearance.copy(dark = mode)) },
-                        label = { Text(mode.label) },
-                    )
-                }
-            }
-            Row(
-                Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier.padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -264,23 +272,31 @@ fun SettingsScreen(
                     val selected = appearance.color == c
                     Box(
                         Modifier
-                            .size(40.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(c.swatch())
                             .then(
                                 if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                                 else Modifier
                             )
-                            .clickable {
-                                settings.setAppearance(appearance.copy(color = c))
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                    }
+                            .clickable { settings.setAppearance(appearance.copy(color = c)) },
+                    )
                 }
             }
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
-            SectionTitle(tr("Privacidad"), Modifier.padding(horizontal = 16.dp))
+            // ---------------------------------------------------------------- Ayuda
+            SectionTitle(tr("Ayuda"), Modifier.padding(horizontal = 16.dp))
+            ListItem(
+                modifier = Modifier.clickable(onClick = onLearn),
+                headlineContent = { Text(tr("¿Qué estoy viendo?")) },
+                supportingContent = { Text(tr("Explicaciones sencillas de IP, router, puertos, latencia y más.")) },
+                leadingContent = { Icon(Icons.Outlined.School, contentDescription = null) },
+            )
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+            // ---------------------------------------------------------------- Privacidad y anuncios
+            SectionTitle(tr("Privacidad y anuncios"), Modifier.padding(horizontal = 16.dp))
             ListItem(
                 headlineContent = { Text(tr("Tus datos se quedan en tu teléfono")) },
                 supportingContent = {
@@ -288,21 +304,14 @@ fun SettingsScreen(
                         tr("Los dispositivos, nombres e historial se guardan solo en este teléfono. La app no envía la información de tu red a ningún servidor."),
                     )
                 },
+                leadingContent = { Icon(Icons.Outlined.Lock, contentDescription = null) },
             )
             ListItem(
                 modifier = Modifier.clickable { runCatching { uri.openUri(BuildConfig.PRIVACY_POLICY_URL) } },
                 headlineContent = { Text(tr("Política de privacidad")) },
                 supportingContent = { Text(tr("Abre la política completa en el navegador.")) },
+                leadingContent = { Icon(Icons.Outlined.Policy, contentDescription = null) },
             )
-            if (ads.privacyOptionsRequired && activity != null) {
-                ListItem(
-                    modifier = Modifier.clickable { ads.showPrivacyOptions(activity) },
-                    headlineContent = { Text(tr("Opciones de privacidad de anuncios")) },
-                    supportingContent = { Text(tr("Cambia tu consentimiento para anuncios personalizados.")) },
-                )
-            }
-
-            SectionTitle(tr("Anuncios"), Modifier.padding(horizontal = 16.dp))
             ListItem(
                 headlineContent = { Text(if (p.isPremium) tr("Sin anuncios") else tr("Sin anuncios que interrumpan")) },
                 supportingContent = {
@@ -311,27 +320,44 @@ fun SettingsScreen(
                         else tr("Tus primeros %1\$s escaneos no tienen anuncios. Después, como máximo uno cada %2\$s escaneos, y el escaneo sigue trabajando detrás del anuncio para que no esperes de más.", AdsManager.SCANS_PER_AD, AdsManager.SCANS_PER_AD),
                     )
                 },
+                leadingContent = { Icon(Icons.Outlined.Campaign, contentDescription = null) },
             )
+            if (ads.privacyOptionsRequired && activity != null) {
+                ListItem(
+                    modifier = Modifier.clickable { ads.showPrivacyOptions(activity) },
+                    headlineContent = { Text(tr("Opciones de privacidad de anuncios")) },
+                    supportingContent = { Text(tr("Cambia tu consentimiento para anuncios personalizados.")) },
+                    leadingContent = { Icon(Icons.Outlined.ManageAccounts, contentDescription = null) },
+                )
+            }
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
+            // ---------------------------------------------------------------- Datos
             SectionTitle(tr("Datos"), Modifier.padding(horizontal = 16.dp))
             ListItem(
                 modifier = Modifier.clickable { vm.trustAll() },
                 headlineContent = { Text(tr("Marcar todos los dispositivos como conocidos")) },
                 supportingContent = { Text(tr("Útil después de revisar tu red por primera vez.")) },
+                leadingContent = { Icon(Icons.Outlined.DoneAll, contentDescription = null) },
             )
             ListItem(
                 modifier = Modifier.clickable { confirmClear = true },
                 headlineContent = { Text(tr("Borrar todos los datos"), color = MaterialTheme.colorScheme.error) },
                 supportingContent = { Text(tr("Elimina dispositivos, nombres personalizados e historial.")) },
+                leadingContent = { Icon(Icons.Outlined.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             )
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
+            // ---------------------------------------------------------------- Acerca de
             SectionTitle(tr("Acerca de"), Modifier.padding(horizontal = 16.dp))
             ListItem(
                 headlineContent = { Text(tr("Lupa de Red %1\$s", BuildConfig.VERSION_NAME)) },
                 supportingContent = {
                     Text(tr("Escanea solo redes en las que tengas permiso: tu casa o una red que administres."))
                 },
+                leadingContent = { Icon(Icons.Outlined.Info, contentDescription = null) },
             )
+            Spacer(Modifier.height(24.dp))
         }
     }
 

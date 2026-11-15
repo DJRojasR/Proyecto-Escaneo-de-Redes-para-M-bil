@@ -22,6 +22,8 @@ import com.lupadered.app.net.HostSnapshot
 import com.lupadered.app.net.Ipv4
 import com.lupadered.app.net.LocalNetwork
 import com.lupadered.app.net.NetworkInfoProvider
+import com.lupadered.app.net.DiagItem
+import com.lupadered.app.net.WifiSecurityCheck
 import com.lupadered.app.net.ScanListener
 import com.lupadered.app.net.ScanPhase
 import com.lupadered.app.data.AppSettings
@@ -79,6 +81,8 @@ data class HomeState(
     val networkChanged: Boolean = false,
     /** El usuario eligió "Ahora no" al pedirle un nombre para esta red. */
     val namePromptDismissed: Boolean = false,
+    /** Revisión automática de la protección del WiFi (gratis). Vacía = aún no se revisó. */
+    val wifiSecurity: List<DiagItem> = emptyList(),
 )
 
 data class HistoryState(
@@ -157,8 +161,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     newDevices = if (changed) emptyList() else it.newDevices,
                     selectedGroup = if (changed) null else it.selectedGroup,
                     namePromptDismissed = if (changed) false else it.namePromptDismissed,
+                    wifiSecurity = if (changed) emptyList() else it.wifiSecurity,
                 )
             }
+            checkWifiSecurity(force = changed)
             reloadFromDb()
         }
     }
@@ -244,6 +250,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 app.ads.onScanCompleted()
                 DevicesWidget.updateAll(app)
                 _home.update { it.copy(newDevices = summary.newDevices) }
+                // Al terminar el escaneo revisamos también el "candado" del WiFi
+                checkWifiSecurity(force = true)
             } finally {
                 lock?.release()
                 ticker.cancel()
@@ -252,6 +260,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 withContext(NonCancellable) { reloadFromDb() }
                 loadHistory()
             }
+        }
+    }
+
+    private var wifiSecJob: Job? = null
+    private var wifiSecAt = 0L
+    private var wifiSecKey: String? = null
+    private var wifiSecPerm = false
+
+    /**
+     * Revisa sola la protección del WiFi (WPA2/WPA3, WPS…) para mostrarla en Inicio.
+     * No pide permisos: si falta el de ubicación, simplemente no sabremos el WPS.
+     */
+    fun checkWifiSecurity(force: Boolean = false) {
+        if (wifiSecJob?.isActive == true) return
+        val net = _home.value.network
+        if (net == null || !net.isWifi) {
+            _home.update { it.copy(wifiSecurity = emptyList()) }
+            return
+        }
+        val now = System.currentTimeMillis()
+        // Android limita cuántas veces se pueden buscar redes: no repetimos en menos de 1 minuto
+        // …salvo que el usuario recién haya dado el permiso de ubicación (ahora sí vemos el WPS)
+        val perm = WifiSecurityCheck.hasLocationPermission(app) && WifiSecurityCheck.isLocationOn(app)
+        if (!force && wifiSecKey == net.key && now - wifiSecAt < 60_000 && perm == wifiSecPerm) return
+        wifiSecPerm = perm
+        wifiSecJob = viewModelScope.launch {
+            val r = runCatching { WifiSecurityCheck.check(app) }.getOrNull() ?: return@launch
+            val items = WifiSecurityCheck.items(r, net.gateway)
+            wifiSecAt = System.currentTimeMillis()
+            wifiSecKey = net.key
+            if (_home.value.network?.key == net.key) _home.update { it.copy(wifiSecurity = items) }
         }
     }
 

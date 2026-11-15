@@ -1,6 +1,15 @@
 package com.lupadered.app.ui.screens
 
 import com.lupadered.app.i18n.tr
+import com.lupadered.app.ui.components.diagColor
+import com.lupadered.app.net.DiagStatus
+import com.lupadered.app.net.DiagItem
+import androidx.compose.material.icons.outlined.GppMaybe
+import androidx.compose.material.icons.outlined.GppBad
+import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.ManageSearch
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +27,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
 import com.lupadered.app.ui.components.rememberIsPremium
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.NewReleases
@@ -71,8 +79,12 @@ fun HomeScreen(
     onScan: () -> Unit,
     onOpenDevice: (Long) -> Unit,
     onLearn: () -> Unit,
+    onInspectIp: () -> Unit,
+    onWifiSecurity: () -> Unit,
 ) {
     val s by vm.home.collectAsStateWithLifecycle()
+    // Revisión automática del "candado" del WiFi (también al volver a esta pantalla)
+    LaunchedEffect(Unit) { vm.checkWifiSecurity() }
     val isPremium = rememberIsPremium()
     var renaming by remember { mutableStateOf(false) }
     if (renaming) {
@@ -86,11 +98,12 @@ fun HomeScreen(
         )
     }
 
+    // El botón "?" se quitó: "¿Qué estoy viendo?" está en Ajustes › Ayuda
     ScreenScaffold(
         title = tr("Lupa de Red"),
         actions = {
-            IconButton(onClick = onLearn) {
-                Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = tr("¿Qué estoy viendo?"))
+            IconButton(onClick = onInspectIp) {
+                Icon(Icons.AutoMirrored.Outlined.ManageSearch, contentDescription = tr("Analizar una IP"))
             }
         },
     ) { padding ->
@@ -144,6 +157,9 @@ fun HomeScreen(
             }
             item { Spacer(Modifier.height(12.dp)) }
             item { ScanCard(s, onScan = onScan, onCancel = vm::cancelScan) }
+            if (!s.scanning && s.wifiSecurity.isNotEmpty()) {
+                item { WifiSecurityCard(s.wifiSecurity, onClick = onWifiSecurity) }
+            }
 
             if (s.newDevices.isNotEmpty()) {
                 item {
@@ -211,7 +227,72 @@ fun HomeScreen(
                     DeviceRow(d, onClick = { d.id?.let(onOpenDevice) })
                 }
             }
+            if (!s.scanning && s.devices.isNotEmpty()) {
+                item {
+                    OutlinedButton(
+                        onClick = onInspectIp,
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    ) {
+                        Icon(Icons.AutoMirrored.Outlined.ManageSearch, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(tr("¿No aparece un equipo? Analízalo por su IP"))
+                    }
+                }
+            }
             item { Spacer(Modifier.height(24.dp)) }
+        }
+    }
+}
+
+/**
+ * Resumen de la seguridad del WiFi en Inicio: discreto si todo está bien,
+ * resaltado si hay algo que arreglar. Al tocarlo se abre la explicación completa.
+ */
+@Composable
+private fun WifiSecurityCard(items: List<DiagItem>, onClick: () -> Unit) {
+    val first = items.first()
+    if (first.status == DiagStatus.UNKNOWN) return
+    val problems = items.filter { it.status == DiagStatus.BAD || it.status == DiagStatus.WARN }
+    val worst = when {
+        items.any { it.status == DiagStatus.BAD } -> DiagStatus.BAD
+        problems.isNotEmpty() -> DiagStatus.WARN
+        else -> DiagStatus.GOOD
+    }
+    val wpsUnknown = items.any { it.status == DiagStatus.UNKNOWN }
+    val color = diagColor(worst)
+    val title = when (worst) {
+        DiagStatus.BAD -> tr("Tu WiFi está desprotegido: %1\$s", first.value)
+        DiagStatus.WARN -> tr("Tu WiFi se puede proteger mejor: %1\$s", problems.joinToString(", ") { it.title })
+        else -> tr("Tu WiFi está bien protegido (%1\$s)", first.value)
+    }
+    val subtitle = when {
+        worst != DiagStatus.GOOD -> tr("Toca para ver cómo arreglarlo.")
+        wpsUnknown -> tr("Toca para revisar también el WPS del router.")
+        else -> tr("Toca para ver los detalles.")
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp).clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (worst == DiagStatus.GOOD) MaterialTheme.colorScheme.surfaceContainerLow
+            else color.copy(alpha = 0.15f),
+        ),
+    ) {
+        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                when (worst) {
+                    DiagStatus.GOOD -> Icons.Outlined.VerifiedUser
+                    DiagStatus.BAD -> Icons.Outlined.GppBad
+                    else -> Icons.Outlined.GppMaybe
+                },
+                contentDescription = null,
+                tint = color,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

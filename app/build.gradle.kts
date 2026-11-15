@@ -114,6 +114,8 @@ dependencies {
     implementation(libs.okhttp)
     // Realidad aumentada para el mapa de calor (opcional: si el teléfono no la soporta, se usa el modo caminata)
     implementation(libs.arcore)
+    // Generar el QR para compartir el WiFi (solo la parte "core", sin cámara)
+    implementation(libs.zxing.core)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)

@@ -84,6 +84,17 @@ según sus puertos y su fabricante. Esa información no sale de tu teléfono.
 - **Compartir el mapa:** si tocas "Compartir mapa" o "Guardar imagen", la app crea una imagen del
   mapa en tu teléfono. Solo sale de él si tú eliges a dónde enviarla.
 
+## 4.4 Seguridad de tu WiFi y permiso de ubicación
+
+- La herramienta gratuita *Seguridad de tu WiFi* revisa qué protección usa la red WiFi a la que estás
+  conectado (por ejemplo WPA2 o WPA3) y si el router tiene WPS activo.
+- Para ver esos detalles de las redes WiFi, **Android exige el permiso de ubicación**. La app solo lo pide
+  si tocas "Permitir y revisar" en esa pantalla, y lo usa únicamente para leer la lista de redes WiFi
+  cercanas en el momento de la revisión. **La app no obtiene tu posición, no la guarda y no la envía a
+  ningún servidor.** Puedes negar el permiso: la revisión funciona igual, solo que sin el dato de WPS
+  (y, en Android 11 o anterior, sin el tipo de protección).
+- Puedes quitar el permiso cuando quieras en *Ajustes de Android > Apps > Lupa de Red > Permisos*.
+
 ## 5. Reportes exportados (Premium)
 
 Cuando exportas un reporte en PDF o CSV, el archivo se guarda donde tú elijas. A partir de ahí, lo que hagas con él

@@ -53,6 +53,8 @@ import androidx.navigation.navArgument
 import com.lupadered.app.LupaApp
 import com.lupadered.app.ui.screens.DeviceDetailScreen
 import com.lupadered.app.ui.screens.DiagnosticsScreen
+import com.lupadered.app.ui.screens.WifiSecurityScreen
+import com.lupadered.app.ui.screens.WifiQrScreen
 import com.lupadered.app.ui.screens.HistoryScreen
 import com.lupadered.app.ui.screens.HomeScreen
 import com.lupadered.app.ui.screens.IpManagerScreen
@@ -146,6 +148,8 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onScan = startNetworkScan,
                     onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
                     onLearn = { nav.navigate("aprende") },
+                    onInspectIp = { nav.navigate("manual?ip=") },
+                    onWifiSecurity = { nav.navigate("seguridad_wifi") },
                 )
             }
             composable("ips") {
@@ -164,6 +168,8 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     ToolsActions(
                         onManual = { nav.navigate("manual?ip=") },
                         onDiagnostics = { nav.navigate("diagnostico") },
+                        onWifiSecurity = { nav.navigate("seguridad_wifi") },
+                        onWifiQr = { nav.navigate("wifi_qr") },
                         onLearn = { nav.navigate("aprende") },
                         onSettings = { nav.navigate("ajustes") },
                         onPremium = openPremium,
@@ -263,6 +269,12 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onBack = { nav.popBackStack() },
                 )
             }
+            composable("wifi_qr") {
+                WifiQrScreen(onBack = { nav.popBackStack() })
+            }
+            composable("seguridad_wifi") {
+                WifiSecurityScreen(vm = toolsVm, onBack = { nav.popBackStack() })
+            }
             composable("diagnostico") {
                 DiagnosticsScreen(vm = toolsVm, onBack = { nav.popBackStack() })
             }
@@ -278,6 +290,7 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     activity = activity,
                     onPremium = openPremium,
                     onMonitor = { nav.navigate("vigilancia") },
+                    onLearn = { nav.navigate("aprende") },
                     onBack = { nav.popBackStack() },
                 )
             }

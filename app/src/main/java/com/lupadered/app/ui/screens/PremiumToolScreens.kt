@@ -1,6 +1,7 @@
 package com.lupadered.app.ui.screens
 
 import com.lupadered.app.i18n.tr
+import com.lupadered.app.net.signalMeaning
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -360,8 +361,8 @@ fun LatencyScreen(vm: LatencyViewModel, onBack: () -> Unit) {
             }
             LossAlert(s.samples, s.router, s.internet)
             SignalCard(s.signalDbm)
-            StatsCard(tr("Router (tu WiFi)"), s.router, routerColor)
-            StatsCard(tr("Internet (tu proveedor)"), s.internet, netColor)
+            StatsCard(tr("Router (tu WiFi)"), s.router, routerColor, isRouter = true)
+            StatsCard(tr("Internet (tu proveedor)"), s.internet, netColor, isRouter = false)
 
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Text(
@@ -436,11 +437,18 @@ private fun SignalCard(dbm: Int?) {
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(tr("Señal WiFi: %1\$s", label), style = MaterialTheme.typography.titleSmall, color = color)
+                    // Primero qué significa; el número en dBm queda en letra chica
                     Text(
-                        dbm?.let { tr("%1\$s dBm (mientras más cerca de 0, mejor)", it) } ?: tr("Tu teléfono no informa la intensidad de la señal."),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        dbm?.let { signalMeaning(it) } ?: tr("Tu teléfono no informa la intensidad de la señal."),
+                        style = MaterialTheme.typography.bodySmall,
                     )
+                    dbm?.let {
+                        Text(
+                            tr("Dato técnico: %1\$s dBm", it),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
             Text(
@@ -550,7 +558,7 @@ private fun LatencyChart(samples: List<LatencySample>, routerColor: Color, netCo
             Text(tr("ahora"), style = MaterialTheme.typography.labelSmall, color = labelColor)
         }
         Text(
-            tr("× roja = no respondió (paquete perdido)"),
+            tr("× roja = no respondió (paquete perdido) · ms = milésimas de segundo: menos es mejor"),
             style = MaterialTheme.typography.labelSmall,
             color = lost,
             modifier = Modifier.padding(top = 4.dp),
@@ -559,17 +567,49 @@ private fun LatencyChart(samples: List<LatencySample>, routerColor: Color, netCo
 }
 
 @Composable
-private fun StatsCard(title: String, st: LatencyStats?, color: Color) {
+private fun StatsCard(title: String, st: LatencyStats?, color: Color, isRouter: Boolean) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(Modifier.fillMaxWidth().padding(14.dp)) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall, color = color)
-            Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Stat(tr("Promedio"), latencyText(st?.avg))
-                Stat(tr("Mín / máx"), st?.let { if (it.min == null) "—" else "${it.min}/${it.max}" } ?: "—")
-                Stat(tr("Variación"), latencyText(st?.jitter))
-                Stat(tr("Perdidos"), st?.let { "${it.lossPercent}%" } ?: "—")
+            // Qué significa, en palabras simples
+            Text(latencyMeaning(st, isRouter), style = MaterialTheme.typography.bodyMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Stat(tr("Tarda en responder"), latencyText(st?.avg))
+                Stat(tr("Estabilidad"), stabilityWord(st?.jitter))
+                Stat(tr("Respuestas perdidas"), st?.let { "${it.lossPercent}%" } ?: "—")
+            }
+            st?.takeIf { it.min != null }?.let {
+                Text(
+                    tr("Dato técnico: mín %1\$s ms · máx %2\$s ms · variación (jitter) %3\$s ms", it.min, it.max, it.jitter ?: 0),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
+    }
+}
+
+/** Qué tan parejas son las respuestas: palabras en vez de "jitter". */
+private fun stabilityWord(jitter: Long?): String = when {
+    jitter == null -> "—"
+    jitter <= 10 -> tr("Estable")
+    jitter <= 40 -> tr("Algo variable")
+    else -> tr("Inestable")
+}
+
+/** Lo que significa la latencia para una persona común. */
+private fun latencyMeaning(st: LatencyStats?, isRouter: Boolean): String {
+    if (st == null) return tr("Midiendo…")
+    val avg = st.avg ?: return tr("Midiendo…")
+    if (st.lossPercent >= 10) return tr("Se pierden muchas respuestas: la conexión se corta a ratos.")
+    return if (isRouter) when {
+        avg <= 20 -> tr("Tu WiFi responde rápido: entre tu teléfono y el router todo va bien.")
+        avg <= 60 -> tr("Tu WiFi responde con algo de demora: puede notarse en videollamadas.")
+        else -> tr("Tu WiFi responde muy lento: acércate al router o revisa si algo interfiere.")
+    } else when {
+        avg <= 60 -> tr("Internet responde rápido: ideal para videollamadas y juegos.")
+        avg <= 150 -> tr("Internet responde con algo de demora: los juegos y videollamadas pueden trabarse un poco.")
+        else -> tr("Internet responde muy lento: las páginas y llamadas pueden trabarse.")
     }
 }
 

@@ -1,6 +1,20 @@
 package com.lupadered.app.ui.screens
 
 import com.lupadered.app.i18n.tr
+import androidx.compose.material.icons.outlined.QrCode2
+import com.lupadered.app.net.WifiSecurityCheck
+import androidx.compose.material.icons.outlined.GppMaybe
+import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.LaunchedEffect
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.provider.Settings
+import android.content.Intent
+import android.Manifest
+import com.lupadered.app.net.DiagItem
+import androidx.compose.material.icons.outlined.WifiLock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -94,6 +108,8 @@ class ToolsActions(
     val onExport: () -> Unit,
     val onSpeed: () -> Unit,
     val onHeatMap: () -> Unit,
+    val onWifiSecurity: () -> Unit,
+    val onWifiQr: () -> Unit,
 )
 
 @Composable
@@ -122,6 +138,7 @@ fun ToolsScreen(a: ToolsActions) {
                     }
                 }
             }
+            // "Analizar una IP" y "Seguridad de tu WiFi" ahora están en Inicio
             ToolSection(
                 title = tr("Herramientas gratis"),
                 subtitle = tr("Disponibles para todos, sin pagar."),
@@ -135,14 +152,14 @@ fun ToolsScreen(a: ToolsActions) {
                 a.onSpeed,
             )
             ToolCard(
-                Icons.AutoMirrored.Outlined.ManageSearch, tr("Analizar una IP"),
-                tr("¿Conoces una dirección IP de tu red? Revisa si responde, cuánto tarda, su nombre y sus puertos abiertos."),
-                a.onManual,
-            )
-            ToolCard(
                 Icons.Outlined.Speed, tr("Diagnóstico de conexión"),
                 tr("¿Internet va lento? Descubre si el problema es la señal WiFi, el router, tu proveedor o el DNS."),
                 a.onDiagnostics,
+            )
+            ToolCard(
+                Icons.Outlined.QrCode2, tr("Compartir tu WiFi"),
+                tr("Crea un código QR para que tus visitas se conecten con la cámara, sin escribir la contraseña."),
+                a.onWifiQr,
             )
             ToolCard(
                 Icons.Outlined.Wifi, tr("Mis redes"),
@@ -184,19 +201,15 @@ fun ToolsScreen(a: ToolsActions) {
             )
 
             ToolSection(
-                title = tr("Ayuda y ajustes"),
+                title = tr("Ajustes"),
                 subtitle = null,
                 icon = Icons.Outlined.Settings,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            // "¿Qué estoy viendo?" ahora está dentro de Ajustes › Ayuda
             ToolCard(
-                Icons.Outlined.School, tr("¿Qué estoy viendo?"),
-                tr("Explicaciones sencillas de IP, router, puertos, latencia y más."),
-                a.onLearn,
-            )
-            ToolCard(
-                Icons.Outlined.Settings, tr("Ajustes y privacidad"),
-                tr("Apariencia, privacidad de anuncios, borrar datos y política de privacidad."),
+                Icons.Outlined.Settings, tr("Ajustes"),
+                tr("Idioma, apariencia, ayuda, privacidad y datos."),
                 a.onSettings,
             )
         }
@@ -242,6 +255,34 @@ private fun ToolCard(icon: ImageVector, title: String, text: String, onClick: ()
                     }
                 }
                 Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+
+/** Tarjeta de un resultado: primero lo que significa, luego qué hacer y el dato técnico. */
+@Composable
+internal fun DiagItemCard(item: DiagItem) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                StatusDot(diagColor(item.status))
+                Spacer(Modifier.width(8.dp))
+                Text(item.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Text(item.value, style = MaterialTheme.typography.labelLarge, color = diagColor(item.status))
+            }
+            // Primero lo que significa para ti; después qué es y el dato técnico
+            item.meaning?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            item.advice?.let {
+                Text(tr("Qué hacer: %1\$s", it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            }
+            Text(item.explanation, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            item.technical?.let {
+                Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -421,25 +462,7 @@ fun DiagnosticsScreen(vm: ToolsViewModel, onBack: () -> Unit) {
                         modifier = Modifier.padding(16.dp),
                     )
                 }
-                s.items.forEach { item ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                    ) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                StatusDot(diagColor(item.status))
-                                Spacer(Modifier.width(8.dp))
-                                Text(item.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                                Text(item.value, style = MaterialTheme.typography.labelLarge, color = diagColor(item.status))
-                            }
-                            Text(item.explanation, style = MaterialTheme.typography.bodySmall)
-                            item.advice?.let {
-                                Text(tr("Qué hacer: %1\$s", it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                    }
-                }
+                s.items.forEach { item -> DiagItemCard(item) }
             }
         }
     }
@@ -484,6 +507,102 @@ fun LearnScreen(onBack: () -> Unit) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// ============================================================== Seguridad de tu WiFi (gratis)
+
+@Composable
+fun WifiSecurityScreen(vm: ToolsViewModel, onBack: () -> Unit) {
+    val s by vm.wifiSec.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        vm.checkWifiSecurity()
+    }
+    LaunchedEffect(Unit) { if (s.result == null) vm.checkWifiSecurity() }
+
+    ScreenScaffold(title = tr("Seguridad de tu WiFi"), onBack = onBack) { padding ->
+        Column(
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                tr("Revisamos el “candado” de tu WiFi: qué protección usa y si el router tiene atajos peligrosos. Así sabes si alguien podría entrar a tu red sin permiso."),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (s.running) {
+                RadarStatus(tr("Revisando tu WiFi…"), size = 36.dp)
+            } else {
+                Button(onClick = vm::checkWifiSecurity, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (s.result == null) tr("Revisar mi WiFi") else tr("Revisar de nuevo"))
+                }
+            }
+            s.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+            val r = s.result
+            if (r != null && s.items.isNotEmpty()) {
+                val (status, text) = WifiSecurityCheck.verdict(s.items)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = diagColor(status).copy(alpha = 0.15f)),
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                if (status == DiagStatus.GOOD) Icons.Outlined.VerifiedUser else Icons.Outlined.GppMaybe,
+                                contentDescription = null, tint = diagColor(status),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                        }
+                        r.ssid?.let {
+                            Text(
+                                tr("Red: %1\$s", it),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp, start = 34.dp),
+                            )
+                        }
+                    }
+                }
+                s.items.forEach { DiagItemCard(it) }
+
+                // Explicación del permiso: Android lo pide para ver detalles de redes WiFi
+                if (!r.hasLocationPermission) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(tr("¿Por qué pide ubicación?"), style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                tr("Para ver los detalles de las redes WiFi (como el WPS del router), Android exige el permiso de ubicación. Lupa de Red no usa, no guarda y no envía tu ubicación."),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Button(onClick = {
+                                permLauncher.launch(
+                                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                )
+                            }) { Text(tr("Permitir y revisar")) }
+                        }
+                    }
+                } else if (!r.locationOn) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                tr("Activa la ubicación del teléfono para revisar el WPS. Después vuelve y toca «Revisar de nuevo»."),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            OutlinedButton(onClick = {
+                                runCatching { context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
+                            }) { Text(tr("Abrir ajustes de ubicación")) }
+                        }
+                    }
+                }
+                Text(
+                    tr("Consejo: usa una contraseña de al menos 12 caracteres, que no sea tu nombre ni tu teléfono, y cambia también la contraseña para entrar al router."),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

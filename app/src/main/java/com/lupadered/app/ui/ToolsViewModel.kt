@@ -11,6 +11,7 @@ import com.lupadered.app.net.HostInspector
 import com.lupadered.app.net.InspectionResult
 import com.lupadered.app.net.Ipv4
 import com.lupadered.app.net.NetworkInfoProvider
+import com.lupadered.app.net.WifiSecurityCheck
 import com.lupadered.app.knowledge.PortKnowledge
 import com.lupadered.app.ui.components.CheckItem
 import com.lupadered.app.ui.components.CheckStatus
@@ -33,6 +34,13 @@ data class ManualState(
     val checks: List<CheckItem> = emptyList(),
 )
 
+data class WifiSecState(
+    val running: Boolean = false,
+    val result: WifiSecurityCheck.Result? = null,
+    val items: List<DiagItem> = emptyList(),
+    val error: String? = null,
+)
+
 data class DiagState(
     val running: Boolean = false,
     val progress: Float = 0f,
@@ -51,6 +59,28 @@ class ToolsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _diag = MutableStateFlow(DiagState())
     val diag: StateFlow<DiagState> = _diag.asStateFlow()
+
+    private val _wifiSec = MutableStateFlow(WifiSecState())
+    val wifiSec: StateFlow<WifiSecState> = _wifiSec.asStateFlow()
+
+    /** Revisión gratis de la protección del WiFi (WEP/WPA/WPA2/WPA3, WPS). */
+    fun checkWifiSecurity() {
+        if (_wifiSec.value.running) return
+        viewModelScope.launch {
+            _wifiSec.update { it.copy(running = true, error = null) }
+            try {
+                val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+                if (net == null || !net.isWifi) {
+                    _wifiSec.value = WifiSecState(error = tr("No estás conectado a un WiFi. Conéctate a tu red para revisarla."))
+                    return@launch
+                }
+                val r = WifiSecurityCheck.check(app)
+                _wifiSec.value = WifiSecState(result = r, items = WifiSecurityCheck.items(r, net.gateway))
+            } finally {
+                _wifiSec.update { it.copy(running = false) }
+            }
+        }
+    }
 
     /** Sugerencia para el campo de IP: "192.168.1." */
     fun ipPrefix(): String {
