@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "Your password isn't saved or sent: the code is created on your phone and erased when you leave this screen.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "Show this code on your screen to your guest: they scan it with their phone's camera and connect without you having to read out the password.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "The code is only shown on your screen: it can't be shared, saved or screenshotted. Show it in person only to people you want to let in.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Note: whoever connects can see the password in their phone's settings. For guests, use the guest network."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Note: whoever connects can see the password in their phone's settings. For guests, use the guest network.",
+"Apagar linterna": "Turn off flashlight",
+"Encender linterna": "Turn on flashlight",
+"Toca la linterna de arriba a la derecha.": "Tap the flashlight at the top right.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "It's too dark and the camera can't recognize the place. Turn on the lights.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "You moved too fast. Stay still for a moment, then walk and turn more slowly.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "The camera can't find any details. Point at a part of the floor with furniture, rugs or edges: a plain wall or floor won't work.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "Another app is using the camera. Close it and try again.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "The place was lost. Slowly go back to an area you already painted, pointing at the floor, so it can recognize it.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Not working? You can finish and continue with walking mode.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "It's a bit dark: the map could get misaligned. Turn on more lights.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Tip: turn slowly and keep the floor in view. If the map shifts a little, it corrects itself when you return to a known place."
 }

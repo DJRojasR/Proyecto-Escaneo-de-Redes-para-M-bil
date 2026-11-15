@@ -60,6 +60,12 @@ import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.lupadered.app.i18n.tr
+import com.google.ar.core.TrackingFailureReason
+import androidx.compose.material.icons.filled.FlashlightOff
+import androidx.compose.material.icons.filled.FlashlightOn
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.activity.compose.BackHandler
 import com.lupadered.app.ui.screens.signalColor
 import kotlin.math.hypot
 
@@ -83,6 +89,40 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
     var glView by remember { mutableStateOf<GLSurfaceView?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var installRequested by remember { mutableStateOf(false) }
+    var config by remember { mutableStateOf<Config?>(null) }
+    var torchOn by remember { mutableStateOf(false) }
+    var torchUnsupported by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var finishing by remember { mutableStateOf(false) }
+
+    // Al salir guardamos el recorrido ya corregido por las anclas
+    val finish: () -> Unit = {
+        if (!finishing) {
+            finishing = true
+            scope.launch {
+                runCatching { vm.finish() }
+                onDone()
+            }
+        }
+    }
+    BackHandler(onBack = finish)
+
+    // Linterna: ARCore la enciende junto con la cámara (no todos los teléfonos lo permiten)
+    val toggleTorch: () -> Unit = {
+        val sess = session
+        val cfg = config
+        if (sess != null && cfg != null) {
+            val want = !torchOn
+            try {
+                cfg.flashMode = if (want) Config.FlashMode.TORCH else Config.FlashMode.OFF
+                sess.configure(cfg)
+                torchOn = want
+            } catch (_: Throwable) {
+                runCatching { cfg.flashMode = Config.FlashMode.OFF }
+                torchUnsupported = true
+            }
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasPermission = granted
@@ -105,12 +145,15 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
                         ArCoreApk.InstallStatus.INSTALLED -> Unit
                     }
                     session = Session(activity).also { sess ->
-                        val config = Config(sess).apply {
+                        val cfg = Config(sess).apply {
                             planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
                             focusMode = Config.FocusMode.AUTO
                             updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+                            // Para saber si hay poca luz y avisar antes de que se pierda
+                            lightEstimationMode = Config.LightEstimationMode.AMBIENT_INTENSITY
                         }
-                        sess.configure(config)
+                        sess.configure(cfg)
+                        config = cfg
                     }
                 } catch (_: Throwable) {
                     error = tr("Este teléfono no pudo iniciar la realidad aumentada. Usa el modo caminata.")
@@ -173,22 +216,55 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
-                    onClick = onDone,
+                    onClick = finish,
                     modifier = Modifier.clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)),
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = tr("Atrás"), tint = Color.White)
                 }
                 Spacer(Modifier.width(10.dp))
                 SignalChip(s.liveRssi)
+                Spacer(Modifier.weight(1f))
+                if (session != null && !torchUnsupported) {
+                    IconButton(
+                        onClick = toggleTorch,
+                        modifier = Modifier.clip(CircleShape)
+                            .background(if (torchOn) Color(0xFFFFC107) else Color.Black.copy(alpha = 0.45f)),
+                    ) {
+                        Icon(
+                            if (torchOn) Icons.Filled.FlashlightOn else Icons.Filled.FlashlightOff,
+                            contentDescription = if (torchOn) tr("Apagar linterna") else tr("Encender linterna"),
+                            tint = if (torchOn) Color.Black else Color.White,
+                        )
+                    }
+                }
             }
             Spacer(Modifier.height(10.dp))
+            val f = s.frame
+            val dark = f?.failure == TrackingFailureReason.INSUFFICIENT_LIGHT || (f?.light ?: 1f) < 0.12f
+            val torchTip = if (!torchOn && !torchUnsupported) " " + tr("Toca la linterna de arriba a la derecha.") else ""
             val hint = when {
                 permissionDenied -> tr("Para usar la realidad aumentada necesitamos permiso para usar la cámara. Si prefieres, usa el modo caminata.")
                 error != null -> error
                 session == null -> tr("Preparando la cámara…")
-                s.frame?.tracking != true -> tr("Mueve el teléfono despacio apuntando al piso para que reconozca el lugar.")
-                s.samples.isEmpty() -> tr("¡Listo! Camina despacio por tu casa con la cámara apuntando un poco al piso.")
-                else -> null
+                f == null -> tr("Preparando la cámara…")
+                !f.tracking -> when (f.failure) {
+                    TrackingFailureReason.INSUFFICIENT_LIGHT ->
+                        tr("Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.") + torchTip
+                    TrackingFailureReason.EXCESSIVE_MOTION ->
+                        tr("Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.")
+                    TrackingFailureReason.INSUFFICIENT_FEATURES ->
+                        tr("La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.")
+                    TrackingFailureReason.CAMERA_UNAVAILABLE ->
+                        tr("Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.")
+                    else -> if (s.sampleCount == 0) {
+                        tr("Mueve el teléfono despacio apuntando al piso para que reconozca el lugar.")
+                    } else {
+                        tr("Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.")
+                    }
+                } + (if (s.lostForMs > 8000) "\n" + tr("¿No lo logra? Puedes terminar y seguir con el modo caminata.") else "")
+                dark -> tr("Está algo oscuro: el mapa podría desalinearse. Enciende más luces.") + torchTip
+                s.sampleCount == 0 -> tr("¡Listo! Camina despacio por tu casa con la cámara apuntando un poco al piso.")
+                else -> tr("Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.")
             }
             hint?.let { Bubble(it) }
 
@@ -202,7 +278,7 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
                     tr("%1\$s puntos guardados en el plano", s.saved),
                     color = Color.White, style = MaterialTheme.typography.bodySmall,
                 )
-                Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(tr("Terminar recorrido")) }
+                Button(onClick = finish, enabled = !finishing, modifier = Modifier.fillMaxWidth()) { Text(tr("Terminar recorrido")) }
                 Text(
                     tr("Esta función usa los Servicios de Google Play para RA (ARCore), proporcionados por Google LLC y regidos por la Política de Privacidad de Google."),
                     color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall,

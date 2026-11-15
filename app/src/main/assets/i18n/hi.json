@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "आपका पासवर्ड न सेव होता है न भेजा जाता है: कोड आपके फ़ोन में बनता है और इस स्क्रीन से निकलते ही मिट जाता है।",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "यह कोड अपनी स्क्रीन पर मेहमान को दिखाएँ: वह अपने फ़ोन के कैमरे से स्कैन करके जुड़ जाएगा, आपको पासवर्ड बोलना नहीं पड़ेगा।",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "कोड सिर्फ़ आपकी स्क्रीन पर दिखता है: इसे शेयर, सेव या स्क्रीनशॉट नहीं किया जा सकता। इसे सिर्फ़ उन्हीं को सामने से दिखाएँ जिन्हें आप जोड़ना चाहते हैं।",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "ध्यान दें: जो जुड़ेगा वह अपने फ़ोन की सेटिंग्स में पासवर्ड देख सकेगा। मेहमानों के लिए गेस्ट नेटवर्क इस्तेमाल करें।"
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "ध्यान दें: जो जुड़ेगा वह अपने फ़ोन की सेटिंग्स में पासवर्ड देख सकेगा। मेहमानों के लिए गेस्ट नेटवर्क इस्तेमाल करें।",
+"Apagar linterna": "टॉर्च बंद करें",
+"Encender linterna": "टॉर्च चालू करें",
+"Toca la linterna de arriba a la derecha.": "ऊपर दाईं ओर टॉर्च पर टैप करें।",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "बहुत अंधेरा है और कैमरा जगह नहीं पहचान पा रहा। लाइट जलाएँ।",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "आप बहुत तेज़ी से हिले। एक पल रुकें, फिर धीरे चलें और धीरे मुड़ें।",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "कैमरे को कोई विवरण नहीं मिल रहा। फ़र्श के उस हिस्से की ओर करें जहाँ फ़र्नीचर, दरी या किनारे हों: सादी दीवार या चिकना फ़र्श काम नहीं करता।",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "कोई दूसरा ऐप कैमरा इस्तेमाल कर रहा है। उसे बंद करके फिर कोशिश करें।",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "जगह खो गई। धीरे-धीरे उस जगह पर लौटें जिसे आपने पहले रंगा था, फ़र्श की ओर करके, ताकि वह पहचान सके।",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "नहीं हो रहा? आप खत्म करके चलने वाले मोड से जारी रख सकते हैं।",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "थोड़ा अंधेरा है: मैप खिसक सकता है। और लाइट जलाएँ।",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "सलाह: धीरे मुड़ें और फ़र्श को नज़र में रखें। अगर मैप थोड़ा खिसके, तो किसी जानी-पहचानी जगह पर लौटते ही खुद ठीक हो जाता है।"
 }

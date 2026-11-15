@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "Kata sandimu tidak disimpan atau dikirim: kode dibuat di ponselmu dan dihapus saat kamu keluar dari layar ini.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "Tunjukkan kode ini di layarmu ke tamu: mereka memindainya dengan kamera ponsel dan terhubung tanpa kamu harus menyebutkan kata sandinya.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "Kode hanya tampil di layarmu: tidak bisa dibagikan, disimpan, atau di-screenshot. Tunjukkan langsung hanya ke orang yang ingin kamu beri akses.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Catatan: orang yang terhubung bisa melihat kata sandi di pengaturan ponselnya. Untuk tamu, gunakan jaringan tamu."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Catatan: orang yang terhubung bisa melihat kata sandi di pengaturan ponselnya. Untuk tamu, gunakan jaringan tamu.",
+"Apagar linterna": "Matikan senter",
+"Encender linterna": "Nyalakan senter",
+"Toca la linterna de arriba a la derecha.": "Ketuk senter di kanan atas.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "Terlalu gelap dan kamera tidak mengenali tempat ini. Nyalakan lampu.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "Kamu bergerak terlalu cepat. Diam sebentar, lalu berjalan dan berbelok lebih pelan.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "Kamera tidak menemukan detail. Arahkan ke bagian lantai yang ada perabot, karpet, atau tepi: dinding atau lantai polos tidak bisa.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "Aplikasi lain sedang memakai kamera. Tutup lalu coba lagi.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "Tempatnya hilang. Kembali pelan-pelan ke area yang sudah diwarnai, arahkan ke lantai, agar dikenali lagi.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Tidak berhasil? Kamu bisa selesai dan lanjut dengan mode jalan kaki.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "Agak gelap: peta bisa bergeser. Nyalakan lebih banyak lampu.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Tips: berbelok pelan-pelan dan tetap arahkan ke lantai. Jika peta bergeser sedikit, peta akan terkoreksi sendiri saat kamu kembali ke tempat yang sudah dikenal."
 }

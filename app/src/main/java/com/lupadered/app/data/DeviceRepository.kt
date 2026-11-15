@@ -484,6 +484,14 @@ class DeviceRepository(context: Context) {
             put("at", System.currentTimeMillis())
         })
 
+    /** Corrige dónde quedó un punto (la realidad aumentada ajusta el recorrido al terminar). */
+    fun moveHeatPoint(id: Long, x: Float, y: Float) {
+        db.update("heat_points", ContentValues().apply {
+            put("x", x)
+            put("y", y)
+        }, "id = ?", arrayOf(id.toString()))
+    }
+
     fun deleteHeatPoint(id: Long) {
         db.delete("heat_points", "id = ?", arrayOf(id.toString()))
     }

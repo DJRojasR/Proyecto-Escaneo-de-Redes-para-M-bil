@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "Votre mot de passe n’est ni enregistré ni envoyé : le code est créé sur votre téléphone et effacé quand vous quittez cet écran.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "Montrez ce code sur votre écran à votre invité : il le scanne avec l’appareil photo de son téléphone et se connecte sans que vous ayez à lui dicter le mot de passe.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "Le code s’affiche uniquement sur votre écran : il ne peut être ni partagé, ni enregistré, ni capturé. Montrez-le en personne seulement à ceux à qui vous voulez donner l’accès.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Attention : la personne connectée pourra voir le mot de passe dans les réglages de son téléphone. Pour les invités, utilisez le réseau invité."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Attention : la personne connectée pourra voir le mot de passe dans les réglages de son téléphone. Pour les invités, utilisez le réseau invité.",
+"Apagar linterna": "Éteindre la lampe",
+"Encender linterna": "Allumer la lampe",
+"Toca la linterna de arriba a la derecha.": "Touchez la lampe en haut à droite.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "Il fait trop sombre et la caméra ne reconnaît pas le lieu. Allumez les lumières.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "Vous avez bougé trop vite. Restez immobile un instant, puis marchez et tournez plus lentement.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "La caméra ne trouve pas de détails. Visez une partie du sol avec des meubles, des tapis ou des bords : un mur ou un sol uni ne marchent pas.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "Une autre app utilise la caméra. Fermez-la et réessayez.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "Le lieu a été perdu. Revenez lentement vers une zone déjà peinte, en visant le sol, pour qu’il la reconnaisse.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Ça ne marche pas ? Vous pouvez terminer et continuer en mode marche.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "Il fait un peu sombre : la carte pourrait se décaler. Allumez plus de lumières.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Conseil : tournez lentement et gardez le sol en vue. Si la carte se décale un peu, elle se corrige seule quand vous revenez à un endroit connu."
 }

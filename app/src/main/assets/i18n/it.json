@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "La tua password non viene salvata né inviata: il codice si crea nel telefono e si cancella quando esci da questa schermata.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "Mostra questo codice sullo schermo al tuo ospite: lo scansiona con la fotocamera del telefono e si connette senza che tu debba dettargli la password.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "Il codice si vede solo sul tuo schermo: non si può condividere, salvare né catturare. Mostralo di persona solo a chi vuoi dare accesso.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Attenzione: chi si connette potrà vedere la password nelle impostazioni del suo telefono. Per gli ospiti, usa la rete ospiti."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Attenzione: chi si connette potrà vedere la password nelle impostazioni del suo telefono. Per gli ospiti, usa la rete ospiti.",
+"Apagar linterna": "Spegni torcia",
+"Encender linterna": "Accendi torcia",
+"Toca la linterna de arriba a la derecha.": "Tocca la torcia in alto a destra.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "C’è troppo buio e la fotocamera non riconosce il luogo. Accendi le luci.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "Ti sei mosso troppo in fretta. Stai fermo un momento, poi cammina e gira più lentamente.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "La fotocamera non trova dettagli. Inquadra una parte del pavimento con mobili, tappeti o bordi: una parete o un pavimento liscio non vanno bene.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "Un’altra app sta usando la fotocamera. Chiudila e riprova.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "Il luogo è stato perso. Torna lentamente in una zona già dipinta, inquadrando il pavimento, perché la riconosca.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Non ci riesce? Puoi terminare e continuare con la modalità camminata.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "È un po’ buio: la mappa potrebbe disallinearsi. Accendi più luci.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Consiglio: gira lentamente e tieni il pavimento in vista. Se la mappa si sposta un po’, si corregge da sola quando torni in un posto conosciuto."
 }

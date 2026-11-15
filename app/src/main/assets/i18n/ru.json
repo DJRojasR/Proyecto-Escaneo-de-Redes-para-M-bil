@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "Ваш пароль не сохраняется и не отправляется: код создаётся на телефоне и стирается, когда вы уходите с этого экрана.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "Покажите этот код гостю на своём экране: он отсканирует его камерой телефона и подключится, а вам не придётся диктовать пароль.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "Код виден только на вашем экране: его нельзя переслать, сохранить или заскриншотить. Показывайте его лично только тем, кому хотите дать доступ.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Внимание: подключившийся сможет увидеть пароль в настройках своего телефона. Для гостей используйте гостевую сеть."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Внимание: подключившийся сможет увидеть пароль в настройках своего телефона. Для гостей используйте гостевую сеть.",
+"Apagar linterna": "Выключить фонарик",
+"Encender linterna": "Включить фонарик",
+"Toca la linterna de arriba a la derecha.": "Нажмите на фонарик в правом верхнем углу.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "Слишком темно, и камера не узнаёт место. Включите свет.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "Вы двигались слишком быстро. Постойте немного, затем идите и поворачивайте медленнее.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "Камера не находит деталей. Наведите её на участок пола с мебелью, коврами или краями: гладкая стена или пол не подойдут.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "Камерой пользуется другое приложение. Закройте его и попробуйте снова.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "Место потеряно. Медленно вернитесь в уже закрашенную зону, направив камеру на пол, чтобы её узнали.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Не получается? Можно завершить и продолжить в режиме ходьбы.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "Немного темно: карта может сместиться. Включите больше света.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Совет: поворачивайтесь медленно и держите пол в кадре. Если карта немного сдвинется, она исправится сама, когда вы вернётесь в знакомое место."
 }

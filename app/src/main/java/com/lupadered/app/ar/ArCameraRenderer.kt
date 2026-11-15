@@ -3,10 +3,14 @@ package com.lupadered.app.ar
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import com.google.ar.core.Anchor
 import com.google.ar.core.Coordinates2d
 import com.google.ar.core.Frame
+import com.google.ar.core.LightEstimate
 import com.google.ar.core.Plane
+import com.google.ar.core.Pose
 import com.google.ar.core.Session
+import com.google.ar.core.TrackingFailureReason
 import com.google.ar.core.TrackingState
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -25,7 +29,26 @@ class ArFrameInfo(
     val floorY: Float?,
     val view: FloatArray,
     val projection: FloatArray,
+    /** Por qué ARCore perdió el lugar (poca luz, movimiento brusco…); null si va bien. */
+    val failure: TrackingFailureReason? = null,
+    /** Brillo de la imagen de la cámara (0 = negro, 1 = muy claro); null si no se sabe. */
+    val light: Float? = null,
+    /** Posición actual (ya corregida por ARCore) de cada ancla del recorrido. */
+    val anchors: List<ArAnchorPose> = emptyList(),
 )
+
+/**
+ * Un ancla: un punto del piso que ARCore va "recordando". Cuando ARCore se da cuenta
+ * de que se desvió (al girar o volver a un lugar ya visto) corrige las anclas, y así
+ * el mapa pintado se mueve con ellas en vez de quedar desalineado.
+ */
+class ArAnchorPose(val id: Int, val pose: Pose)
+
+/** Cada cuántos metros dejamos un ancla nueva. */
+private const val ANCHOR_SPACING_M = 1.2f
+
+/** ARCore recomienda no tener demasiadas anclas a la vez. */
+private const val MAX_ANCHORS = 60
 
 /**
  * Pinta la imagen de la cámara de fondo (como en las muestras oficiales de ARCore)
@@ -41,6 +64,8 @@ class ArCameraRenderer(
     private val background = CameraBackground()
     private var lowestFloor: Float? = null
     private var frameCount = 0
+    private val anchors = ArrayList<Pair<Int, Anchor>>()
+    private var nextAnchorId = 0
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0f, 0f, 1f)
@@ -81,7 +106,30 @@ class ArCameraRenderer(
         }
         // Un piso detectado muy por encima del teléfono no tiene sentido (sería una mesa)
         val floor = lowestFloor?.takeIf { it < pose.ty() - 0.4f }
-        onFrame(ArFrameInfo(tracking, pose.tx(), pose.ty(), pose.tz(), floor, view, projection))
+
+        // Dejamos un ancla cada ~1 m recorrido para que ARCore corrija el mapa al desviarse
+        if (tracking) {
+            val far = anchors.none { (_, a) ->
+                val p = a.pose
+                val dx = p.tx() - pose.tx()
+                val dz = p.tz() - pose.tz()
+                dx * dx + dz * dz < ANCHOR_SPACING_M * ANCHOR_SPACING_M
+            }
+            if (far && anchors.size < MAX_ANCHORS) {
+                try {
+                    anchors += nextAnchorId++ to session.createAnchor(Pose.makeTranslation(pose.tx(), pose.ty(), pose.tz()))
+                } catch (_: Throwable) {
+                    // Si ARCore no puede crearla ahora, lo intentamos en otro cuadro
+                }
+            }
+        }
+        val anchorPoses = anchors
+            .filter { (_, a) -> a.trackingState == TrackingState.TRACKING }
+            .map { (id, a) -> ArAnchorPose(id, a.pose) }
+
+        val light = frame.lightEstimate.takeIf { it.state == LightEstimate.State.VALID }?.pixelIntensity
+        val failure = if (tracking) null else camera.trackingFailureReason
+        onFrame(ArFrameInfo(tracking, pose.tx(), pose.ty(), pose.tz(), floor, view, projection, failure, light, anchorPoses))
     }
 }
 

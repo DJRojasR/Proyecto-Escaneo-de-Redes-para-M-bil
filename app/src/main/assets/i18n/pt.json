@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "Sua senha não é salva nem enviada: o código é criado no seu celular e apagado ao sair desta tela.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "Mostre este código na sua tela para a visita: ela o escaneia com a câmera do celular e se conecta sem você precisar ditar a senha.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "O código só aparece na sua tela: não pode ser compartilhado, salvo nem capturado. Mostre-o pessoalmente só a quem você quer dar acesso.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Atenção: quem se conectar poderá ver a senha nas configurações do celular. Para visitas, use a rede de convidados."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "Atenção: quem se conectar poderá ver a senha nas configurações do celular. Para visitas, use a rede de convidados.",
+"Apagar linterna": "Desligar lanterna",
+"Encender linterna": "Ligar lanterna",
+"Toca la linterna de arriba a la derecha.": "Toque na lanterna no canto superior direito.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "Está muito escuro e a câmera não reconhece o lugar. Acenda as luzes.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "Você se moveu rápido demais. Fique parado um momento e depois ande e gire mais devagar.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "A câmera não encontra detalhes. Aponte para uma parte do chão com móveis, tapetes ou bordas: uma parede ou chão liso não servem.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "Outro app está usando a câmera. Feche-o e tente de novo.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "O lugar se perdeu. Volte devagar a uma área que você já pintou, apontando para o chão, para que ele a reconheça.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Não está dando certo? Você pode terminar e continuar com o modo caminhada.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "Está um pouco escuro: o mapa pode se desalinhar. Acenda mais luzes.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Dica: gire devagar e mantenha o chão à vista. Se o mapa se mover um pouco, ele se corrige sozinho ao voltar a um lugar conhecido."
 }

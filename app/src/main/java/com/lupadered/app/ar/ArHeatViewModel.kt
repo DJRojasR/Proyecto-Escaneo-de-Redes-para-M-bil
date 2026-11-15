@@ -4,8 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lupadered.app.LupaApp
+import java.util.concurrent.Executors
+import com.google.ar.core.Pose
 import com.lupadered.app.net.NetworkInfoProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,8 +20,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.hypot
 
-/** Una medición en el espacio real (metros). */
-data class ArSample(val x: Float, val z: Float, val rssi: Int)
+/**
+ * Una medición. Se guarda relativa al ancla más cercana (no en coordenadas fijas):
+ * así, cuando ARCore corrige un desvío y mueve el ancla, la medición se mueve con ella.
+ */
+private class ArSample(
+    val anchorId: Int,
+    val local: FloatArray,
+    val rssi: Int,
+    var dbId: Long? = null,
+    /** Posición en el mundo calculada la última vez (metros). */
+    var x: Float = 0f,
+    var z: Float = 0f,
+)
 
 /**
  * Una baldosa del mapa sobre el piso: el cuadrado (i, k) de [CELL_M] metros de lado
@@ -29,9 +43,11 @@ data class ArCell(val i: Int, val k: Int, val rssi: Int)
 data class ArHeatState(
     val liveRssi: Int? = null,
     val frame: ArFrameInfo? = null,
-    val samples: List<ArSample> = emptyList(),
+    val sampleCount: Int = 0,
     val cells: List<ArCell> = emptyList(),
     val saved: Int = 0,
+    /** Hace cuánto (ms) que ARCore no reconoce el lugar; 0 si va bien. */
+    val lostForMs: Long = 0,
 )
 
 /** Tamaño de cada baldosa del mapa, en metros. */
@@ -43,11 +59,14 @@ private const val PAINT_RADIUS_M = 0.9f
 /** Mediciones que se tienen en cuenta para estimar cada baldosa, en metros. */
 private const val INFLUENCE_M = 1.6f
 
+/** Si las mediciones se movieron más que esto (ARCore corrigió), se repinta todo. */
+private const val REPAINT_SHIFT_M = 0.08f
+
 /**
  * Recorrido con realidad aumentada. ARCore nos dice dónde está el teléfono en
- * metros; cada vez que avanzas un poco guardamos la señal WiFi en ese lugar. Las
- * mediciones también se pasan al plano del piso elegido, partiendo del punto
- * donde empezaste y con la parte de arriba del plano hacia donde mirabas.
+ * metros; cada vez que avanzas un poco guardamos la señal WiFi en ese lugar, atada
+ * al ancla más cercana. Si ARCore corrige un desvío (por ejemplo después de girar),
+ * las anclas se mueven y el mapa se vuelve a pintar en su lugar correcto.
  */
 class ArHeatViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -55,16 +74,34 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
     private val repo get() = app.repository
     private var liveJob: Job? = null
 
+    /** Todo lo que toca las mediciones y baldosas corre en este único hilo. */
+    private val workerExecutor = Executors.newSingleThreadExecutor()
+    private val worker = workerExecutor.asCoroutineDispatcher()
+
     private var floorId: Long = -1
     private var startX = 0.5f
     private var startY = 0.5f
     private var widthM = 12f
+
+    // Solo se usan desde el hilo de OpenGL
     private var lastSampleAt = 0L
     private var lastEmitAt = 0L
+    private var lastRefreshAt = 0L
     private var lastX = Float.NaN
     private var lastZ = Float.NaN
-    private var originX = Float.NaN
-    private var originZ = Float.NaN
+    private var prevCamX = Float.NaN
+    private var prevCamZ = Float.NaN
+    private var prevTrackedAt = 0L
+    private var ignoreUntil = 0L
+    private var lostSince = 0L
+
+    /** El ancla del punto de partida: el plano se mide desde ahí. */
+    @Volatile private var originAnchorId: Int? = null
+    @Volatile private var latestAnchors: Map<Int, Pose> = emptyMap()
+
+    // Solo se usan desde [worker]
+    private val samples = ArrayList<ArSample>()
+    private val cells = HashMap<Pair<Int, Int>, Int>()
 
     private val _state = MutableStateFlow(ArHeatState())
     val state: StateFlow<ArHeatState> = _state.asStateFlow()
@@ -96,37 +133,88 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
 
     /** Llega desde el hilo de OpenGL en cada cuadro. */
     fun onFrame(info: ArFrameInfo) {
-        val t = System.currentTimeMillis()
+        val now = System.currentTimeMillis()
+        if (!info.tracking) {
+            if (lostSince == 0L) lostSince = now
+        } else {
+            lostSince = 0L
+        }
         // El dibujo de encima no necesita más de ~30 cuadros por segundo
-        if (t - lastEmitAt >= 33) {
-            lastEmitAt = t
-            _state.update { it.copy(frame = info) }
+        if (now - lastEmitAt >= 33) {
+            lastEmitAt = now
+            val lost = if (lostSince == 0L) 0L else now - lostSince
+            _state.update { it.copy(frame = info, lostForMs = lost) }
         }
         if (!info.tracking) return
-        if (originX.isNaN()) {
-            originX = info.camX
-            originZ = info.camZ
+
+        val anchors = info.anchors.associate { it.id to it.pose }
+        latestAnchors = anchors
+        if (originAnchorId == null) originAnchorId = info.anchors.minByOrNull { it.id }?.id
+
+        // Si al recuperar el lugar la posición "salta" de golpe, esperamos a que se asiente
+        if (!prevCamX.isNaN() && now - prevTrackedAt < 600 &&
+            hypot(info.camX - prevCamX, info.camZ - prevCamZ) > 1.0f
+        ) {
+            ignoreUntil = now + 1500
         }
+        prevCamX = info.camX
+        prevCamZ = info.camZ
+        prevTrackedAt = now
+
+        // Una vez por segundo revisamos si ARCore corrigió las anclas
+        if (now - lastRefreshAt > 1000) {
+            lastRefreshAt = now
+            viewModelScope.launch(worker) { refreshPositions(anchors) }
+        }
+
+        if (now < ignoreUntil) return
         val rssi = _state.value.liveRssi ?: return
-        val now = System.currentTimeMillis()
         val moved = if (lastX.isNaN()) Float.MAX_VALUE else hypot(info.camX - lastX, info.camZ - lastZ)
         // Una muestra cada ~30 cm recorridos (o cada 2 s si estás quieto en un lugar nuevo)
         if (moved < 0.3f && !(moved > 0.1f && now - lastSampleAt > 2000)) return
+
+        // La medición se ata al ancla más cercana
+        val nearest = info.anchors.minByOrNull {
+            val p = it.pose
+            hypot(p.tx() - info.camX, p.tz() - info.camZ)
+        } ?: return
         lastX = info.camX
         lastZ = info.camZ
         lastSampleAt = now
-        val sample = ArSample(info.camX, info.camZ, rssi)
-        samples += sample
-        paintAround(sample)
-        _state.update { it.copy(samples = samples.toList(), cells = cells.map { (key, v) -> ArCell(key.first, key.second, v) }) }
-        save(sample)
+        val local = nearest.pose.inverse().transformPoint(floatArrayOf(info.camX, info.camY, info.camZ))
+        val sample = ArSample(nearest.id, local, rssi, x = info.camX, z = info.camZ)
+        viewModelScope.launch(worker) {
+            samples += sample
+            paintAround(sample)
+            publishCells()
+            save(sample, anchors)
+        }
     }
 
-    private val samples = ArrayList<ArSample>()
-    private val cells = HashMap<Pair<Int, Int>, Int>()
+    /** Recalcula dónde está cada medición según las anclas (ya corregidas por ARCore). */
+    private fun refreshPositions(anchors: Map<Int, Pose>) {
+        if (samples.isEmpty()) return
+        var maxShift = 0f
+        for (s in samples) {
+            val pose = anchors[s.anchorId] ?: continue
+            val w = pose.transformPoint(s.local)
+            maxShift = maxOf(maxShift, hypot(w[0] - s.x, w[2] - s.z))
+            s.x = w[0]
+            s.z = w[2]
+        }
+        if (maxShift < REPAINT_SHIFT_M) return
+        cells.clear()
+        for (s in samples) paintAround(s)
+        publishCells()
+    }
+
+    private fun publishCells() {
+        val list = cells.map { (key, v) -> ArCell(key.first, key.second, v) }
+        _state.update { it.copy(sampleCount = samples.size, cells = list) }
+    }
 
     /**
-     * Vuelve a calcular las baldosas cercanas a la nueva medición: cada una toma un
+     * Vuelve a calcular las baldosas cercanas a una medición: cada una toma un
      * promedio de las mediciones de alrededor, pesando más las más cercanas.
      */
     private fun paintAround(s: ArSample) {
@@ -151,16 +239,49 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    /** Pasa la muestra al plano: X a la derecha y Z hacia atrás (abajo en el plano). */
-    private fun save(s: ArSample) {
-        if (floorId < 0) return
+    /**
+     * Pasa una posición del mundo al plano del piso: medida desde el ancla del punto
+     * de partida, con X a la derecha y Z hacia atrás (abajo en el plano).
+     */
+    private fun toPlan(x: Float, y: Float, z: Float, anchors: Map<Int, Pose>): Pair<Float, Float>? {
+        val origin = originAnchorId?.let { anchors[it] } ?: return null
+        val l = origin.inverse().transformPoint(floatArrayOf(x, y, z))
         val heightM = widthM / 0.75f
         // Sin límites: si el recorrido se sale del recuadro, el mapa se agranda para mostrarlo
-        val px = startX + (s.x - originX) / widthM
-        val py = startY + (s.z - originZ) / heightM
-        viewModelScope.launch(Dispatchers.IO) {
-            repo.addHeatPoint(floorId, px, py, s.rssi, null)
-            _state.update { it.copy(saved = it.saved + 1) }
+        return (startX + l[0] / widthM) to (startY + l[2] / heightM)
+    }
+
+    private suspend fun save(s: ArSample, anchors: Map<Int, Pose>) {
+        if (floorId < 0) return
+        val pose = anchors[s.anchorId] ?: return
+        val w = pose.transformPoint(s.local)
+        val (px, py) = toPlan(w[0], w[1], w[2], anchors) ?: return
+        val id = withContext(Dispatchers.IO) { repo.addHeatPoint(floorId, px, py, s.rssi, null) }
+        s.dbId = id
+        _state.update { it.copy(saved = it.saved + 1) }
+    }
+
+    /**
+     * Al terminar, corregimos en el plano los puntos ya guardados con la última
+     * posición de las anclas: así el mapa guardado queda tan alineado como el que se vio.
+     */
+    suspend fun finish() {
+        val anchors = latestAnchors
+        if (anchors.isEmpty() || floorId < 0) return
+        withContext(worker) {
+            val moves = samples.mapNotNull { s ->
+                val id = s.dbId ?: return@mapNotNull null
+                val pose = anchors[s.anchorId] ?: return@mapNotNull null
+                val w = pose.transformPoint(s.local)
+                val (px, py) = toPlan(w[0], w[1], w[2], anchors) ?: return@mapNotNull null
+                Triple(id, px, py)
+            }
+            withContext(Dispatchers.IO) { moves.forEach { (id, x, y) -> repo.moveHeatPoint(id, x, y) } }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        workerExecutor.shutdown()
     }
 }

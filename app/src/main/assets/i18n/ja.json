@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "パスワードは保存も送信もされません。コードはスマホ内で作られ、この画面を離れると消えます。",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "この画面のコードを来客に見せてください。来客がスマホのカメラで読み取れば、パスワードを伝えなくても接続できます。",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "コードはあなたの画面にだけ表示されます。共有・保存・スクリーンショットはできません。接続させたい人にだけ、直接見せてください。",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "注意：接続した人は自分のスマホの設定でパスワードを見られます。来客にはゲストネットワークを使いましょう。"
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "注意：接続した人は自分のスマホの設定でパスワードを見られます。来客にはゲストネットワークを使いましょう。",
+"Apagar linterna": "ライトを消す",
+"Encender linterna": "ライトをつける",
+"Toca la linterna de arriba a la derecha.": "右上のライトをタップしてください。",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "暗すぎてカメラが場所を認識できません。照明をつけてください。",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "動きが速すぎました。少しじっとしてから、ゆっくり歩いてゆっくり曲がってください。",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "カメラが特徴を見つけられません。家具やラグ、境目のある床に向けてください。無地の壁や床では認識できません。",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "別のアプリがカメラを使っています。閉じてからもう一度お試しください。",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "場所を見失いました。床に向けたまま、すでに塗った場所へゆっくり戻ると再認識します。",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "うまくいかない？ 終了して歩行モードで続けることもできます。",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "少し暗いため、マップがずれる可能性があります。照明を増やしてください。",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "ヒント：ゆっくり曲がり、床が映るようにしてください。マップが少しずれても、知っている場所に戻ると自動で補正されます。"
 }

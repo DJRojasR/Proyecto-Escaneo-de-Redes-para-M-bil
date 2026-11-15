@@ -1193,5 +1193,16 @@
 "Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla.": "لا تُحفظ كلمة المرور ولا تُرسل: يُنشأ الرمز في هاتفك ويُمسح عند مغادرة هذه الشاشة.",
 "Muestra este código en tu pantalla a la visita: lo escanea con la cámara de su teléfono y se conecta sin que tengas que dictarle la contraseña.": "اعرض هذا الرمز على شاشتك للضيف: يمسحه بكاميرا هاتفه ويتصل دون أن تُملي عليه كلمة المرور.",
 "El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso.": "الرمز يظهر على شاشتك فقط: لا يمكن مشاركته أو حفظه أو التقاط صورة شاشة له. اعرضه شخصيًا فقط لمن تريد منحه الوصول.",
-"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "انتبه: من يتصل يمكنه رؤية كلمة المرور في إعدادات هاتفه. للضيوف استخدم شبكة الضيوف."
+"Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados.": "انتبه: من يتصل يمكنه رؤية كلمة المرور في إعدادات هاتفه. للضيوف استخدم شبكة الضيوف.",
+"Apagar linterna": "إطفاء المصباح",
+"Encender linterna": "تشغيل المصباح",
+"Toca la linterna de arriba a la derecha.": "اضغط على المصباح أعلى اليمين.",
+"Hay muy poca luz y la cámara no reconoce el lugar. Enciende las luces.": "الإضاءة ضعيفة جدًا ولا تتعرف الكاميرا على المكان. شغّل الأضواء.",
+"Te moviste muy rápido. Quédate quieto un momento y luego camina y gira más despacio.": "تحركت بسرعة كبيرة. توقف لحظة ثم امشِ واستدر ببطء أكثر.",
+"La cámara no encuentra detalles. Apunta a una parte del piso con muebles, alfombras o bordes: una pared o un piso liso no sirven.": "لا تجد الكاميرا تفاصيل. وجّهها إلى جزء من الأرض فيه أثاث أو سجاد أو حواف: الجدار أو الأرض الملساء لا تنفع.",
+"Otra app está usando la cámara. Ciérrala y vuelve a intentarlo.": "تطبيق آخر يستخدم الكاميرا. أغلقه وحاول مجددًا.",
+"Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "ضاع المكان. عُد ببطء إلى منطقة لوّنتها من قبل مع توجيه الكاميرا إلى الأرض حتى يتعرف عليها.",
+"¿No lo logra? Puedes terminar y seguir con el modo caminata.": "لم ينجح؟ يمكنك الإنهاء والمتابعة بوضع المشي.",
+"Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "المكان مظلم قليلًا: قد تنحرف الخريطة. شغّل أضواء أكثر.",
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "نصيحة: استدر ببطء وأبقِ الأرض ظاهرة. إذا تحركت الخريطة قليلًا فستُصحَّح وحدها عند عودتك إلى مكان معروف."
 }
