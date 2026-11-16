@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copia de seguridad (Android 12+): se respaldan los nombres que el usuario puso
-     a sus dispositivos y el historial, para que no los pierda al cambiar de teléfono. -->
+<!-- Copia de seguridad (Android 12+). `lupa.db` guarda el inventario de la red del
+     usuario (IPs, nombres de dispositivos, puertos, mapa de calor), así que NO se
+     incluye en `cloud-backup` (se subiría a la copia de seguridad de Google del
+     usuario). Sí se incluye en `device-transfer`, que transfiere datos directamente
+     entre los dos teléfonos del propio usuario sin pasar por servidores de Google,
+     para que no se pierda al cambiar de equipo. Las preferencias (ajustes, idioma,
+     estado de compra) son de sensibilidad baja y sí viajan en ambos casos. -->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="database" path="lupa.db" />
         <include domain="sharedpref" path="." />
     </cloud-backup>
     <device-transfer>

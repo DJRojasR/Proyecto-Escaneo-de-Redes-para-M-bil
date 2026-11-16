@@ -29,6 +29,7 @@ import com.lupadered.app.net.ScanPhase
 import com.lupadered.app.data.AppSettings
 import com.lupadered.app.widget.DevicesWidget
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -83,6 +84,8 @@ data class HomeState(
     val namePromptDismissed: Boolean = false,
     /** Revisión automática de la protección del WiFi (gratis). Vacía = aún no se revisó. */
     val wifiSecurity: List<DiagItem> = emptyList(),
+    /** El último escaneo terminó en un error inesperado (ej. un paquete raro de la red). */
+    val scanError: Boolean = false,
 )
 
 data class HistoryState(
@@ -171,6 +174,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun dismissNetworkChanged() = _home.update { it.copy(networkChanged = false) }
 
+    fun dismissScanError() = _home.update { it.copy(scanError = false) }
+
     fun dismissNamePrompt() = _home.update { it.copy(namePromptDismissed = true) }
 
     /** Pone nombre a la red actual ("Casa", "Router 2"…). */
@@ -209,7 +214,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (scanJob?.isActive == true) return
         scanJob = viewModelScope.launch {
             val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
-            _home.update { it.copy(network = net, networkChecked = true, newDevices = emptyList()) }
+            _home.update { it.copy(network = net, networkChecked = true, newDevices = emptyList(), scanError = false) }
             if (net == null) return@launch
             reloadFromDb()
 
@@ -252,6 +257,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _home.update { it.copy(newDevices = summary.newDevices) }
                 // Al terminar el escaneo revisamos también el "candado" del WiFi
                 checkWifiSecurity(force = true)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Un paquete raro de la red (NetBIOS/mDNS/SSDP/TR-064 malformado) no debe
+                // tumbar la app en primer plano: lo mostramos como error recuperable.
+                _home.update { it.copy(scanError = true) }
             } finally {
                 lock?.release()
                 ticker.cancel()

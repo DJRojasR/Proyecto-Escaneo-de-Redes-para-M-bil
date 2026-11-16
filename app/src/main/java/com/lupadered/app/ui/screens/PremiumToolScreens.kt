@@ -209,6 +209,13 @@ fun SecurityScreen(vm: SecurityViewModel, onOpenDevice: (Long) -> Unit, onBack: 
                                 OutlinedButton(onClick = { showPasswordConsent = true }) {
                                     Text(if (s.defaultPasswordFound == null) tr("Probar contraseñas comunes") else tr("Probar de nuevo"))
                                 }
+                                if (s.passwordCheckOnCooldown) {
+                                    Text(
+                                        tr("Espera unos minutos antes de volver a probar, para no arriesgar que el router bloquee el acceso."),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
                         }
                     }

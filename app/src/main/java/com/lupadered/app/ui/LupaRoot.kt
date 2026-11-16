@@ -72,6 +72,21 @@ private val tabs = listOf(
     Tab("herramientas", tr("Herramientas"), Icons.Outlined.Handyman),
 )
 
+/**
+ * Rutas que `MainActivity` acepta de un Intent externo (notificación, widget, u otra
+ * app). `MainActivity` es `exported` porque es el LAUNCHER, así que esta whitelist es
+ * la única defensa contra que otra app navegue a una pantalla no prevista.
+ */
+object RouteWhitelist {
+    private val devicePattern = Regex("dispositivo/\\d{1,12}")
+    private const val MAX_LENGTH = 32
+
+    fun isAllowed(route: String?): Boolean {
+        if (route == null || route.length > MAX_LENGTH) return false
+        return route == "red" || route == "premium" || devicePattern.matches(route)
+    }
+}
+
 fun Context.findActivity(): Activity? {
     var c: Context? = this
     while (c is ContextWrapper) {
@@ -105,8 +120,7 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
     LaunchedEffect(openRoute) {
         // Cualquier app puede abrir la pantalla principal con datos extra: solo aceptamos
         // las rutas que usan nuestras notificaciones y el widget, y nunca dejamos que falle.
-        val allowed = openRoute == "red" || openRoute == "premium" ||
-            (openRoute != null && Regex("dispositivo/\\d{1,12}").matches(openRoute))
+        val allowed = RouteWhitelist.isAllowed(openRoute)
         if (openRoute != null && !allowed) onRouteOpened()
         if (openRoute != null && allowed) {
             if (openRoute == "red") {

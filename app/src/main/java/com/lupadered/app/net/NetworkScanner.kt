@@ -275,6 +275,22 @@ class NetworkScanner {
             if (!Ipv4.isValid(src) || !subnet.contains(src)) return
             val records = DnsMessage.parse(r.data, r.length)
             if (records.isEmpty()) return
+            // DnsMessage.parse ya está blindado contra paquetes truncados, pero el
+            // procesamiento de los registros abajo no lo está: un mDNS malformado de
+            // algún equipo de la LAN no debe tumbar el escaneo completo.
+            try {
+                handleMdnsRecords(records, src, subnet, host, alive)
+            } catch (_: Exception) {
+            }
+        }
+
+        private fun handleMdnsRecords(
+            records: List<DnsMessage.Record>,
+            src: String,
+            subnet: Subnet,
+            host: (String) -> HostAccumulator,
+            alive: (String, DiscoveryMethod, Long?) -> Unit,
+        ) {
             val h = host(src)
             for (rec in records) {
                 when (rec.type) {

@@ -16,8 +16,10 @@ tiempos de respuesta.
 - Esta información **se guarda solo en tu teléfono** (junto con los nombres que tú pongas y el historial).
 - **No la enviamos a ningún servidor** ni la compartimos con terceros.
 - Puedes borrarla en cualquier momento en *Ajustes > Borrar todos los datos* o desinstalando la app.
-- Si tienes activada la copia de seguridad de Android, el sistema puede incluir estos datos en tu copia
-  de seguridad personal de Google, cifrada y bajo tu cuenta.
+- Esta información **no se incluye** en la copia de seguridad en la nube de Android: solo se transfiere
+  directamente cuando cambias de teléfono con la transferencia de datos de Android (que no pasa por
+  servidores de Google). La copia de seguridad en la nube solo guarda tus ajustes (idioma, preferencias),
+  nunca el inventario de tu red.
 
 La app no solicita permiso de ubicación ni accede a contactos, fotos, micrófono o cámara.
 

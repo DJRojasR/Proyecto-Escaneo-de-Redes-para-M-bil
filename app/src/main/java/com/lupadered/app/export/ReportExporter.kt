@@ -45,8 +45,10 @@ object ReportExporter {
 
     fun writeCsv(data: ReportData, out: OutputStream) {
         val sb = StringBuilder()
-        // BOM para que Excel reconozca las tildes
-        sb.append('﻿')
+        // BOM para que Excel reconozca las tildes. Se construye en runtime (no como
+        // carácter literal en el .kt): lint marca un BOM embebido en el código fuente
+        // como error "ByteOrderMark".
+        sb.append(0xFEFF.toChar())
         sb.appendLine(row(tr("Red"), tr("Nombre"), "IP", tr("Tipo"), tr("Grupo"), tr("Fabricante"), tr("Modelo"), tr("Estado"), tr("Conocido"),
             tr("Puertos abiertos"), tr("Latencia (ms)"), tr("Visto por primera vez"), tr("Visto por última vez")))
         for (d in data.devices.sortedWith(compareBy({ !data.isOnline(it) }, { it.ip }))) {

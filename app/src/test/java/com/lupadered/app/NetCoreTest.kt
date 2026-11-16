@@ -8,7 +8,11 @@ import com.lupadered.app.net.Ipv4
 import com.lupadered.app.net.Mdns
 import com.lupadered.app.net.NetworkScanner
 import com.lupadered.app.net.NioTcpProber
+import com.lupadered.app.net.RouterAuthProbe
+import com.lupadered.app.net.RouterHosts
 import com.lupadered.app.net.Subnet
+import com.lupadered.app.ui.RouteWhitelist
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -48,6 +52,50 @@ class NetCoreTest {
         assertTrue(Ipv4.isPrivate("172.20.0.1"))
         assertFalse(Ipv4.isPrivate("8.8.8.8"))
         assertFalse(Ipv4.isPrivate("172.32.0.1"))
+    }
+
+    @Test
+    fun ipv4_casosLimite() {
+        assertNull(Ipv4.toInt("-1.2.3.4"))
+        assertNull(Ipv4.toInt("1.2 .3.4"))
+        assertNull(Ipv4.toInt(""))
+        assertNull(Ipv4.toInt("::1"))
+        assertNull(Ipv4.toInt("1.2.3.4.5"))
+    }
+
+    @Test
+    fun routeWhitelist_soloRutasConocidas() {
+        assertTrue(RouteWhitelist.isAllowed("red"))
+        assertTrue(RouteWhitelist.isAllowed("premium"))
+        assertTrue(RouteWhitelist.isAllowed("dispositivo/42"))
+        assertFalse(RouteWhitelist.isAllowed("dispositivo/abc"))
+        assertFalse(RouteWhitelist.isAllowed(null))
+        assertFalse(RouteWhitelist.isAllowed("../ajustes"))
+        assertFalse(RouteWhitelist.isAllowed("dispositivo/" + "1".repeat(50)))
+    }
+
+    @Test
+    fun routerAuthProbe_cooldownTrasUnIntento() = runBlocking {
+        // IP privada sin router real detrás: la conexión falla rápido (timeout corto)
+        // y de todas formas debe quedar registrado el intento para el cooldown.
+        val ip = "192.168.250.250"
+        assertEquals(0L, RouterAuthProbe.cooldownRemainingMs(ip))
+        RouterAuthProbe.probeDefaultCredentials(ip, timeoutMs = 80)
+        assertTrue(RouterAuthProbe.cooldownRemainingMs(ip) > 0)
+    }
+
+    @Test
+    fun routerAuthProbe_ipNoPrivadaNiSiquieraLoIntenta() = runBlocking {
+        assertFalse(RouterAuthProbe.probeDefaultCredentials("8.8.8.8", timeoutMs = 50))
+        assertEquals(0L, RouterAuthProbe.cooldownRemainingMs("8.8.8.8"))
+    }
+
+    @Test
+    fun routerHosts_xmlMalformadoNoRompe() {
+        assertNull(RouterHosts.controlUrlOf(""))
+        assertNull(RouterHosts.controlUrlOf("<service><serviceType>otro</serviceType>"))
+        assertNull(RouterHosts.controlUrlOf("<service><serviceType>" + "x".repeat(10_000) + "</serviceType></service>"))
+        assertNull(RouterHosts.controlUrlOf("no es xml en absoluto {}"))
     }
 
     @Test

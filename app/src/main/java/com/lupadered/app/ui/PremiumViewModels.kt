@@ -50,6 +50,8 @@ data class SecurityState(
     /** Resultado de la prueba de credenciales del router (null = no probado). */
     val defaultPasswordFound: Boolean? = null,
     val checkingPassword: Boolean = false,
+    /** El usuario pidió reintentar antes de que termine el cooldown anti-abuso. */
+    val passwordCheckOnCooldown: Boolean = false,
 )
 
 class SecurityViewModel(application: Application) : AndroidViewModel(application) {
@@ -95,9 +97,16 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     fun probeRouterPassword() {
         if (_state.value.checkingPassword) return
         viewModelScope.launch {
-            _state.update { it.copy(checkingPassword = true) }
             val data = current()
             val gateway = data?.devices?.firstOrNull { it.isGateway && it.id in data.online }
+            // Si se pulsó "Probar de nuevo" antes de que pase el cooldown anti-abuso,
+            // no reintentamos contra el router (ni tocamos el resultado anterior):
+            // solo avisamos que hay que esperar un poco.
+            if (gateway != null && RouterAuthProbe.cooldownRemainingMs(gateway.ip) > 0) {
+                _state.update { it.copy(passwordCheckOnCooldown = true) }
+                return@launch
+            }
+            _state.update { it.copy(checkingPassword = true, passwordCheckOnCooldown = false) }
             val found = if (gateway != null) {
                 withContext(Dispatchers.IO) { RouterAuthProbe.probeDefaultCredentials(gateway.ip) }
             } else null

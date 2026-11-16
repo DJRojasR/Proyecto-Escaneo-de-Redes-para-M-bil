@@ -56,6 +56,15 @@ data class PremiumState(
  * El estado Premium se guarda en el teléfono para que funcione sin Internet y se
  * vuelve a comprobar con Google Play cada vez que se abre la app, así el usuario
  * lo recupera al reinstalar o al cambiar de celular con la misma cuenta.
+ *
+ * Nota de seguridad: la verificación de la compra es solo local (contra la respuesta
+ * de la Billing Library), sin un servidor propio que valide la firma de la compra.
+ * Es una decisión de producto consciente: esta app no tiene backend, y el riesgo de
+ * no verificar server-side es de negocio (alguien podría intentar forzar el estado
+ * Premium en su propio teléfono), nunca de exposición de datos de otros usuarios.
+ * [setTestPremium] solo existe en builds de depuración ([BuildConfig.DEBUG]) y queda
+ * ofuscado por R8 en `release` igual que el resto de la clase (ver proguard-rules.pro,
+ * que no tiene ningún `-keep` sobre este paquete).
  */
 class PremiumManager(context: Context) : PurchasesUpdatedListener {
 

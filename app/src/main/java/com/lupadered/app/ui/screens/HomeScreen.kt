@@ -126,6 +126,25 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {
+            if (s.scanError) {
+                item {
+                    Card(
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.WifiOff, contentDescription = null)
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                tr("No se pudo completar el escaneo. Intenta de nuevo."),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(onClick = vm::dismissScanError) { Text("OK") }
+                        }
+                    }
+                }
+            }
             if (s.networkChanged && s.network != null) {
                 item {
                     Card(

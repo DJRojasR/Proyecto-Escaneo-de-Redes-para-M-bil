@@ -16,6 +16,13 @@ import java.net.URI
  * protege, simplemente no obtenemos nada.
  *
  * Solo se conecta a la IP del router, nunca a otra dirección.
+ *
+ * Seguridad: igual que [RouterAuthProbe], habla HTTP/SOAP plano por un socket crudo
+ * en vez de HttpURLConnection, a propósito: Android bloquea HTTP sin cifrar por
+ * defecto y estos paneles TR-064 solo responden por HTTP, pero el tráfico nunca sale
+ * de la red local (siempre contra `gateway`, la IP del propio router del usuario).
+ * Las respuestas se acotan a 256KB ([request]) para no quedar leyendo indefinidamente
+ * si un router devuelve una respuesta corrupta o interminable.
  */
 object RouterHosts {
 
