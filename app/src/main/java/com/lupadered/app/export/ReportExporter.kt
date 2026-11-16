@@ -71,9 +71,12 @@ object ReportExporter {
         out.write(sb.toString().toByteArray(Charsets.UTF_8))
     }
 
-    private fun row(vararg cells: String): String = cells.joinToString(";") { c ->
+    private fun row(vararg cells: String): String = cells.joinToString(";") { raw ->
+        // Un nombre de equipo como "=HIPERVINCULO(...)" lo pone cualquiera en la red:
+        // Excel lo ejecutaría como fórmula. Le anteponemos ' para que sea solo texto.
+        val c = if (raw.isNotEmpty() && raw[0] in "=+-@\t\r" && raw.toDoubleOrNull() == null) "'$raw" else raw
         // Usamos ";" porque Excel en español lo espera así; se escapan comillas.
-        if (c.contains(';') || c.contains('"') || c.contains('\n')) "\"" + c.replace("\"", "\"\"") + "\"" else c
+        if (c.contains(';') || c.contains('"') || c.contains('\n') || c.contains('\r')) "\"" + c.replace("\"", "\"\"") + "\"" else c
     }
 
     // ------------------------------------------------------------------ PDF

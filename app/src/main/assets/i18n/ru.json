@@ -1204,5 +1204,7 @@
 "Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "Место потеряно. Медленно вернитесь в уже закрашенную зону, направив камеру на пол, чтобы её узнали.",
 "¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Не получается? Можно завершить и продолжить в режиме ходьбы.",
 "Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "Немного темно: карта может сместиться. Включите больше света.",
-"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Совет: поворачивайтесь медленно и держите пол в кадре. Если карта немного сдвинется, она исправится сама, когда вы вернётесь в знакомое место."
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Совет: поворачивайтесь медленно и держите пол в кадре. Если карта немного сдвинется, она исправится сама, когда вы вернётесь в знакомое место.",
+"Ocultar consejos": "Скрыть советы",
+"Ver consejos": "Показать советы"
 }

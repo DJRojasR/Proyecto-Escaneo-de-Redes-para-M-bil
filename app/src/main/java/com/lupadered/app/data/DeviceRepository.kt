@@ -1,5 +1,7 @@
 package com.lupadered.app.data
 
+import com.lupadered.app.net.sanitized
+
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -275,7 +277,7 @@ class DeviceRepository(context: Context) {
     fun network(key: String): NetworkProfile? = networks().firstOrNull { it.key == key }
 
     fun renameNetwork(key: String, name: String?) {
-        db.update("networks", ContentValues().apply { put("name", name?.trim()?.takeIf { it.isNotEmpty() }) },
+        db.update("networks", ContentValues().apply { put("name", name?.trim()?.take(40)?.takeIf { it.isNotEmpty() }) },
             "network_key = ?", arrayOf(key))
     }
 
@@ -297,7 +299,7 @@ class DeviceRepository(context: Context) {
     // ---------------------------------------------------------------- escritura
 
     fun updateAlias(id: Long, alias: String?) {
-        db.update("devices", ContentValues().apply { put("alias", alias?.trim()?.takeIf { it.isNotEmpty() }) },
+        db.update("devices", ContentValues().apply { put("alias", alias?.trim()?.take(40)?.takeIf { it.isNotEmpty() }) },
             "id = ?", arrayOf(id.toString()))
     }
 
@@ -445,7 +447,7 @@ class DeviceRepository(context: Context) {
     }
 
     fun renameHeatFloor(id: Long, name: String) {
-        db.update("heat_floors", ContentValues().apply { put("name", name) }, "id = ?", arrayOf(id.toString()))
+        db.update("heat_floors", ContentValues().apply { put("name", name.trim().take(30)) }, "id = ?", arrayOf(id.toString()))
     }
 
     fun setHeatRouter(id: Long, x: Float?, y: Float?) {
@@ -553,6 +555,9 @@ class DeviceRepository(context: Context) {
         source: ScanSource = ScanSource.MANUAL,
         gateway: String? = null,
     ): ScanSummary {
+        // Los textos vienen de otros equipos: se limpian antes de guardarlos
+        @Suppress("NAME_SHADOWING")
+        val hosts = hosts.map { it.sanitized() }
         val database = db
         database.beginTransaction()
         try {

@@ -303,16 +303,21 @@ private fun NetworkCard(s: HomeState, onRename: () -> Unit) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                Text(
-                    s.profile?.displayName ?: tr("Tu red"),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                if (net != null && s.profile == null) {
-                    Spacer(Modifier.width(8.dp))
-                    Tag(tr("Red nueva"), StatusColors.warn)
+                // El nombre ocupa el espacio libre y el lápiz queda siempre a la derecha,
+                // sea el nombre corto o largo (antes dos pesos se repartían el espacio).
+                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        s.profile?.displayName ?: tr("Tu red"),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (net != null && s.profile == null) {
+                        Spacer(Modifier.width(8.dp))
+                        Tag(tr("Red nueva"), StatusColors.warn)
+                    }
                 }
-                Spacer(Modifier.weight(1f))
                 if (s.profile != null) {
                     IconButton(onClick = onRename) {
                         Icon(Icons.Outlined.Edit, contentDescription = tr("Cambiar el nombre de la red"))

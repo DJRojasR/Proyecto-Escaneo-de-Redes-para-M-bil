@@ -1204,5 +1204,7 @@
 "Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "Le lieu a été perdu. Revenez lentement vers une zone déjà peinte, en visant le sol, pour qu’il la reconnaisse.",
 "¿No lo logra? Puedes terminar y seguir con el modo caminata.": "Ça ne marche pas ? Vous pouvez terminer et continuer en mode marche.",
 "Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "Il fait un peu sombre : la carte pourrait se décaler. Allumez plus de lumières.",
-"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Conseil : tournez lentement et gardez le sol en vue. Si la carte se décale un peu, elle se corrige seule quand vous revenez à un endroit connu."
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "Conseil : tournez lentement et gardez le sol en vue. Si la carte se décale un peu, elle se corrige seule quand vous revenez à un endroit connu.",
+"Ocultar consejos": "Masquer les conseils",
+"Ver consejos": "Voir les conseils"
 }

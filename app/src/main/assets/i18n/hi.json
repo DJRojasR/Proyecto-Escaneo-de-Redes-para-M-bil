@@ -1204,5 +1204,7 @@
 "Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "जगह खो गई। धीरे-धीरे उस जगह पर लौटें जिसे आपने पहले रंगा था, फ़र्श की ओर करके, ताकि वह पहचान सके।",
 "¿No lo logra? Puedes terminar y seguir con el modo caminata.": "नहीं हो रहा? आप खत्म करके चलने वाले मोड से जारी रख सकते हैं।",
 "Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "थोड़ा अंधेरा है: मैप खिसक सकता है। और लाइट जलाएँ।",
-"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "सलाह: धीरे मुड़ें और फ़र्श को नज़र में रखें। अगर मैप थोड़ा खिसके, तो किसी जानी-पहचानी जगह पर लौटते ही खुद ठीक हो जाता है।"
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "सलाह: धीरे मुड़ें और फ़र्श को नज़र में रखें। अगर मैप थोड़ा खिसके, तो किसी जानी-पहचानी जगह पर लौटते ही खुद ठीक हो जाता है।",
+"Ocultar consejos": "सलाह छिपाएँ",
+"Ver consejos": "सलाह देखें"
 }

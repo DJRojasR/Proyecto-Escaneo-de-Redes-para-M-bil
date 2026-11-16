@@ -1204,5 +1204,7 @@
 "Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.": "位置丢失了。请慢慢回到已经涂过颜色的区域，对准地面，让它重新识别。",
 "¿No lo logra? Puedes terminar y seguir con el modo caminata.": "还是不行？你可以结束，改用步行模式继续。",
 "Está algo oscuro: el mapa podría desalinearse. Enciende más luces.": "有点暗：地图可能会错位。请多开几盏灯。",
-"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "提示：转身要慢，保持地面在画面中。如果地图稍有偏移，回到已识别的地方时会自动校正。"
+"Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.": "提示：转身要慢，保持地面在画面中。如果地图稍有偏移，回到已识别的地方时会自动校正。",
+"Ocultar consejos": "隐藏提示",
+"Ver consejos": "查看提示"
 }

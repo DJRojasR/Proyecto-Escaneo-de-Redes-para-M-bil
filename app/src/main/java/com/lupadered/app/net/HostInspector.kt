@@ -144,9 +144,10 @@ class HostInspector {
             pingSamples = pings,
             openPorts = open,
             respondedToTcp = responded,
-            netbiosName = names.first,
-            mdnsHostname = names.second,
-            dnsName = names.third,
+            // Nombres anunciados por el equipo: se limpian (ver SafeText)
+            netbiosName = SafeText.clean(names.first),
+            mdnsHostname = SafeText.clean(names.second),
+            dnsName = SafeText.clean(names.third),
             durationMs = System.currentTimeMillis() - start,
         )
     }

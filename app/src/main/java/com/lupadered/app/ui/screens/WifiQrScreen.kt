@@ -1,6 +1,10 @@
 package com.lupadered.app.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -197,21 +201,33 @@ fun WifiQrScreen(onBack: () -> Unit) {
     }
 }
 
-/** Consejos para compartir el WiFi sin que nadie no deseado pueda entrar. */
+/** Consejos para compartir el WiFi de forma segura: minimizados; se abren al tocar. */
 @Composable
 private fun SafetyTips() {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { open = !open },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+    ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Shield, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text(tr("Comparte tu WiFi de forma segura"), style = MaterialTheme.typography.titleSmall)
+                Text(tr("Comparte tu WiFi de forma segura"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Icon(
+                    if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    contentDescription = if (open) tr("Ocultar consejos") else tr("Ver consejos"),
+                )
             }
-            Tip(tr("El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso."))
-            Tip(tr("Lo más seguro para visitas es una «red de invitados»: actívala en tu router y comparte ese WiFi, no el principal. Así las visitas tienen Internet, pero no ven tus equipos (cámaras, computadoras, impresoras)."))
-            Tip(tr("¿Alguien ya no debería entrar? Cambia la contraseña del WiFi en el router: el código viejo deja de funcionar."))
-            Tip(tr("Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla."))
-            Tip(tr("Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados."))
+            AnimatedVisibility(visible = open) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Tip(tr("El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso."))
+                    Tip(tr("Lo más seguro para visitas es una «red de invitados»: actívala en tu router y comparte ese WiFi, no el principal. Así las visitas tienen Internet, pero no ven tus equipos (cámaras, computadoras, impresoras)."))
+                    Tip(tr("¿Alguien ya no debería entrar? Cambia la contraseña del WiFi en el router: el código viejo deja de funcionar."))
+                    Tip(tr("Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla."))
+                    Tip(tr("Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados."))
+                }
+            }
         }
     }
 }

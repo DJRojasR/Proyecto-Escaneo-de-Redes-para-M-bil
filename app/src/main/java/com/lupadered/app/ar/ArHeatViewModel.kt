@@ -133,6 +133,7 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
 
     /** Llega desde el hilo de OpenGL en cada cuadro. */
     fun onFrame(info: ArFrameInfo) {
+        if (workerExecutor.isShutdown) return // la pantalla ya se cerró
         val now = System.currentTimeMillis()
         if (!info.tracking) {
             if (lostSince == 0L) lostSince = now

@@ -137,3 +137,35 @@ class HostAccumulator(val ip: String) {
         isGateway = isGateway,
     )
 }
+
+/**
+ * Los nombres que anuncian los equipos (mDNS, NetBIOS, UPnP, el router) los elige
+ * cualquiera que esté en la red, así que no se confía en ellos: se quitan caracteres
+ * de control e invisibles (por ejemplo los que invierten el texto para disfrazar un
+ * nombre) y se limita el largo.
+ */
+object SafeText {
+    fun clean(s: String?, max: Int = 64): String? {
+        if (s == null) return null
+        val out = StringBuilder()
+        for (c in s) {
+            if (Character.isISOControl(c)) { out.append(' '); continue }
+            if (Character.getType(c) == Character.FORMAT.toInt()) continue
+            out.append(c)
+        }
+        return out.toString().replace(Regex("\\s+"), " ").trim().take(max).trim().takeIf { it.isNotEmpty() }
+    }
+}
+
+/** Copia del equipo con todos sus textos limpios (ver [SafeText]). */
+fun HostSnapshot.sanitized(): HostSnapshot = copy(
+    netbiosName = SafeText.clean(netbiosName),
+    mdnsHostname = SafeText.clean(mdnsHostname),
+    mdnsInstances = mdnsInstances.mapNotNull { SafeText.clean(it) }.take(20).toSet(),
+    mdnsServices = mdnsServices.mapNotNull { SafeText.clean(it, 80) }.take(40).toSet(),
+    dnsName = SafeText.clean(dnsName),
+    ssdpServer = SafeText.clean(ssdpServer, 120),
+    friendlyName = SafeText.clean(friendlyName),
+    manufacturer = SafeText.clean(manufacturer),
+    model = SafeText.clean(model),
+)

@@ -70,6 +70,8 @@ object RouterHosts {
             val type = tag(b, "serviceType") ?: continue
             if (!type.equals(SERVICE, ignoreCase = true)) continue
             val url = tag(b, "controlURL") ?: continue
+            // Va dentro de la petición HTTP: rechazamos espacios, saltos de línea y rarezas
+            if (url.length > 200 || !url.all { it in '!'..'~' }) continue
             return if (url.startsWith("/")) url else "/$url"
         }
         return null

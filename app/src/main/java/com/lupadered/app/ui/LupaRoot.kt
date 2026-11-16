@@ -103,12 +103,17 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
 
     // Abrir una pantalla pedida desde una notificación o el widget
     LaunchedEffect(openRoute) {
-        if (openRoute != null) {
+        // Cualquier app puede abrir la pantalla principal con datos extra: solo aceptamos
+        // las rutas que usan nuestras notificaciones y el widget, y nunca dejamos que falle.
+        val allowed = openRoute == "red" || openRoute == "premium" ||
+            (openRoute != null && Regex("dispositivo/\\d{1,12}").matches(openRoute))
+        if (openRoute != null && !allowed) onRouteOpened()
+        if (openRoute != null && allowed) {
             if (openRoute == "red") {
                 nav.popBackStack(nav.graph.findStartDestination().id, inclusive = false)
                 mainVm.refreshNetwork()
             } else {
-                nav.navigate(openRoute) { launchSingleTop = true }
+                runCatching { nav.navigate(openRoute) { launchSingleTop = true } }
             }
             onRouteOpened()
         }
