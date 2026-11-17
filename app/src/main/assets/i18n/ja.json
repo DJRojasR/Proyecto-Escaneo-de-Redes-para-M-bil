@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "別のネットワークに接続しました",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "今は「%1$s」です。このマップはどのネットワーク用にしますか？ 2つのネットワークを混ぜるとマップは使えません。",
 "Usar \"%1$s\"": "「%1$s」を使う",
-"Seguir con el mapa actual": "今のマップを続ける"
+"Seguir con el mapa actual": "今のマップを続ける",
+"Mira quién está en tu WiFi": "あなたのWiFiに誰がいるか確認",
+"Escanea tu red": "ネットワークをスキャン",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "上の「スキャン」ボタンをタップして、WiFiに誰がつながっているか確認しましょう。機器を記憶するので、次回はすぐに表示されます。"
 }

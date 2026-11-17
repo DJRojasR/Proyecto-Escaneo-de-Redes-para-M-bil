@@ -38,6 +38,21 @@ import com.lupadered.app.ui.screens.SecurityScreen
 import com.lupadered.app.ui.screens.SpeedTestScreen
 import com.lupadered.app.ui.screens.ToolsActions
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -133,6 +148,12 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
         }
     }
 
+    var showSplash by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1400)
+        showSplash = false
+    }
+    Box(Modifier.fillMaxSize()) {
     CompositionLocalProvider(LocalOpenPremium provides openPremium) {
     Scaffold(
         bottomBar = {
@@ -316,6 +337,8 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
         }
     }
     }
+    AppSplash(visible = showSplash)
+    }
 }
 
 /** Estructura común de cada pantalla: barra superior con título y "atrás" opcional. */
@@ -325,10 +348,12 @@ fun ScreenScaffold(
     title: String,
     onBack: (() -> Unit)? = null,
     actions: @Composable () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = snackbarHost,
         topBar = {
             TopAppBar(
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -344,4 +369,77 @@ fun ScreenScaffold(
         },
         content = content,
     )
+}
+
+@Composable
+private fun AppSplash(visible: Boolean) {
+    androidx.compose.animation.AnimatedVisibility(
+        visible = visible,
+        enter = androidx.compose.animation.fadeIn(),
+        exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(500)),
+    ) {
+        val cs = MaterialTheme.colorScheme
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(cs.primary, cs.primaryContainer)),
+            ),
+            contentAlignment = Alignment.Center,
+        ) {
+            val scale = remember { androidx.compose.animation.core.Animatable(0.7f) }
+            LaunchedEffect(Unit) {
+                scale.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.5f, stiffness = 220f))
+            }
+            // Ondas de radar que se expanden sin parar (algo moviéndose)
+            val ringColor = MaterialTheme.colorScheme.onPrimary
+            val pulse = androidx.compose.animation.core.rememberInfiniteTransition(label = "radar")
+            val wave by pulse.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                    animation = androidx.compose.animation.core.tween(2000, easing = androidx.compose.animation.core.LinearEasing),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
+                ),
+                label = "wave",
+            )
+            androidx.compose.foundation.Canvas(modifier = Modifier.size(240.dp)) {
+                val maxR = size.minDimension / 2f
+                for (i in 0..2) {
+                    val prog = ((wave + i / 3f) % 1f)
+                    drawCircle(
+                        color = ringColor.copy(alpha = (1f - prog) * 0.45f),
+                        radius = maxR * prog,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx()),
+                    )
+                }
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    Modifier
+                        .size(108.dp)
+                        .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+                        .background(cs.onPrimary.copy(alpha = 0.16f), androidx.compose.foundation.shape.CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Outlined.Wifi,
+                        contentDescription = null,
+                        tint = cs.onPrimary,
+                        modifier = Modifier.size(60.dp),
+                    )
+                }
+                Spacer(Modifier.height(18.dp))
+                Text(
+                    tr("NexoLan Scanner"),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = cs.onPrimary,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    tr("Mira quién está en tu WiFi"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cs.onPrimary.copy(alpha = 0.85f),
+                )
+            }
+        }
+    }
 }

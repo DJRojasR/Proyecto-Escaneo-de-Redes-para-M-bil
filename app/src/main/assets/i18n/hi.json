@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "आप दूसरे नेटवर्क से जुड़ गए",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "अब आप \"%1$s\" पर हैं। यह मैप किस नेटवर्क के लिए बनाना है? दो नेटवर्क मिलाने पर मैप बेकार हो जाता है।",
 "Usar \"%1$s\"": "\"%1$s\" इस्तेमाल करें",
-"Seguir con el mapa actual": "मौजूदा मैप जारी रखें"
+"Seguir con el mapa actual": "मौजूदा मैप जारी रखें",
+"Mira quién está en tu WiFi": "देखें आपके WiFi पर कौन है",
+"Escanea tu red": "अपना नेटवर्क स्कैन करें",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "ऊपर \"स्कैन करें\" बटन दबाएँ और जानें कि आपके WiFi से कौन जुड़ा है। ऐप डिवाइस याद रखेगा ताकि अगली बार तुरंत दिखा सके।"
 }

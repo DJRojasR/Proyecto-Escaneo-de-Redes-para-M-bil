@@ -52,10 +52,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.Card
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -94,6 +110,17 @@ fun HomeScreen(
     onWifiSecurity: () -> Unit,
 ) {
     val s by vm.home.collectAsStateWithLifecycle()
+    // Aviso "cambiaste de red" como notificación pequeña abajo (no una tarjeta grande)
+    val netSnackbar = remember { SnackbarHostState() }
+    LaunchedEffect(s.networkChanged) {
+        if (s.networkChanged && s.network != null) {
+            val msg =
+                if (s.profile == null) tr("Te conectaste a una red nueva. Escanéala para guardarla en \"Mis redes\".")
+                else tr("Cambiaste a la red \"%1\$s\". Te mostramos sus equipos.", s.profile?.displayName)
+            netSnackbar.showSnackbar(msg)
+            vm.dismissNetworkChanged()
+        }
+    }
     // Revisión automática del "candado" del WiFi (también al volver a esta pantalla)
     LaunchedEffect(Unit) { vm.checkWifiSecurity() }
     val isPremium = rememberIsPremium()
@@ -113,6 +140,23 @@ fun HomeScreen(
         nameMsg = null
         if (WifiSecurityCheck.hasLocationPermission(homeContext)) tryWifiName()
         else locPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+    // Al tocar "Escanear": si falta el permiso de ubicación lo pedimos ahí mismo, para que la red
+    // quede con el nombre de tu WiFi. Si no lo da, se lo explicamos y escaneamos igual.
+    val scanScope = rememberCoroutineScope()
+    var locationExplained by rememberSaveable { mutableStateOf(false) }
+    val scanPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted && !locationExplained) {
+            locationExplained = true
+            scanScope.launch {
+                netSnackbar.showSnackbar(tr("Sin el permiso de ubicación, Android no deja ver el nombre del WiFi."))
+            }
+        }
+        onScan()
+    }
+    val scanTapped: () -> Unit = {
+        if (WifiSecurityCheck.hasLocationPermission(homeContext) || locationExplained) onScan()
+        else scanPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
     var renaming by remember { mutableStateOf(false) }
     if (renaming) {
@@ -134,6 +178,7 @@ fun HomeScreen(
                 Icon(Icons.AutoMirrored.Outlined.ManageSearch, contentDescription = tr("Analizar una IP"))
             }
         },
+        snackbarHost = { SnackbarHost(netSnackbar) },
     ) { padding ->
         if (s.networkChecked && s.network == null && !s.scanning) {
             EmptyState(
@@ -173,39 +218,10 @@ fun HomeScreen(
                     }
                 }
             }
-            if (s.networkChanged && s.network != null) {
-                item {
-                    Card(
-                        modifier = Modifier.padding(bottom = 12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                    ) {
-                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.SwapHoriz, contentDescription = null)
-                            Spacer(Modifier.width(10.dp))
-                            Text(
-                                if (s.profile == null) tr("Te conectaste a una red nueva. Escanéala para guardarla en \"Mis redes\".")
-                                else tr("Cambiaste a la red \"%1\$s\". Te mostramos sus equipos.", s.profile?.displayName),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f),
-                            )
-                            TextButton(onClick = vm::dismissNetworkChanged) { Text("OK") }
-                        }
-                    }
-                }
-            }
-            item { NetworkCard(s, onRename = { renaming = true }) }
-            if (!s.scanning && s.profile != null && s.profile?.name == null && !s.namePromptDismissed) {
-                item {
-                    NamePromptCard(
-                        onSave = vm::renameCurrentNetwork,
-                        onLater = vm::dismissNamePrompt,
-                        onUseWifiName = onUseWifiName,
-                        message = nameMsg,
-                    )
-                }
-            }
+            // El círculo "Escanea tu red" va arriba; el rango que revisamos queda debajo
+            item { ScanCard(s, onScan = scanTapped, onCancel = vm::cancelScan) }
             item { Spacer(Modifier.height(12.dp)) }
-            item { ScanCard(s, onScan = onScan, onCancel = vm::cancelScan) }
+            item { NetworkCard(s, onRename = { renaming = true }) }
             if (!s.scanning && s.wifiSecurity.isNotEmpty()) {
                 item { WifiSecurityCard(s.wifiSecurity, onClick = onWifiSecurity) }
             }
@@ -254,7 +270,7 @@ fun HomeScreen(
                     EmptyState(
                         icon = Icons.Outlined.Devices,
                         title = tr("Aún no hay dispositivos"),
-                        text = tr("Toca \"Escanear red\" para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez."),
+                        text = tr("Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez."),
                     )
                 }
             }
@@ -403,9 +419,16 @@ private fun NetworkCard(s: HomeState, onRename: () -> Unit) {
 
 @Composable
 private fun ScanCard(s: HomeState, onScan: () -> Unit, onCancel: () -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+    // En reposo el círculo va sin tarjeta de fondo; al escanear se muestra la tarjeta del radar
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (s.scanning) MaterialTheme.colorScheme.primaryContainer
+            else androidx.compose.ui.graphics.Color.Transparent,
+        ),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(if (s.scanning) 16.dp else 0.dp)) {
             if (s.scanning) {
+                // Radar girando (como antes), con el paso y el porcentaje al lado
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadarSpinner(size = 56.dp)
                     Spacer(Modifier.width(14.dp))
@@ -435,31 +458,78 @@ private fun ScanCard(s: HomeState, onScan: () -> Unit, onCancel: () -> Unit) {
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 )
             } else {
-                Button(
-                    onClick = onScan,
-                    enabled = s.network != null,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                ) {
-                    Icon(Icons.Outlined.Search, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(tr("Escanear red"))
-                }
-                val last = s.lastScan
-                if (last != null) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        tr("Último escaneo %1\$s · %2\$s dispositivos · %3\$s s", relativeTime(last.startedAt), last.found, (last.durationMs + 500) / 1000),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                // Círculo con un halo que late suavemente (sin tarjeta de fondo)
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    val base = MaterialTheme.colorScheme.primary
+                    val enabled = s.network != null
+                    val pulse = androidx.compose.animation.core.rememberInfiniteTransition(label = "halo")
+                    val wave by pulse.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1f,
+                        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                            animation = androidx.compose.animation.core.tween(1800, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+                            repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
+                        ),
+                        label = "wave",
                     )
-                }
-                if (s.untrustedOnline > 0 && s.newDevices.isEmpty()) {
-                    Spacer(Modifier.height(6.dp))
+                    Box(Modifier.size(170.dp), contentAlignment = Alignment.Center) {
+                        if (enabled) {
+                            // Onda que sale del círculo y se desvanece
+                            Box(
+                                Modifier
+                                    .size(108.dp)
+                                    .graphicsLayer {
+                                        val sc = 1f + 0.55f * wave
+                                        scaleX = sc
+                                        scaleY = sc
+                                        alpha = 0.35f * (1f - wave)
+                                    }
+                                    .clip(CircleShape)
+                                    .background(base),
+                            )
+                        }
+                        Box(
+                            Modifier
+                                .size(108.dp)
+                                .shadow(10.dp, CircleShape)
+                                .clip(CircleShape)
+                                .background(if (enabled) base else base.copy(alpha = 0.4f))
+                                .clickable(enabled = enabled, onClick = onScan),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Outlined.Search,
+                                contentDescription = tr("Escanea tu red"),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(42.dp),
+                            )
+                        }
+                    }
                     Text(
-                        tr("Hay %1\$s dispositivo(s) sin revisar en línea. Ábrelos para marcarlos como conocidos.", s.untrustedOnline),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = StatusColors.warn,
+                        tr("Escanear"),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Light,
+                            letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp),
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
+                    val last = s.lastScan
+                    if (last != null) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            tr("Último escaneo %1\$s · %2\$s dispositivos · %3\$s s", relativeTime(last.startedAt), last.found, (last.durationMs + 500) / 1000),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (s.untrustedOnline > 0 && s.newDevices.isEmpty()) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            tr("Hay %1\$s dispositivo(s) sin revisar en línea. Ábrelos para marcarlos como conocidos.", s.untrustedOnline),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = StatusColors.warn,
+                        )
+                    }
                 }
             }
         }
@@ -568,61 +638,6 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
 }
 
 
-/** Pide un nombre para la red después de escanearla por primera vez ("Casa", "Router 2"…). */
-@Composable
-private fun NamePromptCard(
-    onSave: (String) -> Unit,
-    onLater: () -> Unit,
-    onUseWifiName: () -> Unit,
-    message: String?,
-) {
-    var text by remember { mutableStateOf("") }
-    Card(
-        modifier = Modifier.padding(top = 12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-    ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(tr("¿Cómo se llama esta red?"), style = MaterialTheme.typography.titleMedium)
-            Text(
-                tr("Ponle un nombre para reconocerla en \"Mis redes\", por ejemplo si tienes dos routers."),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(vertical = 6.dp),
-            )
-            // Detectar el nombre del WiFi (necesita permiso de ubicación, lo exige Android)
-            Button(onClick = onUseWifiName, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Outlined.Wifi, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(tr("Usar el nombre de mi WiFi"))
-            }
-            Text(
-                tr("Android solo deja ver el nombre del WiFi con permiso de ubicación. La app no usa ni guarda tu ubicación."),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
-            )
-            message?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
-            }
-            Text(tr("O ponle un nombre tú:"), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(bottom = 6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(tr("Casa"), tr("Router 2"), tr("Trabajo")).forEach { suggestion ->
-                    AssistChip(onClick = { onSave(suggestion) }, label = { Text(suggestion) })
-                }
-            }
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it.take(30) },
-                singleLine = true,
-                placeholder = { Text(tr("Otro nombre")) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onLater) { Text(tr("Ahora no")) }
-                TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text(tr("Guardar")) }
-            }
-        }
-    }
-}
 
 @Composable
 fun NetworkNameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {

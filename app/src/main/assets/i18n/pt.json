@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "Você se conectou a outra rede",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "Agora você está em \"%1$s\". Para qual rede você quer este mapa? Se misturar duas redes, o mapa não serve.",
 "Usar \"%1$s\"": "Usar \"%1$s\"",
-"Seguir con el mapa actual": "Continuar com o mapa atual"
+"Seguir con el mapa actual": "Continuar com o mapa atual",
+"Mira quién está en tu WiFi": "Veja quem está no seu WiFi",
+"Escanea tu red": "Escaneie sua rede",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "Toque no botão \"Escanear\" acima para descobrir quem está conectado ao seu WiFi. O app vai lembrar os aparelhos para mostrá-los na hora da próxima vez."
 }

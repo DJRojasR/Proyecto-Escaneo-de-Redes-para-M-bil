@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "Kamu terhubung ke jaringan lain",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "Sekarang kamu di \"%1$s\". Peta ini untuk jaringan yang mana? Kalau mencampur dua jaringan, petanya tidak berguna.",
 "Usar \"%1$s\"": "Pakai \"%1$s\"",
-"Seguir con el mapa actual": "Lanjutkan peta saat ini"
+"Seguir con el mapa actual": "Lanjutkan peta saat ini",
+"Mira quién está en tu WiFi": "Lihat siapa saja di WiFi-mu",
+"Escanea tu red": "Pindai jaringanmu",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "Ketuk tombol \"Pindai\" di atas untuk mengetahui siapa yang terhubung ke WiFi-mu. Aplikasi akan mengingat perangkat agar bisa langsung ditampilkan lain kali."
 }

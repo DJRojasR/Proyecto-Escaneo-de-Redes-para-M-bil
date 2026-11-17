@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "You connected to another network",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "You're now on \"%1$s\". Which network do you want this map for? If you mix two networks, the map is useless.",
 "Usar \"%1$s\"": "Use \"%1$s\"",
-"Seguir con el mapa actual": "Keep the current map"
+"Seguir con el mapa actual": "Keep the current map",
+"Mira quién está en tu WiFi": "See who's on your WiFi",
+"Escanea tu red": "Scan your network",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "Tap the \"Scan\" button above to find out who is connected to your WiFi. The app will remember the devices to show them to you instantly next time."
 }

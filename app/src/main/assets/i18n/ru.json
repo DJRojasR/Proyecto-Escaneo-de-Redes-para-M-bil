@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "Вы подключились к другой сети",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "Сейчас вы в \"%1$s\". Для какой сети сделать эту карту? Если смешать две сети, карта бесполезна.",
 "Usar \"%1$s\"": "Использовать \"%1$s\"",
-"Seguir con el mapa actual": "Оставить текущую карту"
+"Seguir con el mapa actual": "Оставить текущую карту",
+"Mira quién está en tu WiFi": "Узнайте, кто в вашем Wi-Fi",
+"Escanea tu red": "Сканировать сеть",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "Нажмите кнопку «Сканировать» выше, чтобы узнать, кто подключён к вашему Wi-Fi. Приложение запомнит устройства и в следующий раз покажет их сразу."
 }

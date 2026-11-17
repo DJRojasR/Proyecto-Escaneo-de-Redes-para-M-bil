@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "اتصلت بشبكة أخرى",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "أنت الآن على \"%1$s\". لأي شبكة تريد هذه الخريطة؟ إذا خلطت شبكتين، تصبح الخريطة بلا فائدة.",
 "Usar \"%1$s\"": "استخدم \"%1$s\"",
-"Seguir con el mapa actual": "تابع بالخريطة الحالية"
+"Seguir con el mapa actual": "تابع بالخريطة الحالية",
+"Mira quién está en tu WiFi": "شاهد من المتصل بشبكة WiFi لديك",
+"Escanea tu red": "افحص شبكتك",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "اضغط زر \"فحص\" في الأعلى لتعرف من المتصل بشبكة WiFi لديك. سيتذكر التطبيق الأجهزة ليعرضها لك فورًا في المرة القادمة."
 }

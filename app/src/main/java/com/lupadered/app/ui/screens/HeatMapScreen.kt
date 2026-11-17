@@ -191,10 +191,6 @@ fun HeatMapScreen(vm: HeatMapViewModel, onOpenAr: (floorId: Long, x: Float, y: F
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                tr("Camina por tu casa con el teléfono y mide la señal en cada lugar. Verás en colores dónde llega mejor el WiFi y dónde casi no llega."),
-                style = MaterialTheme.typography.bodyMedium,
-            )
             if (!isPremium) {
                 LockedCard(
                     tr("Mapa de calor WiFi"),
@@ -215,7 +211,6 @@ fun HeatMapScreen(vm: HeatMapViewModel, onOpenAr: (floorId: Long, x: Float, y: F
                 return@Column
             }
 
-            FloorChips(s, onSelect = vm::selectFloor, onAdd = { dialog = HeatDialog.ADD })
             LiveSignalCard(s.liveRssi)
             if (s.roaming) RoamingWarning()
             Steps(s)
@@ -273,6 +268,13 @@ fun HeatMapScreen(vm: HeatMapViewModel, onOpenAr: (floorId: Long, x: Float, y: F
                     Text(tr("Borrar y empezar de cero"))
                 }
             }
+            // Los pisos y la ayuda van al final; arriba queda el mapa, que es lo importante
+            FloorChips(s, onSelect = vm::selectFloor, onAdd = { dialog = HeatDialog.ADD })
+            Text(
+                tr("Camina por tu casa con el teléfono y mide la señal en cada lugar. Verás en colores dónde llega mejor el WiFi y dónde casi no llega."),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             if (s.floors.size > 1) FloorsComparison(s)
             FloorsTip()
         }

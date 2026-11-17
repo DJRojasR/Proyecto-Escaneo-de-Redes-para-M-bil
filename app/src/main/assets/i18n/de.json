@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "Du hast dich mit einem anderen Netz verbunden",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "Du bist jetzt in \"%1$s\". Für welches Netz soll diese Karte sein? Wenn du zwei Netze mischst, ist die Karte nutzlos.",
 "Usar \"%1$s\"": "\"%1$s\" verwenden",
-"Seguir con el mapa actual": "Aktuelle Karte behalten"
+"Seguir con el mapa actual": "Aktuelle Karte behalten",
+"Mira quién está en tu WiFi": "Sieh, wer in deinem WLAN ist",
+"Escanea tu red": "Netzwerk scannen",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "Tippe oben auf „Scannen“, um zu sehen, wer mit deinem WLAN verbunden ist. Die App merkt sich die Geräte und zeigt sie dir beim nächsten Mal sofort."
 }

@@ -1249,5 +1249,8 @@
 "Te conectaste a otra red": "你连接到了另一个网络",
 "Ahora estás en \"%1$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.": "你现在连的是\"%1$s\"。这张地图要用于哪个网络？如果混用两个网络，地图就没用了。",
 "Usar \"%1$s\"": "使用\"%1$s\"",
-"Seguir con el mapa actual": "继续当前地图"
+"Seguir con el mapa actual": "继续当前地图",
+"Mira quién está en tu WiFi": "看看谁连着你的 WiFi",
+"Escanea tu red": "扫描你的网络",
+"Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez.": "点击上方的“扫描”按钮，看看谁连着你的 WiFi。应用会记住这些设备，下次立即显示给你。"
 }
