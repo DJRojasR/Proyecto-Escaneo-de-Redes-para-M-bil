@@ -52,6 +52,7 @@ class BackgroundScanWorker(context: Context, params: WorkerParameters) : Corouti
                     selfModel = MainViewModel.phoneModel(),
                     source = source,
                     gateway = net.gateway,
+                    ssid = net.ssid,
                 )
             }
             if (settings.notifyIntruders && summary.newDevices.isNotEmpty()) {
@@ -67,6 +68,8 @@ class BackgroundScanWorker(context: Context, params: WorkerParameters) : Corouti
                     Notifier.notifyDeviceAlert(app, a.device.id, a.device.displayName, a.message)
                 }
             }
+            // Marca que la vigilancia automática sí pudo correr (para el aviso de batería)
+            if (source == ScanSource.AUTO) app.settings.lastAutoScanAt = System.currentTimeMillis()
             DevicesWidget.updateAll(app)
             return Result.success()
         } catch (e: CancellationException) {

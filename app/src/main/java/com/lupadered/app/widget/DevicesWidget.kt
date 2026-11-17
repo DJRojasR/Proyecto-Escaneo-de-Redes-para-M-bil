@@ -44,7 +44,7 @@ class DevicesWidget : AppWidgetProvider() {
             val views = RemoteViews(app.packageName, R.layout.widget_devices)
 
             if (!app.premium.isPremium) {
-                views.setTextViewText(R.id.widget_title, tr("Lupa de Red"))
+                views.setTextViewText(R.id.widget_title, tr("NexoLan Scanner"))
                 views.setTextViewText(R.id.widget_count, tr("Premium"))
                 views.setTextViewText(R.id.widget_detail, tr("Toca para activar el widget de tu red"))
                 views.setTextViewText(R.id.widget_alert, "")
@@ -56,7 +56,7 @@ class DevicesWidget : AppWidgetProvider() {
             val currentKey = NetworkInfoProvider.current(app)?.key
             val profile = currentKey?.let { repo.network(it) } ?: repo.networks().firstOrNull()
             if (profile == null) {
-                views.setTextViewText(R.id.widget_title, tr("Lupa de Red"))
+                views.setTextViewText(R.id.widget_title, tr("NexoLan Scanner"))
                 views.setTextViewText(R.id.widget_count, "—")
                 views.setTextViewText(R.id.widget_detail, tr("Toca para escanear tu red"))
                 views.setTextViewText(R.id.widget_alert, "")

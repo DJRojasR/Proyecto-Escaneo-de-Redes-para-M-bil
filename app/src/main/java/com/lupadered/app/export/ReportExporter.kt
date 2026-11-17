@@ -94,7 +94,7 @@ object ReportExporter {
         val w = PdfWriter(doc)
 
         w.title(tr("Reporte de red · %1\$s", data.network.displayName))
-        w.text(tr("Generado el %1\$s con Lupa de Red", dateTime(data.createdAt)), 10f, GREY)
+        w.text(tr("Generado el %1\$s con NexoLan Scanner", dateTime(data.createdAt)), 10f, GREY)
         w.space(10f)
 
         w.heading(tr("Resumen"))
@@ -179,7 +179,7 @@ object ReportExporter {
             paint.textSize = 8f
             paint.color = GREY
             paint.typeface = Typeface.DEFAULT
-            p.canvas.drawText(tr("Lupa de Red · página %1\$s", pageNumber), MARGIN, PAGE_H - 20f, paint)
+            p.canvas.drawText(tr("NexoLan Scanner · página %1\$s", pageNumber), MARGIN, PAGE_H - 20f, paint)
         }
 
         private fun ensure(height: Float) {

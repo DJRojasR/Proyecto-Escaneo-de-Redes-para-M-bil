@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.lupadered.app.data.Appearance
+import com.lupadered.app.data.DarkMode
 import com.lupadered.app.data.ThemeColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -148,9 +149,12 @@ fun LupaTheme(
     premium: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    // Claro u oscuro siempre sigue al teléfono (se quitó la opción en Ajustes;
-    // así nadie queda atrapado con una elección guardada antes).
-    val dark = isSystemInDarkTheme()
+    // Claro, oscuro o según el teléfono, elegido por el usuario en Ajustes.
+    val dark = when (appearance.dark) {
+        DarkMode.LIGHT -> false
+        DarkMode.DARK -> true
+        DarkMode.SYSTEM -> isSystemInDarkTheme()
+    }
     val color = appearance.color
     CompositionLocalProvider(LocalIsDark provides dark) {
         MaterialTheme(

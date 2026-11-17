@@ -1,6 +1,17 @@
 package com.lupadered.app.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import com.lupadered.app.net.WifiSecurityCheck
+import androidx.compose.material.icons.outlined.Wifi
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.Manifest
 import com.lupadered.app.i18n.tr
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Lifecycle
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material.icons.outlined.BatteryAlert
 import com.lupadered.app.ui.components.diagColor
 import com.lupadered.app.net.DiagStatus
 import com.lupadered.app.net.DiagItem
@@ -86,6 +97,23 @@ fun HomeScreen(
     // Revisión automática del "candado" del WiFi (también al volver a esta pantalla)
     LaunchedEffect(Unit) { vm.checkWifiSecurity() }
     val isPremium = rememberIsPremium()
+    val homeContext = LocalContext.current
+    var nameMsg by remember { mutableStateOf<String?>(null) }
+    fun tryWifiName() {
+        vm.applyWifiNameAsNetwork { ok ->
+            nameMsg = if (ok) null
+            else tr("No pudimos leer el nombre. Enciende la ubicación del teléfono y vuelve a intentarlo.")
+        }
+    }
+    val locPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) tryWifiName()
+        else nameMsg = tr("Sin el permiso de ubicación, Android no deja ver el nombre del WiFi.")
+    }
+    val onUseWifiName = {
+        nameMsg = null
+        if (WifiSecurityCheck.hasLocationPermission(homeContext)) tryWifiName()
+        else locPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
     var renaming by remember { mutableStateOf(false) }
     if (renaming) {
         NetworkNameDialog(
@@ -100,7 +128,7 @@ fun HomeScreen(
 
     // El botón "?" se quitó: "¿Qué estoy viendo?" está en Ajustes › Ayuda
     ScreenScaffold(
-        title = tr("Lupa de Red"),
+        title = tr("NexoLan Scanner"),
         actions = {
             IconButton(onClick = onInspectIp) {
                 Icon(Icons.AutoMirrored.Outlined.ManageSearch, contentDescription = tr("Analizar una IP"))
@@ -171,6 +199,8 @@ fun HomeScreen(
                     NamePromptCard(
                         onSave = vm::renameCurrentNetwork,
                         onLater = vm::dismissNamePrompt,
+                        onUseWifiName = onUseWifiName,
+                        message = nameMsg,
                     )
                 }
             }
@@ -178,6 +208,9 @@ fun HomeScreen(
             item { ScanCard(s, onScan = onScan, onCancel = vm::cancelScan) }
             if (!s.scanning && s.wifiSecurity.isNotEmpty()) {
                 item { WifiSecurityCard(s.wifiSecurity, onClick = onWifiSecurity) }
+            }
+            if (!s.scanning) {
+                item { BatteryWarningCard() }
             }
 
             if (s.newDevices.isNotEmpty()) {
@@ -537,7 +570,12 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
 
 /** Pide un nombre para la red después de escanearla por primera vez ("Casa", "Router 2"…). */
 @Composable
-private fun NamePromptCard(onSave: (String) -> Unit, onLater: () -> Unit) {
+private fun NamePromptCard(
+    onSave: (String) -> Unit,
+    onLater: () -> Unit,
+    onUseWifiName: () -> Unit,
+    message: String?,
+) {
     var text by remember { mutableStateOf("") }
     Card(
         modifier = Modifier.padding(top = 12.dp),
@@ -550,6 +588,22 @@ private fun NamePromptCard(onSave: (String) -> Unit, onLater: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(vertical = 6.dp),
             )
+            // Detectar el nombre del WiFi (necesita permiso de ubicación, lo exige Android)
+            Button(onClick = onUseWifiName, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Outlined.Wifi, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(tr("Usar el nombre de mi WiFi"))
+            }
+            Text(
+                tr("Android solo deja ver el nombre del WiFi con permiso de ubicación. La app no usa ni guarda tu ubicación."),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+            )
+            message?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
+            }
+            Text(tr("O ponle un nombre tú:"), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(bottom = 6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(tr("Casa"), tr("Router 2"), tr("Trabajo")).forEach { suggestion ->
                     AssistChip(onClick = { onSave(suggestion) }, label = { Text(suggestion) })
@@ -587,4 +641,65 @@ fun NetworkNameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -
         confirmButton = { TextButton(onClick = { onSave(text) }) { Text(tr("Guardar")) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
+}
+
+
+/**
+ * Aviso cuando el ahorro de batería del teléfono está frenando los escaneos
+ * automáticos de la vigilancia. Se revisa sola al entrar y al volver a la pantalla.
+ * Si no hay problema (o la vigilancia está apagada), no muestra nada.
+ */
+@Composable
+internal fun BatteryWarningCard() {
+    val context = LocalContext.current
+    val app = context.applicationContext as com.lupadered.app.LupaApp
+    val monitor by app.settings.monitor.collectAsStateWithLifecycle()
+    var refresh by remember { mutableStateOf(0) }
+
+    // Vuelve a comprobar cada vez que el usuario regresa a esta pantalla
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) refresh++
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+
+    val status = remember(monitor, refresh) {
+        com.lupadered.app.monitor.BatteryGuard.check(context, monitor, app.settings.lastAutoScanAt)
+    } ?: return
+
+    var showHow by remember { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = StatusColors.warn.copy(alpha = 0.15f)),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.BatteryAlert, contentDescription = null, tint = StatusColors.warn)
+                Spacer(Modifier.width(10.dp))
+                Text(tr("La batería está frenando la vigilancia"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            }
+            Text(
+                tr("Tu teléfono está frenando los escaneos automáticos para ahorrar batería. Por eso quizá no te avisemos cuando se conecte un equipo nuevo."),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { com.lupadered.app.monitor.BatteryGuard.openBatterySettings(context) }) {
+                    Text(tr("Arreglarlo"))
+                }
+                TextButton(onClick = { showHow = !showHow }) {
+                    Text(if (showHow) tr("Ocultar pasos") else tr("¿Cómo?"))
+                }
+            }
+            if (showHow) {
+                Text(
+                    com.lupadered.app.monitor.BatteryGuard.brandSteps(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
 }

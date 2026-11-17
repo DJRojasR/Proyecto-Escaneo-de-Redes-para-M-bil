@@ -103,7 +103,7 @@ fun MonitorScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                tr("Lupa de Red puede revisar tu red sola, aunque no abras la app, y avisarte si se conecta alguien que no conoces."),
+                tr("NexoLan Scanner puede revisar tu red sola, aunque no abras la app, y avisarte si se conecta alguien que no conoces."),
                 style = MaterialTheme.typography.bodyMedium,
             )
 
@@ -115,6 +115,8 @@ fun MonitorScreen(onBack: () -> Unit) {
                 )
                 return@Column
             }
+
+            BatteryWarningCard()
 
             // ---------- Red vigilada
             Card(

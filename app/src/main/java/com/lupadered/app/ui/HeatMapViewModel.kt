@@ -52,6 +52,12 @@ data class HeatMapState(
     val summaries: List<FloorSummary> = emptyList(),
     /** Señal WiFi ahora mismo (dBm), actualizada cada segundo. */
     val liveRssi: Int? = null,
+    /** Velocidad del WiFi ahora mismo (Mbps), si el teléfono la informa. */
+    val liveMbps: Int? = null,
+    /** El teléfono cambió de punto de acceso (repetidor/mesh) durante el recorrido. */
+    val roaming: Boolean = false,
+    /** Te conectaste a OTRA red WiFi durante el recorrido (nombre de la nueva); null si no. */
+    val changedNetworkName: String? = null,
     /** Lugar del plano donde el usuario dice que está (0..1). */
     val cursorX: Float? = null,
     val cursorY: Float? = null,
@@ -79,6 +85,10 @@ class HeatMapViewModel(application: Application) : AndroidViewModel(application)
     private val app = application as LupaApp
     private val repo get() = app.repository
     private var liveJob: Job? = null
+    /** Primer punto de acceso visto en este recorrido; si cambia, avisamos (roaming). */
+    private var sessionBssid: String? = null
+    /** Nombre de la red al empezar; si cambia, avisamos que cambiaste de red. */
+    private var sessionSsid: String? = null
     private var measureJob: Job? = null
 
     private val _state = MutableStateFlow(HeatMapState())
@@ -100,9 +110,21 @@ class HeatMapViewModel(application: Application) : AndroidViewModel(application)
             _state.update { it.copy(networkKey = key, gateway = net.gateway, noWifi = false) }
             reload(selectFirst = _state.value.selectedFloorId == null)
             launch { checkAr() }
+            sessionBssid = net.bssid
+            sessionSsid = net.ssid
             while (isActive) {
-                val rssi = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app)?.wifiRssi }
-                _state.update { it.copy(liveRssi = rssi) }
+                val n = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+                val b = n?.bssid
+                val roamed = b != null && sessionBssid != null && b != sessionBssid
+                if (b != null && sessionBssid == null) sessionBssid = b
+                val newNet = if (n?.ssid != null && sessionSsid != null && n.ssid != sessionSsid) n.ssid else null
+                _state.update {
+                    it.copy(
+                        liveRssi = n?.wifiRssi, liveMbps = n?.linkSpeedMbps,
+                        roaming = it.roaming || roamed,
+                        changedNetworkName = it.changedNetworkName ?: newNet,
+                    )
+                }
                 delay(1000)
             }
         }
@@ -185,6 +207,43 @@ class HeatMapViewModel(application: Application) : AndroidViewModel(application)
                 if (repo.heatFloors(key).isEmpty()) repo.addHeatFloor(key, tr("Piso 1"))
             }
             reload(selectFirst = true)
+        }
+    }
+
+    fun resetRoamingWarning() {
+        sessionBssid = null
+        sessionSsid = null
+        _state.update { it.copy(roaming = false, changedNetworkName = null) }
+    }
+
+    /** El usuario eligió hacer el mapa con la red NUEVA: recargamos sus pisos. */
+    fun useCurrentNetwork() {
+        viewModelScope.launch {
+            val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) } ?: return@launch
+            val key = net.key
+            withContext(Dispatchers.IO) {
+                if (repo.heatFloors(key).isEmpty()) repo.addHeatFloor(key, tr("Piso 1"))
+            }
+            sessionBssid = net.bssid
+            sessionSsid = net.ssid
+            _state.update {
+                it.copy(
+                    networkKey = key, gateway = net.gateway,
+                    roaming = false, changedNetworkName = null,
+                    selectedFloorId = null, selectedPointId = null,
+                    cursorX = null, cursorY = null,
+                )
+            }
+            reload(selectFirst = true)
+        }
+    }
+
+    /** El usuario eligió SEGUIR con la red anterior: dejamos de preguntar por la nueva. */
+    fun keepCurrentNetwork() {
+        viewModelScope.launch {
+            val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+            sessionSsid = net?.ssid // ya no vuelve a avisar por esta red
+            _state.update { it.copy(changedNetworkName = null) }
         }
     }
 
@@ -363,8 +422,9 @@ class HeatMapViewModel(application: Application) : AndroidViewModel(application)
         lastSampleY = y
         lastSampleAt = now
         viewModelScope.launch {
-            val id = withContext(Dispatchers.IO) { repo.addHeatPoint(floor.id, x, y, rssi, null) }
-            val point = HeatPoint(id, x, y, rssi, null, now)
+            val mbps = s.liveMbps
+            val id = withContext(Dispatchers.IO) { repo.addHeatPoint(floor.id, x, y, rssi, null, mbps) }
+            val point = HeatPoint(id = id, x = x, y = y, rssi = rssi, pingMs = null, mbps = mbps, at = now)
             _state.update { if (it.selectedFloorId == floor.id) it.copy(points = it.points + point) else it }
         }
     }
@@ -450,11 +510,15 @@ class HeatMapViewModel(application: Application) : AndroidViewModel(application)
             _state.update { it.copy(measuring = true, measureProgress = 0f, message = null) }
             try {
                 val readings = ArrayList<Int>()
+                val speeds = ArrayList<Int>()
                 val pings = ArrayList<Long>()
                 val steps = 8
                 for (i in 0 until steps) {
                     val started = System.currentTimeMillis()
-                    withContext(Dispatchers.IO) { NetworkInfoProvider.current(app)?.wifiRssi }?.let { readings += it }
+                    withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }?.let { net ->
+                        net.wifiRssi?.let { readings += it }
+                        net.linkSpeedMbps?.let { speeds += it }
+                    }
                     if (i % 3 == 0) {
                         s.gateway?.let { gw -> withContext(Dispatchers.IO) { LatencyProbe.router(gw) } }?.let { pings += it }
                     }
@@ -468,7 +532,8 @@ class HeatMapViewModel(application: Application) : AndroidViewModel(application)
                 // Usamos la mediana: un valor raro aislado no cambia el resultado
                 val rssi = readings.sorted()[readings.size / 2]
                 val ping = pings.takeIf { it.isNotEmpty() }?.sorted()?.get(pings.size / 2)?.toInt()
-                withContext(Dispatchers.IO) { repo.addHeatPoint(floorId, x, y, rssi, ping) }
+                val mbps = speeds.takeIf { it.isNotEmpty() }?.sorted()?.get(speeds.size / 2)
+                withContext(Dispatchers.IO) { repo.addHeatPoint(floorId, x, y, rssi, ping, mbps) }
                 _state.update { it.copy(cursorX = null, cursorY = null) }
                 reload()
             } finally {

@@ -28,6 +28,7 @@ private class ArSample(
     val anchorId: Int,
     val local: FloatArray,
     val rssi: Int,
+    val mbps: Int? = null,
     var dbId: Long? = null,
     /** Posición en el mundo calculada la última vez (metros). */
     var x: Float = 0f,
@@ -42,6 +43,11 @@ data class ArCell(val i: Int, val k: Int, val rssi: Int)
 
 data class ArHeatState(
     val liveRssi: Int? = null,
+    val liveMbps: Int? = null,
+    /** El teléfono cambió de punto de acceso (repetidor/mesh) durante el recorrido. */
+    val roaming: Boolean = false,
+    /** Te conectaste a OTRA red WiFi durante el recorrido (nombre de la nueva); null si no. */
+    val changedNetworkName: String? = null,
     val frame: ArFrameInfo? = null,
     val sampleCount: Int = 0,
     val cells: List<ArCell> = emptyList(),
@@ -73,6 +79,9 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
     private val app = application as LupaApp
     private val repo get() = app.repository
     private var liveJob: Job? = null
+    /** Primer punto de acceso del recorrido; si cambia, avisamos (roaming). */
+    private var sessionBssid: String? = null
+    private var sessionSsid: String? = null
 
     /** Todo lo que toca las mediciones y baldosas corre en este único hilo. */
     private val workerExecutor = Executors.newSingleThreadExecutor()
@@ -120,8 +129,19 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
         if (liveJob?.isActive == true) return
         liveJob = viewModelScope.launch {
             while (isActive) {
-                val rssi = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app)?.wifiRssi }
-                _state.update { it.copy(liveRssi = rssi) }
+                val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+                val b = net?.bssid
+                val roamed = b != null && sessionBssid != null && b != sessionBssid
+                if (b != null && sessionBssid == null) sessionBssid = b
+                if (sessionSsid == null) sessionSsid = net?.ssid
+                val newNet = if (net?.ssid != null && sessionSsid != null && net.ssid != sessionSsid) net.ssid else null
+                _state.update {
+                    it.copy(
+                        liveRssi = net?.wifiRssi, liveMbps = net?.linkSpeedMbps,
+                        roaming = it.roaming || roamed,
+                        changedNetworkName = it.changedNetworkName ?: newNet,
+                    )
+                }
                 delay(700)
             }
         }
@@ -183,7 +203,7 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
         lastZ = info.camZ
         lastSampleAt = now
         val local = nearest.pose.inverse().transformPoint(floatArrayOf(info.camX, info.camY, info.camZ))
-        val sample = ArSample(nearest.id, local, rssi, x = info.camX, z = info.camZ)
+        val sample = ArSample(nearest.id, local, rssi, mbps = _state.value.liveMbps, x = info.camX, z = info.camZ)
         viewModelScope.launch(worker) {
             samples += sample
             paintAround(sample)
@@ -257,7 +277,7 @@ class ArHeatViewModel(application: Application) : AndroidViewModel(application) 
         val pose = anchors[s.anchorId] ?: return
         val w = pose.transformPoint(s.local)
         val (px, py) = toPlan(w[0], w[1], w[2], anchors) ?: return
-        val id = withContext(Dispatchers.IO) { repo.addHeatPoint(floorId, px, py, s.rssi, null) }
+        val id = withContext(Dispatchers.IO) { repo.addHeatPoint(floorId, px, py, s.rssi, null, s.mbps) }
         s.dbId = id
         _state.update { it.copy(saved = it.saved + 1) }
     }

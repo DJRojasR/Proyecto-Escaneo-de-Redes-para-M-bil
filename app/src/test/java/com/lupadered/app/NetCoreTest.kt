@@ -8,7 +8,6 @@ import com.lupadered.app.net.Ipv4
 import com.lupadered.app.net.Mdns
 import com.lupadered.app.net.NetworkScanner
 import com.lupadered.app.net.NioTcpProber
-import com.lupadered.app.net.RouterAuthProbe
 import com.lupadered.app.net.RouterHosts
 import com.lupadered.app.net.Subnet
 import com.lupadered.app.ui.RouteWhitelist
@@ -72,22 +71,6 @@ class NetCoreTest {
         assertFalse(RouteWhitelist.isAllowed(null))
         assertFalse(RouteWhitelist.isAllowed("../ajustes"))
         assertFalse(RouteWhitelist.isAllowed("dispositivo/" + "1".repeat(50)))
-    }
-
-    @Test
-    fun routerAuthProbe_cooldownTrasUnIntento() = runBlocking {
-        // IP privada sin router real detrás: la conexión falla rápido (timeout corto)
-        // y de todas formas debe quedar registrado el intento para el cooldown.
-        val ip = "192.168.250.250"
-        assertEquals(0L, RouterAuthProbe.cooldownRemainingMs(ip))
-        RouterAuthProbe.probeDefaultCredentials(ip, timeoutMs = 80)
-        assertTrue(RouterAuthProbe.cooldownRemainingMs(ip) > 0)
-    }
-
-    @Test
-    fun routerAuthProbe_ipNoPrivadaNiSiquieraLoIntenta() = runBlocking {
-        assertFalse(RouterAuthProbe.probeDefaultCredentials("8.8.8.8", timeoutMs = 50))
-        assertEquals(0L, RouterAuthProbe.cooldownRemainingMs("8.8.8.8"))
     }
 
     @Test

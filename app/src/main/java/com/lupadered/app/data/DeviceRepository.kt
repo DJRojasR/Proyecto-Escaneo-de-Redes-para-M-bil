@@ -14,7 +14,7 @@ import com.lupadered.app.net.DiscoveryMethod
 import com.lupadered.app.net.HostSnapshot
 import com.lupadered.app.net.NetworkScanner
 
-private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 6) {
+private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", null, 8) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE devices (
@@ -56,6 +56,16 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         )
         db.execSQL("CREATE INDEX idx_scans_net ON scans(network_key, started_at)")
         db.execSQL(
+            """CREATE TABLE scan_devices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scan_id INTEGER NOT NULL,
+                network_key TEXT NOT NULL,
+                device_id INTEGER NOT NULL,
+                ip TEXT NOT NULL
+            )"""
+        )
+        db.execSQL("CREATE INDEX idx_scandev_scan ON scan_devices(scan_id)")
+        db.execSQL(
             """CREATE TABLE events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 network_key TEXT NOT NULL,
@@ -82,6 +92,27 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
         if (oldVersion < 4) migrateToV4(db)
         if (oldVersion < 5) migrateToV5(db)
         if (oldVersion < 6) migrateToV6(db)
+        if (oldVersion < 7) migrateToV7(db)
+        if (oldVersion < 8) migrateToV8(db)
+    }
+
+    /** Versión 7: velocidad del WiFi (Mbps) en cada punto medido. */
+    private fun migrateToV7(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE heat_points ADD COLUMN mbps INTEGER")
+    }
+
+    /** Versión 8: qué equipos estaban conectados en cada escaneo (historial). */
+    private fun migrateToV8(db: SQLiteDatabase) {
+        db.execSQL(
+            """CREATE TABLE scan_devices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scan_id INTEGER NOT NULL,
+                network_key TEXT NOT NULL,
+                device_id INTEGER NOT NULL,
+                ip TEXT NOT NULL
+            )"""
+        )
+        db.execSQL("CREATE INDEX idx_scandev_scan ON scan_devices(scan_id)")
     }
 
     /** Versión 6: ancho aproximado de cada piso, para pasar pasos y metros al plano. */
@@ -111,6 +142,7 @@ private class DbHelper(context: Context) : SQLiteOpenHelper(context, "lupa.db", 
                 y REAL NOT NULL,
                 rssi INTEGER NOT NULL,
                 ping_ms INTEGER,
+                mbps INTEGER,
                 at INTEGER NOT NULL
             )"""
         )
@@ -201,6 +233,19 @@ class DeviceRepository(context: Context) {
         db.query("devices", null, "id = ?", arrayOf(id.toString()), null, null, null)
             .use { c -> if (c.moveToFirst()) c.toDevice() else null }
 
+    /** Equipos que estaban conectados en un escaneo concreto (con la IP que tenían entonces). */
+    fun devicesInScan(scanId: Long): List<Pair<Device, String>> {
+        val out = ArrayList<Pair<Device, String>>()
+        db.rawQuery("SELECT device_id, ip FROM scan_devices WHERE scan_id = ? ORDER BY id", arrayOf(scanId.toString()))
+            .use { c ->
+                while (c.moveToNext()) {
+                    val d = device(c.getLong(0)) ?: continue
+                    out += d to (c.getString(1) ?: d.ip)
+                }
+            }
+        return out
+    }
+
     fun latestScan(networkKey: String): ScanRecord? = scans(networkKey, 1).firstOrNull()
 
     fun scans(networkKey: String, limit: Int = 50, since: Long = 0L): List<ScanRecord> =
@@ -288,6 +333,7 @@ class DeviceRepository(context: Context) {
         try {
             database.delete("events", "network_key = ?", arrayOf(key))
             database.delete("scans", "network_key = ?", arrayOf(key))
+            database.delete("scan_devices", "network_key = ?", arrayOf(key))
             database.delete("devices", "network_key = ?", arrayOf(key))
             database.delete("networks", "network_key = ?", arrayOf(key))
             database.setTransactionSuccessful()
@@ -344,6 +390,7 @@ class DeviceRepository(context: Context) {
 
     fun deleteDevice(id: Long) {
         db.delete("events", "device_id = ?", arrayOf(id.toString()))
+        db.delete("scan_devices", "device_id = ?", arrayOf(id.toString()))
         db.delete("devices", "id = ?", arrayOf(id.toString()))
         db.delete("alert_rules", "device_id = ?", arrayOf(id.toString()))
     }
@@ -463,26 +510,29 @@ class DeviceRepository(context: Context) {
 
     fun heatPoints(floorId: Long): List<HeatPoint> =
         db.rawQuery(
-            "SELECT id, x, y, rssi, ping_ms, at FROM heat_points WHERE floor_id = ? ORDER BY at",
+            "SELECT id, x, y, rssi, ping_ms, mbps, at FROM heat_points WHERE floor_id = ? ORDER BY at",
             arrayOf(floorId.toString()),
         ).use { c ->
             buildList {
                 while (c.moveToNext()) add(
                     HeatPoint(
                         id = c.getLong(0), x = c.getFloat(1), y = c.getFloat(2), rssi = c.getInt(3),
-                        pingMs = if (c.isNull(4)) null else c.getInt(4), at = c.getLong(5),
+                        pingMs = if (c.isNull(4)) null else c.getInt(4),
+                        mbps = if (c.isNull(5)) null else c.getInt(5),
+                        at = c.getLong(6),
                     )
                 )
             }
         }
 
-    fun addHeatPoint(floorId: Long, x: Float, y: Float, rssi: Int, pingMs: Int?): Long =
+    fun addHeatPoint(floorId: Long, x: Float, y: Float, rssi: Int, pingMs: Int?, mbps: Int? = null): Long =
         db.insert("heat_points", null, ContentValues().apply {
             put("floor_id", floorId)
             put("x", x)
             put("y", y)
             put("rssi", rssi)
             pingMs?.let { put("ping_ms", it) }
+            mbps?.let { put("mbps", it) }
             put("at", System.currentTimeMillis())
         })
 
@@ -538,6 +588,7 @@ class DeviceRepository(context: Context) {
         db.delete("networks", null, null)
         db.delete("events", null, null)
         db.delete("scans", null, null)
+        db.delete("scan_devices", null, null)
         db.delete("devices", null, null)
     }
 
@@ -554,6 +605,7 @@ class DeviceRepository(context: Context) {
         selfModel: String,
         source: ScanSource = ScanSource.MANUAL,
         gateway: String? = null,
+        ssid: String? = null,
     ): ScanSummary {
         // Los textos vienen de otros equipos: se limpian antes de guardarlos
         @Suppress("NAME_SHADOWING")
@@ -581,9 +633,18 @@ class DeviceRepository(context: Context) {
                 put("last_seen", now)
                 put("subnet", subnet)
             }, "network_key = ?", arrayOf(networkKey))
+            // Si conocemos el nombre de la red (SSID) y el usuario no le ha puesto uno,
+            // lo guardamos como nombre automático. No pisamos un nombre que puso el usuario.
+            if (!ssid.isNullOrBlank()) {
+                database.execSQL(
+                    "UPDATE networks SET name = ? WHERE network_key = ? AND (name IS NULL OR name = '')",
+                    arrayOf(ssid.take(40), networkKey),
+                )
+            }
             if (updated == 0) {
                 database.insert("networks", null, ContentValues().apply {
                     put("network_key", networkKey)
+                    put("name", ssid?.takeIf { it.isNotBlank() }?.take(40))
                     put("subnet", subnet)
                     put("gateway", gateway)
                     put("first_seen", now)
@@ -592,6 +653,8 @@ class DeviceRepository(context: Context) {
             }
 
             val matched = HashSet<Long>()
+            // Qué equipos estaban conectados en este escaneo (para el historial)
+            val presence = ArrayList<Pair<Long, String>>()
             val newDevices = ArrayList<Device>()
 
             for (h in hosts) {
@@ -619,6 +682,7 @@ class DeviceRepository(context: Context) {
 
                 if (candidate != null) {
                     matched += candidate.id
+                    presence += candidate.id to h.ip
                     // El escaneo de red es rápido y puede perder un puerto lento: aquí solo sumamos.
                     // Los puertos se quitan únicamente con "Analizar puertos", que los revisa con calma.
                     val ports = (candidate.openPorts + h.openPorts).toSortedSet()
@@ -664,6 +728,7 @@ class DeviceRepository(context: Context) {
                     }
                     val id = database.insert("devices", null, values)
                     matched += id
+                    presence += id to h.ip
                     if (!firstScan) {
                         addEvent(database, networkKey, id, EventType.NEW, h.ip, null, now)
                         device(id)?.let { newDevices += it }
@@ -679,6 +744,14 @@ class DeviceRepository(context: Context) {
                 }
             }
 
+            for ((deviceId, ip) in presence) {
+                database.insert("scan_devices", null, ContentValues().apply {
+                    put("scan_id", scanId)
+                    put("network_key", networkKey)
+                    put("device_id", deviceId)
+                    put("ip", ip)
+                })
+            }
             database.update("scans", ContentValues().apply { put("new_count", newDevices.size) },
                 "id = ?", arrayOf(scanId.toString()))
             database.setTransactionSuccessful()

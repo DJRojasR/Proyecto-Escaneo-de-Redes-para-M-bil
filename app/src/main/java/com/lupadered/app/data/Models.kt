@@ -149,5 +149,7 @@ data class HeatPoint(
     val y: Float,
     val rssi: Int,
     val pingMs: Int?,
+    /** Velocidad del WiFi en ese punto (Mbps), si se pudo leer. */
+    val mbps: Int? = null,
     val at: Long,
 )

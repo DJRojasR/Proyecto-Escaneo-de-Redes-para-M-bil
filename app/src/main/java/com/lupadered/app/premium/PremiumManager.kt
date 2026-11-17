@@ -46,7 +46,7 @@ data class PremiumState(
 )
 
 /**
- * Compras de Lupa de Red Premium con Google Play Billing (RF-20, RF-21).
+ * Compras de NexoLan Scanner Premium con Google Play Billing (RF-20, RF-21).
  *
  * Productos que debes crear en Play Console con estos mismos IDs:
  *  - Suscripción [SUB_MONTHLY] con el plan base [BASE_PLAN_MONTHLY] (S/ 4.90 al mes) y
@@ -257,7 +257,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
                 source = source ?: if (test) PremiumSource.TEST else null,
                 pendingPayment = pending,
                 message = when {
-                    !fromQuery && source != null -> tr("¡Gracias! Ya tienes Lupa de Red Premium.")
+                    !fromQuery && source != null -> tr("¡Gracias! Ya tienes NexoLan Scanner Premium.")
                     pending -> tr("Tu pago está pendiente. Activaremos Premium apenas Google Play lo confirme.")
                     else -> it.message
                 },

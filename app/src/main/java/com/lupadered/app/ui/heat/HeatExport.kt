@@ -144,7 +144,7 @@ object HeatExport {
 
         // Firma
         val foot = TextPaint(muted).apply { textSize = 28f }
-        c.drawText(tr("Hecho con Lupa de Red"), PAD, h - 40f, foot)
+        c.drawText(tr("Hecho con NexoLan Scanner"), PAD, h - 40f, foot)
         return bmp
     }
 

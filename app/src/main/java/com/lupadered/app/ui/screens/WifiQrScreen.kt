@@ -1,6 +1,10 @@
 package com.lupadered.app.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.foundation.clickable
@@ -23,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -76,6 +81,7 @@ fun WifiQrScreen(onBack: () -> Unit) {
     var security by rememberSaveable { mutableStateOf(QrSecurity.WPA) }
     var hidden by rememberSaveable { mutableStateOf(false) }
     var showPassword by rememberSaveable { mutableStateOf(false) }
+    var fullscreen by rememberSaveable { mutableStateOf(false) }
     var prefilled by rememberSaveable { mutableStateOf(false) }
 
     // Rellenamos el nombre de la red y el tipo de protección si Android los da
@@ -192,50 +198,52 @@ fun WifiQrScreen(onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp),
                         )
+                        Button(
+                            onClick = { showPassword = false; fullscreen = true },
+                            modifier = Modifier.padding(top = 12.dp),
+                        ) {
+                            Icon(Icons.Outlined.Fullscreen, contentDescription = null)
+                            Spacer(Modifier.width(6.dp))
+                            Text(tr("Mostrar en grande para escanear"))
+                        }
                     }
                 }
             }
-
-            SafetyTips()
         }
     }
-}
 
-/** Consejos para compartir el WiFi de forma segura: minimizados; se abren al tocar. */
-@Composable
-private fun SafetyTips() {
-    var open by rememberSaveable { mutableStateOf(false) }
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { open = !open },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-    ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Shield, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(tr("Comparte tu WiFi de forma segura"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                Icon(
-                    if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                    contentDescription = if (open) tr("Ocultar consejos") else tr("Ver consejos"),
-                )
-            }
-            AnimatedVisibility(visible = open) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Tip(tr("El código solo se ve en tu pantalla: no se puede compartir, guardar ni capturar. Muéstralo en persona solo a quien quieras dar acceso."))
-                    Tip(tr("Lo más seguro para visitas es una «red de invitados»: actívala en tu router y comparte ese WiFi, no el principal. Así las visitas tienen Internet, pero no ven tus equipos (cámaras, computadoras, impresoras)."))
-                    Tip(tr("¿Alguien ya no debería entrar? Cambia la contraseña del WiFi en el router: el código viejo deja de funcionar."))
-                    Tip(tr("Tu contraseña no se guarda ni se envía: el código se crea en tu teléfono y se borra al salir de esta pantalla."))
-                    Tip(tr("Ojo: quien se conecte podrá ver la contraseña en los ajustes de su teléfono. Para visitas, usa la red de invitados."))
+    // Pantalla completa: solo el código y el nombre. Así, al mostrarlo para escanear,
+    // la contraseña no aparece cerca y nadie puede fotografiarla junto al QR.
+    if (fullscreen && qr != null) {
+        Dialog(
+            onDismissRequest = { fullscreen = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Box(
+                Modifier.fillMaxSize().background(Color.White).clickable { fullscreen = false },
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+                    Image(
+                        bitmap = qr,
+                        contentDescription = tr("Código QR del WiFi %1\$s", ssid.trim()),
+                        filterQuality = FilterQuality.None,
+                        modifier = Modifier.fillMaxWidth(0.9f).aspectRatio(1f).background(Color.White),
+                    )
+                    Text(
+                        ssid.trim(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                    Text(
+                        tr("Apunta la cámara al código · toca para cerrar"),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun Tip(text: String) {
-    Row {
-        Text("•", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 6.dp))
-        Text(text, style = MaterialTheme.typography.bodySmall)
     }
 }

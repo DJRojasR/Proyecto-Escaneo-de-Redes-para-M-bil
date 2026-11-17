@@ -21,9 +21,21 @@ data class LocalNetwork(
     val interfaceName: String?,
     val isWifi: Boolean,
     val wifiRssi: Int?,
+    /** Velocidad de enlace WiFi (Mbps) entre el teléfono y el router; null si no se sabe. */
+    val linkSpeedMbps: Int? = null,
+    /** Nombre de la red WiFi (SSID); null si no hay permiso de ubicación o está apagada. */
+    val ssid: String? = null,
+    /** Identificador del punto de acceso concreto (BSSID): para detectar cambios de repetidor/mesh. */
+    val bssid: String? = null,
 ) {
     /** Identifica la red para guardar sus dispositivos por separado (casa, oficina…). */
-    val key: String get() = "${scanSubnet.cidr}|${gateway ?: "-"}"
+    /**
+     * Identifica la red para guardar sus datos por separado. Si conocemos el nombre del
+     * WiFi (SSID) lo usamos, así dos routers distintos con el mismo rango IP (192.168.1.x)
+     * no se confunden. Sin permiso de ubicación caemos a la subred + gateway, como antes.
+     */
+    val key: String get() = ssid?.takeIf { it.isNotBlank() }?.let { "wifi:$it" }
+        ?: "${scanSubnet.cidr}|${gateway ?: "-"}"
 
     fun toScanTarget() = ScanTarget(scanSubnet, selfIp, gateway, dnsServers, interfaceName)
 }
@@ -76,7 +88,41 @@ object NetworkInfoProvider {
             interfaceName = lp.interfaceName,
             isWifi = isWifi,
             wifiRssi = if (isWifi) readRssi(context, caps) else null,
+            linkSpeedMbps = if (isWifi) readLinkSpeed(context, caps) else null,
+            ssid = if (isWifi) readSsid(context, caps) else null,
+            bssid = if (isWifi) readBssid(context, caps) else null,
         )
+    }
+
+    /**
+     * Velocidad de enlace WiFi en Mbps (WifiInfo.getLinkSpeed). Es la velocidad entre
+     * el teléfono y el router, NO la del plan de Internet. Sirve para comparar zonas.
+     */
+    @Suppress("DEPRECATION")
+    private fun wifiInfo(context: Context, caps: NetworkCapabilities): android.net.wifi.WifiInfo? =
+        (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) caps.transportInfo as? android.net.wifi.WifiInfo else null)
+            ?: context.applicationContext.getSystemService(WifiManager::class.java)?.connectionInfo
+
+    /**
+     * Nombre de la red (SSID). Android solo lo entrega si la app tiene permiso de
+     * ubicación y la ubicación está encendida; si no, devuelve "<unknown ssid>".
+     */
+    @Suppress("DEPRECATION")
+    private fun readSsid(context: Context, caps: NetworkCapabilities): String? =
+        wifiInfo(context, caps)?.ssid?.trim('"')
+            ?.takeIf { it.isNotBlank() && it != "<unknown ssid>" && it != "0x" }
+
+    /** Identificador del punto de acceso (BSSID); 02:00:00:00:00:00 = oculto por Android. */
+    @Suppress("DEPRECATION")
+    private fun readBssid(context: Context, caps: NetworkCapabilities): String? =
+        wifiInfo(context, caps)?.bssid?.lowercase()
+            ?.takeIf { it.isNotBlank() && it != "02:00:00:00:00:00" && it != "00:00:00:00:00:00" }
+
+    @Suppress("DEPRECATION")
+    private fun readLinkSpeed(context: Context, caps: NetworkCapabilities): Int? {
+        val info = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) caps.transportInfo as? android.net.wifi.WifiInfo else null)
+            ?: context.applicationContext.getSystemService(WifiManager::class.java)?.connectionInfo
+        return info?.linkSpeed?.takeIf { it > 0 }
     }
 
     @Suppress("DEPRECATION")

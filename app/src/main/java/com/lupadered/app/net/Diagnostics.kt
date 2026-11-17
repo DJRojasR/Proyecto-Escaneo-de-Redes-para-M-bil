@@ -2,6 +2,7 @@ package com.lupadered.app.net
 
 import com.lupadered.app.i18n.tr
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.DatagramPacket
@@ -37,22 +38,32 @@ class Diagnostics {
         gateway: String?,
         dnsServers: List<String>,
         wifiRssi: Int?,
-        onProgress: (Float) -> Unit,
+        onProgress: (Float, String) -> Unit,
     ): List<DiagItem> = withContext(Dispatchers.IO) {
         val items = ArrayList<DiagItem>()
+        // Mostramos cada paso con su nombre y dejamos un momento para que se vea el avance;
+        // así no termina de golpe y la persona entiende qué está revisando la app.
+        val pause = 650L
 
+        onProgress(0.08f, tr("Revisando la señal del WiFi…"))
         items += signalItem(wifiRssi)
-        onProgress(0.1f)
+        onProgress(0.25f, tr("Revisando la señal del WiFi…"))
+        delay(pause)
 
+        onProgress(0.3f, tr("Probando la conexión con el router…"))
         items += routerItem(gateway)
-        onProgress(0.45f)
+        onProgress(0.5f, tr("Probando la conexión con el router…"))
+        delay(pause)
 
-        val internet = internetItem()
-        items += internet
-        onProgress(0.75f)
+        onProgress(0.55f, tr("Midiendo tu Internet…"))
+        items += internetItem()
+        onProgress(0.8f, tr("Midiendo tu Internet…"))
+        delay(pause)
 
+        onProgress(0.85f, tr("Revisando el DNS (lo que abre las páginas)…"))
         items += dnsItem(dnsServers.firstOrNull() ?: gateway)
-        onProgress(1f)
+        onProgress(1f, tr("Casi listo…"))
+        delay(pause)
 
         items
     }

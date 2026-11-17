@@ -100,6 +100,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lupadered.app.data.HeatPoint
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.WifiFind
 import com.lupadered.app.i18n.tr
 import com.lupadered.app.ui.FloorSummary
 import com.lupadered.app.ui.HeatMapState
@@ -215,6 +217,7 @@ fun HeatMapScreen(vm: HeatMapViewModel, onOpenAr: (floorId: Long, x: Float, y: F
 
             FloorChips(s, onSelect = vm::selectFloor, onAdd = { dialog = HeatDialog.ADD })
             LiveSignalCard(s.liveRssi)
+            if (s.roaming) RoamingWarning()
             Steps(s)
 
             // Los botones van arriba del plano para que se vean sin bajar
@@ -297,7 +300,7 @@ fun HeatMapScreen(vm: HeatMapViewModel, onOpenAr: (floorId: Long, x: Float, y: F
             title = tr("¿Borrar las mediciones de este piso?"),
             text = tr("Se borrarán los %1\$s puntos medidos en \"%2\$s\". El piso se queda para volver a medir.", s.points.size, s.selectedFloor?.name.orEmpty()),
             onDismiss = { dialog = null },
-            onConfirm = { vm.clearFloor(); dialog = null },
+            onConfirm = { vm.clearFloor(); vm.resetRoamingWarning(); dialog = null },
         )
         HeatDialog.DELETE -> ConfirmDialog(
             title = tr("¿Eliminar este piso?"),
@@ -306,6 +309,25 @@ fun HeatMapScreen(vm: HeatMapViewModel, onOpenAr: (floorId: Long, x: Float, y: F
             onConfirm = { vm.deleteFloor(); dialog = null },
         )
         null -> Unit
+    }
+
+    // Si te conectas a otra red mientras mides, preguntamos con cuál seguir (así no se
+    // mezclan dos mapas distintos en el mismo plano).
+    s.changedNetworkName?.let { newName ->
+        AlertDialog(
+            onDismissRequest = { vm.keepCurrentNetwork() },
+            icon = { Icon(Icons.Outlined.WifiFind, contentDescription = null) },
+            title = { Text(tr("Te conectaste a otra red")) },
+            text = {
+                Text(tr("Ahora estás en \"%1\$s\". ¿Con cuál red quieres hacer este mapa? Si mezclas dos redes, el mapa no sirve.", newName))
+            },
+            confirmButton = {
+                TextButton(onClick = { vm.useCurrentNetwork() }) { Text(tr("Usar \"%1\$s\"", newName)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { vm.keepCurrentNetwork() }) { Text(tr("Seguir con el mapa actual")) }
+            },
+        )
     }
 }
 
@@ -340,7 +362,7 @@ internal fun signalColor(dbm: Int): Color {
     return STOPS.last().second
 }
 
-private fun signalLabel(dbm: Int): String = when {
+internal fun signalLabel(dbm: Int): String = when {
     dbm >= -55 -> tr("Excelente")
     dbm >= -67 -> tr("Buena")
     dbm >= -75 -> tr("Regular")
@@ -385,14 +407,28 @@ private fun LiveSignalCard(rssi: Int?) {
             Column(Modifier.weight(1f)) {
                 Text(tr("Señal donde estás ahora"), style = MaterialTheme.typography.labelMedium)
                 Text(
-                    if (rssi == null) tr("Leyendo…") else tr("%1\$s dBm · %2\$s", rssi, signalLabel(rssi)),
+                    if (rssi == null) tr("Leyendo…") else signalLabel(rssi),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
+                if (rssi != null) {
+                    Text(
+                        signalDetail(rssi),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * Línea secundaria en chico: solo el dBm, para quien lo quiera. En el mapa no
+ * mostramos los Mbps del enlace WiFi porque confundían con la prueba de velocidad
+ * (esa cifra es la capacidad del WiFi, no la velocidad real de Internet).
+ */
+internal fun signalDetail(dbm: Int): String = tr("%1\$s dBm", dbm)
 
 @Composable
 private fun Steps(s: HeatMapState) {
@@ -683,10 +719,16 @@ private fun PointCard(p: HeatPoint, onDelete: () -> Unit) {
             Box(Modifier.size(14.dp).clip(CircleShape).background(signalColor(p.rssi)))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(tr("%1\$s dBm · %2\$s", p.rssi, signalLabel(p.rssi)), style = MaterialTheme.typography.titleSmall)
+                Text(signalLabel(p.rssi), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    (p.pingMs?.let { tr("Ping al router: %1\$s ms", it) + " · " } ?: "") + tr("Medido %1\$s", relativeTime(p.at)),
+                    signalDetail(p.rssi) +
+                        (p.pingMs?.let { " · " + tr("ping %1\$s ms", it) } ?: ""),
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    tr("Medido %1\$s", relativeTime(p.at)),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -729,7 +771,7 @@ private fun FloorsComparison(s: HeatMapState) {
                     }
                     val avg = sum?.avg
                     Text(
-                        if (avg == null) tr("sin medir") else tr("%1\$s dBm · %2\$s", avg, signalLabel(avg)),
+                        if (avg == null) tr("sin medir") else signalLabel(avg),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -866,4 +908,26 @@ private fun SizeDialog(initial: Float, onDismiss: () -> Unit, onSave: (Float) ->
         confirmButton = { TextButton(onClick = { onSave(width.roundToInt().toFloat()) }) { Text(tr("Guardar")) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
+}
+
+/**
+ * Aviso cuando el teléfono saltó de un punto de acceso a otro (redes con repetidor
+ * o mesh, varios routers con el mismo nombre). Las señales de puntos distintos no se
+ * pueden comparar bien en un mismo mapa.
+ */
+@Composable
+private fun RoamingWarning() {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = StatusColors.warn.copy(alpha = 0.15f)),
+    ) {
+        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Sync, contentDescription = null, tint = StatusColors.warn)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                tr("Tu teléfono cambió de punto de acceso (tienes un repetidor o red mesh). Las mediciones de distintos puntos no se comparan bien en un mismo mapa; para un mapa fiable, mide con un solo router encendido."),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
 }

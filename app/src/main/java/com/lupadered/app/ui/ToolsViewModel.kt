@@ -44,6 +44,8 @@ data class WifiSecState(
 data class DiagState(
     val running: Boolean = false,
     val progress: Float = 0f,
+    /** Qué está haciendo la app ahora mismo (para mostrarlo mientras diagnostica). */
+    val step: String? = null,
     val items: List<DiagItem> = emptyList(),
     val error: String? = null,
 )
@@ -159,8 +161,8 @@ class ToolsViewModel(application: Application) : AndroidViewModel(application) {
                     _diag.value = DiagState(error = tr("No estás conectado a un WiFi. Conéctate a tu red para hacer el diagnóstico."))
                     return@launch
                 }
-                val items = Diagnostics().run(net.gateway, net.dnsServers, net.wifiRssi) { p ->
-                    _diag.update { it.copy(progress = p) }
+                val items = Diagnostics().run(net.gateway, net.dnsServers, net.wifiRssi) { p, step ->
+                    _diag.update { it.copy(progress = p, step = step) }
                 }
                 _diag.value = DiagState(items = items)
             } finally {

@@ -67,6 +67,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.activity.compose.BackHandler
 import com.lupadered.app.ui.screens.signalColor
+import com.lupadered.app.ui.screens.signalLabel
+import com.lupadered.app.ui.screens.signalDetail
 import kotlin.math.hypot
 
 
@@ -94,6 +96,18 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
     var torchUnsupported by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var finishing by remember { mutableStateOf(false) }
+    var retry by remember { mutableStateOf(0) }
+    var stuck by remember { mutableStateOf(false) }
+
+    val retryCamera: () -> Unit = {
+        runCatching { session?.close() }
+        session = null
+        glView = null
+        error = null
+        stuck = false
+        installRequested = false
+        retry++
+    }
 
     // Al salir guardamos el recorrido ya corregido por las anclas
     val finish: () -> Unit = {
@@ -132,7 +146,18 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
     LaunchedEffect(floorId) { vm.setup(floorId, startX, startY) }
     LaunchedEffect(Unit) { if (!hasPermission) permissionLauncher.launch(Manifest.permission.CAMERA) }
 
-    DisposableEffect(lifecycleOwner, hasPermission) {
+    // Si la sesión existe pero no llega ningún cuadro en unos segundos, la cámara se
+    // quedó negra (pasa a veces al abrir ARCore). Avisamos y ofrecemos reintentar.
+    val hasFrame = s.frame != null
+    LaunchedEffect(session, hasFrame, error, permissionDenied, retry) {
+        stuck = false
+        if (session != null && !hasFrame && error == null && !permissionDenied) {
+            kotlinx.coroutines.delay(6000)
+            stuck = true
+        }
+    }
+
+    DisposableEffect(lifecycleOwner, hasPermission, retry) {
         fun resume() {
             if (!hasPermission || activity == null || error != null) return
             if (session == null) {
@@ -184,6 +209,7 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) resume()
+        Unit
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             pause()
@@ -191,6 +217,16 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
             try { session?.close() } catch (_: Throwable) { }
             session = null
             glView = null
+        }
+    }
+
+    // La vista de la cámara (GLSurfaceView) se crea DESPUÉS de tener la sesión, así que
+    // la reanudamos aquí en cuanto existe. Antes, en el primer intento quedaba en negro
+    // y había que salir y volver a entrar.
+    LaunchedEffect(glView, session, hasPermission, error) {
+        val v = glView
+        if (v != null && session != null && hasPermission && error == null) {
+            runCatching { v.onResume() }
         }
     }
 
@@ -245,6 +281,7 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
             val hint = when {
                 permissionDenied -> tr("Para usar la realidad aumentada necesitamos permiso para usar la cámara. Si prefieres, usa el modo caminata.")
                 error != null -> error
+                stuck -> tr("La cámara no se abrió (quedó en negro). Toca \"Reintentar\"; si sigue igual, cierra la pantalla y vuelve a entrar.")
                 session == null -> tr("Preparando la cámara…")
                 f == null -> tr("Preparando la cámara…")
                 !f.tracking -> when (f.failure) {
@@ -262,11 +299,17 @@ fun ArHeatScreen(vm: ArHeatViewModel, floorId: Long, startX: Float, startY: Floa
                         tr("Se perdió el lugar. Vuelve despacio a una zona que ya pintaste, apuntando al piso, para que lo reconozca.")
                     }
                 } + (if (s.lostForMs > 8000) "\n" + tr("¿No lo logra? Puedes terminar y seguir con el modo caminata.") else "")
+                s.changedNetworkName != null -> tr("Cambiaste de red: ahora estás en \"%1\$s\". Este mapa es de la red anterior.", s.changedNetworkName!!)
+                s.roaming -> tr("Tu teléfono cambió de punto de acceso (repetidor o red mesh). Para un mapa fiable, mide con un solo router encendido.")
                 dark -> tr("Está algo oscuro: el mapa podría desalinearse. Enciende más luces.") + torchTip
                 s.sampleCount == 0 -> tr("¡Listo! Camina despacio por tu casa con la cámara apuntando un poco al piso.")
                 else -> tr("Consejo: gira despacio y mantén el piso a la vista. Si el mapa se mueve un poco, se corrige solo al volver a un lugar conocido.")
             }
             hint?.let { Bubble(it) }
+            if (stuck || error != null) {
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = retryCamera) { Text(tr("Reintentar")) }
+            }
 
             Spacer(Modifier.weight(1f))
             Column(
@@ -338,10 +381,15 @@ private fun SignalChip(rssi: Int?) {
     ) {
         Box(Modifier.size(12.dp).clip(CircleShape).background(rssi?.let { signalColor(it) } ?: Color.Gray))
         Spacer(Modifier.width(8.dp))
-        Text(
-            if (rssi == null) tr("Leyendo…") else "$rssi dBm",
-            color = Color.White, fontWeight = FontWeight.SemiBold,
-        )
+        Column {
+            Text(
+                if (rssi == null) tr("Leyendo…") else signalLabel(rssi),
+                color = Color.White, fontWeight = FontWeight.SemiBold,
+            )
+            if (rssi != null) {
+                Text(signalDetail(rssi), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+            }
+        }
     }
 }
 

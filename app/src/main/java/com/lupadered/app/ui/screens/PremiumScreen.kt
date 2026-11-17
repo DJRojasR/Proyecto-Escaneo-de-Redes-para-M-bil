@@ -77,7 +77,7 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
     val s by premium.state.collectAsStateWithLifecycle()
     val uri = LocalUriHandler.current
 
-    ScreenScaffold(title = tr("Lupa de Red Premium"), onBack = onBack) { padding ->
+    ScreenScaffold(title = tr("NexoLan Scanner Premium"), onBack = onBack) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -189,7 +189,7 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
     s.message?.let { msg ->
         AlertDialog(
             onDismissRequest = premium::clearMessage,
-            title = { Text(tr("Lupa de Red Premium")) },
+            title = { Text(tr("NexoLan Scanner Premium")) },
             text = { Text(msg) },
             confirmButton = { TextButton(onClick = premium::clearMessage) { Text(tr("Entendido")) } },
         )

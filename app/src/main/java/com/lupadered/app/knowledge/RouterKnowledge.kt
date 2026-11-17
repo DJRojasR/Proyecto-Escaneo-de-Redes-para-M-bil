@@ -37,19 +37,6 @@ object RouterKnowledge {
     )
 
     /** Credenciales comunes que se prueban con Basic Auth. Se limita a 10 intentos. */
-    val COMMON_CREDENTIALS: List<Pair<String, String>> = listOf(
-        "admin" to "admin",
-        "admin" to "password",
-        "admin" to "1234",
-        "admin" to "",
-        "admin" to "12345",
-        "root" to "root",
-        "root" to "admin",
-        "user" to "user",
-        "admin" to "motorola",
-        "support" to "support",
-    )
-
     /** ¿La marca/modelo suele traer clave de fábrica conocida? Devuelve la marca detectada. */
     fun factoryDefaultBrand(vararg fields: String?): String? {
         val text = fields.filterNotNull().joinToString(" ").lowercase()

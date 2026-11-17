@@ -76,6 +76,11 @@ class AppSettings(context: Context) {
         get() = prefs.getInt("plan_mbps", 0)
         set(v) = prefs.edit().putInt("plan_mbps", v).apply()
 
+    /** Cuándo corrió por última vez un escaneo automático (para avisar si la batería los frena). */
+    var lastAutoScanAt: Long
+        get() = prefs.getLong("last_auto_scan", 0L)
+        set(v) = prefs.edit().putLong("last_auto_scan", v).apply()
+
     private fun readAppearance() = Appearance(
         color = prefs.getString("theme_color", null)
             ?.let { n -> ThemeColor.entries.firstOrNull { it.name == n } } ?: ThemeColor.TEAL,

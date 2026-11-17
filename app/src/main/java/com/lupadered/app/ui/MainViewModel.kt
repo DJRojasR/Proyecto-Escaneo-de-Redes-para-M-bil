@@ -99,6 +99,14 @@ data class HistoryState(
 /** Una fila del IP Manager: cada IP del rango con su estado. */
 data class IpRow(val ip: String, val device: DeviceItem?, val presence: Presence?)
 
+/** Equipos que estaban conectados en un escaneo concreto del historial. */
+data class ScanMembers(
+    val scanId: Long,
+    val at: Long,
+    val found: Int,
+    val devices: List<Pair<Device, String>>,
+)
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val app = application as LupaApp
@@ -187,6 +195,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Intenta nombrar la red con el nombre del WiFi (SSID). Solo funciona si la app
+     * tiene permiso de ubicación y la ubicación está encendida (lo exige Android).
+     * @return true si lo logró; false si no se pudo leer el nombre.
+     */
+    fun applyWifiNameAsNetwork(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val ssid = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app)?.ssid }
+            if (!ssid.isNullOrBlank()) {
+                renameCurrentNetwork(ssid)
+                onResult(true)
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
+    /** Equipos conectados en un escaneo del historial (para el diálogo de detalle). */
+    private val _scanMembers = MutableStateFlow<ScanMembers?>(null)
+    val scanMembers: StateFlow<ScanMembers?> = _scanMembers.asStateFlow()
+
+    fun openScan(scanId: Long, found: Int, at: Long) {
+        viewModelScope.launch {
+            val list = withContext(Dispatchers.IO) { repo.devicesInScan(scanId) }
+            _scanMembers.value = ScanMembers(scanId, at, found, list)
+        }
+    }
+
+    fun closeScan() {
+        _scanMembers.value = null
+    }
+
     suspend fun reloadFromDb() {
         val net = _home.value.network ?: run {
             dbDevices = emptyList()
@@ -249,6 +289,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             durationMs = System.currentTimeMillis() - started,
                             selfModel = phoneModel(),
                             gateway = net.gateway,
+                            ssid = net.ssid,
                         )
                     }
                 }

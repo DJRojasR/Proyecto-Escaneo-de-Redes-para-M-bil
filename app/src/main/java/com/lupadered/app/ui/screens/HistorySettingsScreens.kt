@@ -1,6 +1,9 @@
 package com.lupadered.app.ui.screens
 
 import com.lupadered.app.i18n.tr
+import com.lupadered.app.data.DarkMode
+import com.lupadered.app.ui.ScanMembers
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.RadioButton
@@ -168,6 +171,7 @@ fun HistoryScreen(vm: MainViewModel, onOpenDevice: (Long) -> Unit) {
                 item { SectionTitle(tr("Escaneos")) }
                 items(h.scans, key = { "s" + it.id }) { sc ->
                     ListItem(
+                        modifier = Modifier.clickable { vm.openScan(sc.id, sc.found, sc.startedAt) },
                         headlineContent = { Text(tr("%1\$s dispositivos", sc.found) + if (sc.newCount > 0) tr(" · %1\$s nuevos", sc.newCount) else "") },
                         supportingContent = {
                             Text(
@@ -175,12 +179,64 @@ fun HistoryScreen(vm: MainViewModel, onOpenDevice: (Long) -> Unit) {
                                     if (sc.source != ScanSource.MANUAL) " · ${sc.source.label}" else "",
                             )
                         },
+                        trailingContent = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 }
             }
         }
     }
+
+    val members by vm.scanMembers.collectAsStateWithLifecycle()
+    members?.let { m ->
+        ScanDevicesDialog(m, onOpenDevice = { vm.closeScan(); onOpenDevice(it) }, onDismiss = vm::closeScan)
+    }
+}
+
+/** Diálogo con los equipos que estaban conectados en un escaneo concreto. */
+@Composable
+private fun ScanDevicesDialog(m: ScanMembers, onOpenDevice: (Long) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Text(tr("Foto de tu red"))
+            }
+        },
+        text = {
+            if (m.devices.isEmpty()) {
+                Text(tr("No guardamos qué equipos había en este escaneo (es anterior a esta función)."))
+            } else {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    // Encabezado claramente histórico: fecha y hora del escaneo, no la red actual
+                    Text(dateTime(m.at), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        tr("Así estaba tu red: %1\$s equipos conectados. Toca uno para ver su detalle.", m.devices.size),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 10.dp),
+                    )
+                    m.devices.forEach { (d, ip) ->
+                        Row(
+                            Modifier.fillMaxWidth().clickable { onOpenDevice(d.id) }.padding(vertical = 9.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(Modifier.size(9.dp).clip(CircleShape).background(StatusColors.good))
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(d.displayName, style = MaterialTheme.typography.bodyMedium)
+                                Text(ip, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Cerrar")) } },
+    )
 }
 
 // ============================================================== Ajustes
@@ -211,7 +267,7 @@ fun SettingsScreen(
             SectionTitle(tr("Tu cuenta"), Modifier.padding(horizontal = 16.dp))
             ListItem(
                 modifier = Modifier.clickable(onClick = onPremium),
-                headlineContent = { Text(if (p.isPremium) tr("Tienes Lupa de Red Premium") else tr("Hazte Premium")) },
+                headlineContent = { Text(if (p.isPremium) tr("Tienes NexoLan Scanner Premium") else tr("Hazte Premium")) },
                 supportingContent = {
                     Text(
                         when (p.source) {
@@ -260,11 +316,23 @@ fun SettingsScreen(
             )
             ListItem(
                 headlineContent = { Text(tr("Apariencia")) },
-                supportingContent = { Text(tr("Color de la app. Se ve clara u oscura según tu teléfono.")) },
+                supportingContent = { Text(tr("Modo claro u oscuro y color de la app.")) },
                 leadingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
             )
             Row(
-                Modifier.padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+                Modifier.padding(start = 56.dp, end = 16.dp).horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                DarkMode.entries.forEach { mode ->
+                    FilterChip(
+                        selected = appearance.dark == mode,
+                        onClick = { settings.setAppearance(appearance.copy(dark = mode)) },
+                        label = { Text(mode.label) },
+                    )
+                }
+            }
+            Row(
+                Modifier.padding(start = 56.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -351,7 +419,7 @@ fun SettingsScreen(
             // ---------------------------------------------------------------- Acerca de
             SectionTitle(tr("Acerca de"), Modifier.padding(horizontal = 16.dp))
             ListItem(
-                headlineContent = { Text(tr("Lupa de Red %1\$s", BuildConfig.VERSION_NAME)) },
+                headlineContent = { Text(tr("NexoLan Scanner %1\$s", BuildConfig.VERSION_NAME)) },
                 supportingContent = {
                     Text(tr("Escanea solo redes en las que tengas permiso: tu casa o una red que administres."))
                 },

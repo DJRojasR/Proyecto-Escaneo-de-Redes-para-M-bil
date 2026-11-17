@@ -62,16 +62,8 @@ class SecurityReviewTest {
     @Test
     fun router_marcaConocida_sugiereRevisarClave_sinProbarNada() {
         val gw = device(1, "192.168.1.1", openPorts = setOf(443), isGateway = true, vendor = "TP-Link")
-        val report = SecurityReview.evaluate(listOf(gw), setOf(gw.id), defaultPasswordFound = null)
+        val report = SecurityReview.evaluate(listOf(gw), setOf(gw.id))
         assertTrue(report.findings.any { it.id == "router.brand_defaults" })
-    }
-
-    @Test
-    fun router_contrasenaDeFabricaEncontrada_esHallazgoAlto() {
-        val gw = device(1, "192.168.1.1", openPorts = setOf(80), isGateway = true)
-        val report = SecurityReview.evaluate(listOf(gw), setOf(gw.id), defaultPasswordFound = true)
-        val f = report.findings.first { it.id == "router.default_password" }
-        assertEquals(com.lupadered.app.knowledge.Severity.HIGH, f.severity)
     }
 
     @Test

@@ -41,14 +41,9 @@ data class SecurityReport(
  */
 object SecurityReview {
 
-    /**
-     * @param defaultPasswordFound resultado de la prueba activa de credenciales del
-     * router: true = el router acepta una clave de fábrica, false = no, null = no se probó.
-     */
     fun evaluate(
         devices: List<Device>,
         onlineIds: Set<Long>,
-        defaultPasswordFound: Boolean? = null,
     ): SecurityReport {
         val online = devices.filter { it.id in onlineIds }
         val findings = ArrayList<Finding>()
@@ -126,7 +121,7 @@ object SecurityReview {
             )
         }
 
-        penalty += routerFindings(online.firstOrNull { it.isGateway }, defaultPasswordFound, findings)
+        penalty += routerFindings(online.firstOrNull { it.isGateway }, findings)
 
         val unknown = online.filter { !it.trusted && !it.isSelf }
         if (unknown.isNotEmpty()) {
@@ -188,7 +183,7 @@ object SecurityReview {
     }
 
     /** Añade los hallazgos del router y devuelve los puntos a restar. */
-    private fun routerFindings(gw: Device?, defaultPasswordFound: Boolean?, out: MutableList<Finding>): Int {
+    private fun routerFindings(gw: Device?, out: MutableList<Finding>): Int {
         if (gw == null) return 0
         var penalty = 0
         val name = gw.displayName
@@ -266,33 +261,18 @@ object SecurityReview {
                 gw.id, "router.firmware", cat,
             )
         }
+        // Sugerencia suave por marca (no se prueba ninguna contraseña contra el router).
         val brand = RouterKnowledge.factoryDefaultBrand(gw.vendor, gw.model, gw.name, gw.server)
-        when (defaultPasswordFound) {
-            true -> {
-                penalty += 25
-                out += Finding(
-                    Severity.HIGH, tr("Tu router acepta una contraseña de fábrica"),
-                    tr("Se pudo entrar a %1\$s con un usuario y clave comunes. Cualquiera en tu red podría hacerlo.", gw.ip),
-                    listOf(
-                        tr("Entra ahora al panel del router y cambia la contraseña de administración."),
-                        tr("Usa una clave larga y distinta a la de tu WiFi."),
-                        tr("Revisa que no haya equipos o reglas que no reconozcas."),
-                    ),
-                    gw.id, "router.default_password", cat,
-                )
-            }
-            false -> Unit
-            null -> if (brand != null) {
-                out += Finding(
-                    Severity.LOW, tr("Revisa la contraseña de tu router (%1\$s)", brand),
-                    tr("Los routers de esta marca suelen venir con usuario y clave de fábrica conocidos. No probamos nada: es solo una sugerencia."),
-                    listOf(
-                        tr("Cambia la contraseña de administración si nunca lo hiciste."),
-                        tr("Puedes usar \"Probar contraseñas comunes\" para comprobarlo (solo en tu router)."),
-                    ),
-                    gw.id, "router.brand_defaults", cat,
-                )
-            }
+        if (brand != null) {
+            out += Finding(
+                Severity.LOW, tr("Revisa la contraseña de tu router (%1\$s)", brand),
+                tr("Los routers de esta marca suelen venir con usuario y clave de fábrica conocidos. Es solo una sugerencia por la marca."),
+                listOf(
+                    tr("Cambia la contraseña de administración si nunca lo hiciste."),
+                    tr("Usa una clave larga y distinta a la de tu WiFi."),
+                ),
+                gw.id, "router.brand_defaults", cat,
+            )
         }
         return penalty
     }

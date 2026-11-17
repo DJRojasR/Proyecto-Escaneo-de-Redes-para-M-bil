@@ -129,7 +129,7 @@ fun ToolsScreen(a: ToolsActions) {
                         Icon(Icons.Outlined.WorkspacePremium, contentDescription = null, tint = PremiumGold)
                         Spacer(Modifier.width(16.dp))
                         Column {
-                            Text(tr("Lupa de Red Premium"), style = MaterialTheme.typography.titleMedium)
+                            Text(tr("NexoLan Scanner Premium"), style = MaterialTheme.typography.titleMedium)
                             Text(
                                 tr("Sin anuncios, alerta de intrusos, revisión de seguridad y más. Suscripción mensual o pago único."),
                                 style = MaterialTheme.typography.bodySmall,
@@ -438,7 +438,7 @@ fun DiagnosticsScreen(vm: ToolsViewModel, onBack: () -> Unit) {
             )
             Spacer(Modifier.height(12.dp))
             if (s.running) {
-                RadarStatus(tr("Probando tu conexión…"), size = 36.dp)
+                RadarStatus(s.step ?: tr("Probando tu conexión…"), size = 36.dp)
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
             } else {
@@ -575,7 +575,7 @@ fun WifiSecurityScreen(vm: ToolsViewModel, onBack: () -> Unit) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(tr("¿Por qué pide ubicación?"), style = MaterialTheme.typography.titleSmall)
                             Text(
-                                tr("Para ver los detalles de las redes WiFi (como el WPS del router), Android exige el permiso de ubicación. Lupa de Red no usa, no guarda y no envía tu ubicación."),
+                                tr("Para ver los detalles de las redes WiFi (como el WPS del router), Android exige el permiso de ubicación. NexoLan Scanner no usa, no guarda y no envía tu ubicación."),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             Button(onClick = {
