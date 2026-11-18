@@ -71,6 +71,7 @@ fun IpManagerScreen(
     onScan: () -> Unit,
     onOpenDevice: (Long) -> Unit,
     onInspectIp: (String) -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     val s by vm.home.collectAsStateWithLifecycle()
     var filter by rememberSaveable { mutableStateOf(IpFilter.IN_USE) }
@@ -78,6 +79,7 @@ fun IpManagerScreen(
 
     ScreenScaffold(
         title = tr("IP Manager"),
+        onBack = onBack,
         actions = {
             IconButton(onClick = { help = true }) { Icon(Icons.Outlined.Info, contentDescription = tr("Ayuda")) }
             if (s.scanning) {
@@ -156,7 +158,7 @@ fun IpManagerScreen(
             item {
                 Card(
                     modifier = Modifier.padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                 ) {
                     Text(
                         tr("\"Sin respuesta\" no siempre significa \"libre\": un equipo apagado o dormido tampoco responde. Antes de usar una IP fija, elige una que nunca hayamos visto ocupada y mejor aún, resérvala en tu router."),
@@ -203,11 +205,13 @@ fun IpManagerScreen(
 
 @Composable
 private fun Stat(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-        Column(Modifier.padding(12.dp)) {
-            Text(value, style = MaterialTheme.typography.headlineSmall)
-            Text(label, style = MaterialTheme.typography.labelMedium)
-        }
+    com.lupadered.app.ui.components.AppCard(modifier, contentPadding = 12.dp) {
+        Text(
+            value,
+            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

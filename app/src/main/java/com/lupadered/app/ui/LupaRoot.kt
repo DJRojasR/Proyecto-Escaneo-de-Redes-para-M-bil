@@ -9,9 +9,22 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Handyman
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Handyman
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
+import com.lupadered.app.ui.screens.DevicesScreen
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,6 +34,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -78,13 +92,20 @@ import com.lupadered.app.ui.screens.ManualScanScreen
 import com.lupadered.app.ui.screens.SettingsScreen
 import com.lupadered.app.ui.screens.ToolsScreen
 
-private data class Tab(val route: String, val label: String, val icon: ImageVector)
+private data class Tab(val route: String, val label: String, val icon: ImageVector, val selectedIcon: ImageVector)
 
+/**
+ * Navegación principal: cuatro secciones con un propósito claro cada una.
+ * - Inicio: el estado de la red y el escaneo.
+ * - Dispositivos: la lista completa (con búsqueda, filtros y el IP Manager).
+ * - Historial: qué pasó en la red.
+ * - Herramientas: diagnóstico, velocidad, seguridad… y Ajustes.
+ */
 private val tabs = listOf(
-    Tab("red", tr("Red"), Icons.Outlined.Wifi),
-    Tab("ips", "IPs", Icons.Outlined.Lan),
-    Tab("historial", tr("Historial"), Icons.Outlined.History),
-    Tab("herramientas", tr("Herramientas"), Icons.Outlined.Handyman),
+    Tab("red", tr("Inicio"), Icons.Outlined.Home, Icons.Filled.Home),
+    Tab("dispositivos", tr("Dispositivos"), Icons.Outlined.Devices, Icons.Filled.Devices),
+    Tab("historial", tr("Historial"), Icons.Outlined.History, Icons.Filled.History),
+    Tab("herramientas", tr("Herramientas"), Icons.Outlined.Handyman, Icons.Filled.Handyman),
 )
 
 /**
@@ -130,6 +151,14 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
         mainVm.startScan()
     }
     val openPremium: () -> Unit = { nav.navigate("premium") { launchSingleTop = true } }
+    // Cambiar de pestaña conservando el estado de cada una
+    val openTab: (String) -> Unit = { target ->
+        nav.navigate(target) {
+            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     // Abrir una pantalla pedida desde una notificación o el widget
     LaunchedEffect(openRoute) {
@@ -158,20 +187,28 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
     Scaffold(
         bottomBar = {
             if (showBar) {
-                NavigationBar {
-                    tabs.forEach { t ->
-                        NavigationBarItem(
-                            selected = route == t.route,
-                            onClick = {
-                                nav.navigate(t.route) {
-                                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(t.icon, contentDescription = null) },
-                            label = { Text(t.label) },
-                        )
+                Column {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        tonalElevation = 0.dp,
+                    ) {
+                        tabs.forEach { t ->
+                            val selected = route == t.route
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { openTab(t.route) },
+                                icon = { Icon(if (selected) t.selectedIcon else t.icon, contentDescription = null) },
+                                label = { Text(t.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            )
+                        }
                     }
                 }
             }
@@ -181,6 +218,12 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
             navController = nav,
             startDestination = "red",
             modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
+            // Transiciones suaves y cortas: fundido entre pestañas y un leve desplazamiento
+            // al entrar a una pantalla de detalle.
+            enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(260)) { it / 14 } },
+            exitTransition = { fadeOut(tween(140)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { fadeOut(tween(140)) + slideOutHorizontally(tween(220)) { it / 14 } },
         ) {
             composable("red") {
                 HomeScreen(
@@ -190,6 +233,17 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onLearn = { nav.navigate("aprende") },
                     onInspectIp = { nav.navigate("manual?ip=") },
                     onWifiSecurity = { nav.navigate("seguridad_wifi") },
+                    onOpenDevices = { openTab("dispositivos") },
+                    onSettings = { nav.navigate("ajustes") },
+                )
+            }
+            composable("dispositivos") {
+                DevicesScreen(
+                    vm = mainVm,
+                    onScan = startNetworkScan,
+                    onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
+                    onInspectIp = { nav.navigate("manual?ip=") },
+                    onOpenIps = { nav.navigate("ips") { launchSingleTop = true } },
                 )
             }
             composable("ips") {
@@ -198,6 +252,7 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onScan = startNetworkScan,
                     onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
                     onInspectIp = { ip -> nav.navigate("manual?ip=$ip") },
+                    onBack = { nav.popBackStack() },
                 )
             }
             composable("historial") {
@@ -220,6 +275,7 @@ fun LupaRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                         onExport = { nav.navigate("exportar") },
                         onSpeed = { nav.navigate("velocidad") },
                         onHeatMap = { nav.navigate("mapa_calor") },
+                        onIpManager = { nav.navigate("ips") { launchSingleTop = true } },
                     )
                 )
             }
@@ -354,9 +410,17 @@ fun ScreenScaffold(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = snackbarHost,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {
+                    Text(
+                        title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = if (onBack == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+                    )
+                },
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
@@ -365,79 +429,84 @@ fun ScreenScaffold(
                     }
                 },
                 actions = { actions() },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
             )
         },
         content = content,
     )
 }
 
+/** Pantalla de bienvenida breve: el logo con ondas de "señal" que se expanden. */
 @Composable
 private fun AppSplash(visible: Boolean) {
     androidx.compose.animation.AnimatedVisibility(
         visible = visible,
-        enter = androidx.compose.animation.fadeIn(),
-        exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(500)),
+        enter = fadeIn(),
+        exit = fadeOut(tween(450)),
     ) {
         val cs = MaterialTheme.colorScheme
         Box(
-            Modifier.fillMaxSize().background(
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(cs.primary, cs.primaryContainer)),
-            ),
+            Modifier.fillMaxSize().background(cs.background),
             contentAlignment = Alignment.Center,
         ) {
-            val scale = remember { androidx.compose.animation.core.Animatable(0.7f) }
+            val scale = remember { androidx.compose.animation.core.Animatable(0.82f) }
             LaunchedEffect(Unit) {
-                scale.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.5f, stiffness = 220f))
+                scale.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = 260f))
             }
-            // Ondas de radar que se expanden sin parar (algo moviéndose)
-            val ringColor = MaterialTheme.colorScheme.onPrimary
+            // Ondas que salen del logo, como una señal que se propaga
+            val ringColor = cs.primary
             val pulse = androidx.compose.animation.core.rememberInfiniteTransition(label = "radar")
             val wave by pulse.animateFloat(
                 initialValue = 0f,
                 targetValue = 1f,
                 animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                    animation = androidx.compose.animation.core.tween(2000, easing = androidx.compose.animation.core.LinearEasing),
+                    animation = tween(2200, easing = androidx.compose.animation.core.LinearEasing),
                     repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
                 ),
                 label = "wave",
             )
-            androidx.compose.foundation.Canvas(modifier = Modifier.size(240.dp)) {
-                val maxR = size.minDimension / 2f
-                for (i in 0..2) {
-                    val prog = ((wave + i / 3f) % 1f)
-                    drawCircle(
-                        color = ringColor.copy(alpha = (1f - prog) * 0.45f),
-                        radius = maxR * prog,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx()),
-                    )
-                }
-            }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    Modifier
-                        .size(108.dp)
-                        .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
-                        .background(cs.onPrimary.copy(alpha = 0.16f), androidx.compose.foundation.shape.CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Outlined.Wifi,
-                        contentDescription = null,
-                        tint = cs.onPrimary,
-                        modifier = Modifier.size(60.dp),
-                    )
+                Box(Modifier.size(220.dp), contentAlignment = Alignment.Center) {
+                    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                        val maxR = size.minDimension / 2f
+                        for (i in 0..2) {
+                            val prog = ((wave + i / 3f) % 1f)
+                            drawCircle(
+                                color = ringColor.copy(alpha = (1f - prog) * 0.30f),
+                                radius = maxR * (0.35f + 0.65f * prog),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx()),
+                            )
+                        }
+                    }
+                    Box(
+                        Modifier
+                            .size(92.dp)
+                            .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+                            .background(cs.primary, androidx.compose.foundation.shape.RoundedCornerShape(28.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Outlined.Wifi,
+                            contentDescription = null,
+                            tint = cs.onPrimary,
+                            modifier = Modifier.size(48.dp),
+                        )
+                    }
                 }
-                Spacer(Modifier.height(18.dp))
                 Text(
                     tr("NexoLan Scanner"),
                     style = MaterialTheme.typography.headlineSmall,
-                    color = cs.onPrimary,
+                    color = cs.onBackground,
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
                     tr("Mira quién está en tu WiFi"),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = cs.onPrimary.copy(alpha = 0.85f),
+                    color = cs.onSurfaceVariant,
                 )
             }
         }

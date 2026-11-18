@@ -1,87 +1,139 @@
 package com.lupadered.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.lupadered.app.data.Appearance
-import com.lupadered.app.data.DarkMode
-import com.lupadered.app.data.ThemeColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lupadered.app.data.Appearance
+import com.lupadered.app.data.DarkMode
+import com.lupadered.app.data.ThemeColor
+
+/*
+ * Identidad visual "NexoLan".
+ *
+ * Neutros fríos tipo pizarra (infraestructura, precisión) + un acento cian-turquesa
+ * que representa la señal y la conectividad. Nada de negros puros ni verdes "hacker":
+ * en oscuro el fondo es un azul pizarra muy profundo y las superficies suben por capas.
+ */
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF0F6E5F),
+    primary = Color(0xFF00788A),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFB9EFDF),
-    onPrimaryContainer = Color(0xFF00201B),
-    secondary = Color(0xFF4A635D),
+    primaryContainer = Color(0xFFCDF1F6),
+    onPrimaryContainer = Color(0xFF00343D),
+    inversePrimary = Color(0xFF5ED3E6),
+    secondary = Color(0xFF4C5D6E),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFCCE8E0),
-    onSecondaryContainer = Color(0xFF06201B),
-    tertiary = Color(0xFF3D6377),
-    tertiaryContainer = Color(0xFFC2E8FF),
-    onTertiaryContainer = Color(0xFF001E2C),
-    background = Color(0xFFF6F8F7),
-    onBackground = Color(0xFF171D1B),
-    surface = Color(0xFFF6F8F7),
-    onSurface = Color(0xFF171D1B),
-    surfaceVariant = Color(0xFFDBE5E1),
-    onSurfaceVariant = Color(0xFF3F4946),
+    secondaryContainer = Color(0xFFDCE5EE),
+    onSecondaryContainer = Color(0xFF16222E),
+    tertiary = Color(0xFF4F5BC8),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFE0E2FF),
+    onTertiaryContainer = Color(0xFF0E1661),
+    background = Color(0xFFF4F6F9),
+    onBackground = Color(0xFF111827),
+    surface = Color(0xFFF4F6F9),
+    onSurface = Color(0xFF111827),
+    surfaceVariant = Color(0xFFE3E8EE),
+    onSurfaceVariant = Color(0xFF4A5565),
+    surfaceTint = Color(0xFF00788A),
+    surfaceBright = Color(0xFFFFFFFF),
+    surfaceDim = Color(0xFFDCE1E7),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF0F4F2),
-    surfaceContainer = Color(0xFFEAEFEC),
-    surfaceContainerHigh = Color(0xFFE4E9E7),
-    outline = Color(0xFF6F7976),
-    outlineVariant = Color(0xFFBEC9C5),
-    error = Color(0xFFBA1A1A),
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
+    surfaceContainerLow = Color(0xFFFFFFFF),
+    surfaceContainer = Color(0xFFEDF1F5),
+    surfaceContainerHigh = Color(0xFFE6EBF0),
+    surfaceContainerHighest = Color(0xFFDFE5EB),
+    inverseSurface = Color(0xFF1E2833),
+    inverseOnSurface = Color(0xFFEFF3F7),
+    outline = Color(0xFF7A8594),
+    outlineVariant = Color(0xFFD9DFE6),
+    error = Color(0xFFC62828),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFDE3E1),
+    onErrorContainer = Color(0xFF4A0B0B),
+    scrim = Color(0xFF000000),
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF8DD6C4),
-    onPrimary = Color(0xFF00382F),
-    primaryContainer = Color(0xFF005045),
-    onPrimaryContainer = Color(0xFFA9F2DF),
-    secondary = Color(0xFFB1CCC4),
-    secondaryContainer = Color(0xFF334B45),
-    onSecondaryContainer = Color(0xFFCCE8E0),
-    tertiary = Color(0xFFA5CCE3),
-    tertiaryContainer = Color(0xFF244C5E),
-    onTertiaryContainer = Color(0xFFC2E8FF),
-    background = Color(0xFF0F1513),
-    onBackground = Color(0xFFDEE4E1),
-    surface = Color(0xFF0F1513),
-    onSurface = Color(0xFFDEE4E1),
-    surfaceVariant = Color(0xFF3F4946),
-    onSurfaceVariant = Color(0xFFBEC9C5),
-    surfaceContainerLowest = Color(0xFF0A0F0E),
-    surfaceContainerLow = Color(0xFF171D1B),
-    surfaceContainer = Color(0xFF1B211F),
-    surfaceContainerHigh = Color(0xFF252B29),
-    outline = Color(0xFF899390),
-    outlineVariant = Color(0xFF3F4946),
-    error = Color(0xFFFFB4AB),
-    errorContainer = Color(0xFF93000A),
+    primary = Color(0xFF5ED3E6),
+    onPrimary = Color(0xFF00363F),
+    primaryContainer = Color(0xFF0D4B57),
+    onPrimaryContainer = Color(0xFFC9F3FA),
+    inversePrimary = Color(0xFF00788A),
+    secondary = Color(0xFFB4C3D2),
+    onSecondary = Color(0xFF1F2D3A),
+    secondaryContainer = Color(0xFF2A3846),
+    onSecondaryContainer = Color(0xFFD7E3EF),
+    tertiary = Color(0xFFB9C0FF),
+    onTertiary = Color(0xFF1F287A),
+    tertiaryContainer = Color(0xFF353F92),
+    onTertiaryContainer = Color(0xFFE0E2FF),
+    background = Color(0xFF0C121A),
+    onBackground = Color(0xFFE3E9F0),
+    surface = Color(0xFF0C121A),
+    onSurface = Color(0xFFE3E9F0),
+    surfaceVariant = Color(0xFF26313D),
+    onSurfaceVariant = Color(0xFFA9B5C2),
+    surfaceTint = Color(0xFF5ED3E6),
+    surfaceBright = Color(0xFF2A3541),
+    surfaceDim = Color(0xFF0C121A),
+    surfaceContainerLowest = Color(0xFF080D13),
+    surfaceContainerLow = Color(0xFF131B25),
+    surfaceContainer = Color(0xFF17212C),
+    surfaceContainerHigh = Color(0xFF1E2935),
+    surfaceContainerHighest = Color(0xFF26323F),
+    inverseSurface = Color(0xFFE3E9F0),
+    inverseOnSurface = Color(0xFF1E2833),
+    outline = Color(0xFF7D8A98),
+    outlineVariant = Color(0xFF2A3643),
+    error = Color(0xFFFF9E97),
+    onError = Color(0xFF5C0F0B),
+    errorContainer = Color(0xFF5E1A17),
     onErrorContainer = Color(0xFFFFDAD6),
+    scrim = Color(0xFF000000),
 )
 
+/**
+ * Tipografía del sistema (sin fuentes extra que pesen en el APK), con una jerarquía
+ * más marcada: títulos firmes y compactos, etiquetas claras y cifras tabulares.
+ */
 private val AppTypography = Typography().let { t ->
     t.copy(
-        headlineSmall = t.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-        titleLarge = t.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-        titleMedium = t.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        displaySmall = t.displaySmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
+        headlineMedium = t.headlineMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.4).sp),
+        headlineSmall = t.headlineSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
+        titleLarge = t.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.2).sp),
+        titleMedium = t.titleMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp),
+        titleSmall = t.titleSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp),
+        bodyLarge = t.bodyLarge.copy(letterSpacing = 0.1.sp),
+        bodyMedium = t.bodyMedium.copy(letterSpacing = 0.1.sp),
         labelLarge = t.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        labelMedium = t.labelMedium.copy(fontWeight = FontWeight.Medium, letterSpacing = 0.3.sp),
+        labelSmall = t.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 0.3.sp),
     )
 }
+
+/** Esquinas redondeadas moderadas y coherentes en toda la app. */
+private val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
 
 /** true si la app se está mostrando en modo oscuro (puede no coincidir con el sistema). */
 val LocalIsDark = staticCompositionLocalOf { false }
@@ -89,15 +141,18 @@ val LocalIsDark = staticCompositionLocalOf { false }
 /** Colores con significado (bien / atención / mal), coherentes en claro y oscuro. */
 object StatusColors {
     val good: Color
-        @Composable get() = if (LocalIsDark.current) Color(0xFF7BD88F) else Color(0xFF1B7F3B)
+        @Composable get() = if (LocalIsDark.current) Color(0xFF6FD99A) else Color(0xFF16804A)
     val warn: Color
-        @Composable get() = if (LocalIsDark.current) Color(0xFFF2C14E) else Color(0xFF9A6700)
+        @Composable get() = if (LocalIsDark.current) Color(0xFFF5C35B) else Color(0xFF9A6200)
     val bad: Color
-        @Composable get() = if (LocalIsDark.current) Color(0xFFFF8A80) else Color(0xFFB3261E)
+        @Composable get() = if (LocalIsDark.current) Color(0xFFFF8F87) else Color(0xFFC62828)
+    val info: Color
+        @Composable get() = MaterialTheme.colorScheme.primary
     val idle: Color
         @Composable get() = MaterialTheme.colorScheme.outline
 }
 
+/** Cifras tabulares (IPs, ms, %), para que no "bailen" al cambiar. */
 val MonoStyle = TextStyle(fontFeatureSettings = "tnum", fontSize = 13.sp)
 
 /** Color principal de cada tema: (claro, contenedor claro, texto sobre contenedor claro, oscuro, contenedor oscuro). */
@@ -108,16 +163,16 @@ private class Accent(
 
 private val accents = mapOf(
     ThemeColor.BLUE to Accent(
-        Color(0xFF2B5EA7), Color(0xFFD6E3FF), Color(0xFF001B3E),
-        Color(0xFFA9C7FF), Color(0xFF0E4785), Color(0xFFD6E3FF), Color(0xFF003063),
+        Color(0xFF2F62C8), Color(0xFFDCE6FF), Color(0xFF0A2259),
+        Color(0xFFAFC6FF), Color(0xFF1D4296), Color(0xFFDCE6FF), Color(0xFF0B2A6B),
     ),
     ThemeColor.PURPLE to Accent(
-        Color(0xFF6B4FA0), Color(0xFFEBDCFF), Color(0xFF25005A),
-        Color(0xFFD3BBFF), Color(0xFF523786), Color(0xFFEBDCFF), Color(0xFF3B1F6E),
+        Color(0xFF6B4FB8), Color(0xFFEBE1FF), Color(0xFF250A5E),
+        Color(0xFFD1BEFF), Color(0xFF4E3592), Color(0xFFEBE1FF), Color(0xFF341A72),
     ),
     ThemeColor.ORANGE to Accent(
-        Color(0xFF9A4A12), Color(0xFFFFDBC8), Color(0xFF341100),
-        Color(0xFFFFB68B), Color(0xFF7A3400), Color(0xFFFFDBC8), Color(0xFF552000),
+        Color(0xFFB4530E), Color(0xFFFFE1CC), Color(0xFF3A1500),
+        Color(0xFFFFB585), Color(0xFF7D3600), Color(0xFFFFE1CC), Color(0xFF552200),
     ),
 )
 
@@ -131,11 +186,13 @@ private fun schemeFor(color: ThemeColor, dark: Boolean): ColorScheme {
         base.copy(
             primary = a.darkPrimary, onPrimary = a.darkOnPrimary,
             primaryContainer = a.darkContainer, onPrimaryContainer = a.darkOnContainer,
+            surfaceTint = a.darkPrimary,
         )
     } else {
         base.copy(
             primary = a.primary, onPrimary = Color.White,
             primaryContainer = a.container, onPrimaryContainer = a.onContainer,
+            surfaceTint = a.primary,
         )
     }
 }
@@ -160,6 +217,7 @@ fun LupaTheme(
         MaterialTheme(
             colorScheme = schemeFor(color, dark),
             typography = AppTypography,
+            shapes = AppShapes,
             content = content,
         )
     }

@@ -41,6 +41,8 @@ data class DeviceDetailState(
     val alertRules: List<AlertRule> = emptyList(),
     /** La vigilancia automática debe estar activa para que las alertas se disparen. */
     val monitorActive: Boolean = false,
+    /** true si respondió en el último escaneo de su red; null si aún no se sabe. */
+    val online: Boolean? = null,
 )
 
 class DeviceViewModel(application: Application, savedState: SavedStateHandle) : AndroidViewModel(application) {
@@ -69,7 +71,8 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
                 val hidden = if (premium) 0 else repo.countDeviceEventsBefore(deviceId, since)
                 val groups = d?.let { repo.groups(it.networkKey) }.orEmpty()
                 val rules = repo.alertRules(deviceId)
-                Loaded(d, events, hidden, groups, rules)
+                val online = d?.let { dev -> repo.latestScan(dev.networkKey)?.let { it.id == dev.lastScanId } }
+                Loaded(d, events, hidden, groups, rules, online)
             }
             val monitor = app.settings.monitor.value
             _state.update {
@@ -81,6 +84,7 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
                     groups = loaded.groups,
                     alertRules = loaded.rules,
                     monitorActive = monitor.autoEnabled || monitor.dailyEnabled,
+                    online = loaded.online,
                 )
             }
         }
@@ -88,7 +92,7 @@ class DeviceViewModel(application: Application, savedState: SavedStateHandle) : 
 
     private class Loaded(
         val device: Device?, val events: List<DeviceEvent>, val hidden: Int,
-        val groups: List<String>, val rules: List<AlertRule>,
+        val groups: List<String>, val rules: List<AlertRule>, val online: Boolean?,
     )
 
     fun addAlertRule(type: AlertType, thresholdMin: Int = 15) = mutate {

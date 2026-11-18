@@ -86,6 +86,12 @@ data class HomeState(
     val wifiSecurity: List<DiagItem> = emptyList(),
     /** El último escaneo terminó en un error inesperado (ej. un paquete raro de la red). */
     val scanError: Boolean = false,
+    /** Última IP que respondió durante el escaneo en curso (para mostrar actividad real). */
+    val lastFoundIp: String? = null,
+    /** El usuario detuvo el último escaneo (sus resultados parciales no se guardan). */
+    val scanCancelled: Boolean = false,
+    /** El último escaneo terminó bien; la pantalla lo muestra una vez y lo descarta. */
+    val scanFinished: Boolean = false,
 )
 
 data class HistoryState(
@@ -254,7 +260,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (scanJob?.isActive == true) return
         scanJob = viewModelScope.launch {
             val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
-            _home.update { it.copy(network = net, networkChecked = true, newDevices = emptyList(), scanError = false) }
+            _home.update {
+                it.copy(
+                    network = net, networkChecked = true, newDevices = emptyList(), scanError = false,
+                    scanCancelled = false, scanFinished = false, lastFoundIp = null,
+                )
+            }
             if (net == null) return@launch
             reloadFromDb()
 
@@ -268,6 +279,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             val lock = NetworkInfoProvider.acquireMulticastLock(app)
             val started = System.currentTimeMillis()
+            var completed = false
             try {
                 // Si justo corre un escaneo automático en segundo plano, esperamos a que termine.
                 val summary = app.scanMutex.withLock {
@@ -277,7 +289,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
 
                         override fun onHost(host: HostSnapshot) {
-                            live[host.ip] = host
+                            if (live.put(host.ip, host) == null) {
+                                _home.update { s -> s.copy(lastFoundIp = host.ip) }
+                            }
                         }
                     })
                     withContext(Dispatchers.IO) {
@@ -296,6 +310,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 app.ads.onScanCompleted()
                 DevicesWidget.updateAll(app)
                 _home.update { it.copy(newDevices = summary.newDevices) }
+                completed = true
                 // Al terminar el escaneo revisamos también el "candado" del WiFi
                 checkWifiSecurity(force = true)
             } catch (e: CancellationException) {
@@ -308,8 +323,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 lock?.release()
                 ticker.cancel()
                 live.clear()
-                _home.update { it.copy(scanning = false, progress = 1f, phase = ScanPhase.DONE) }
+                _home.update { it.copy(scanning = false, progress = 1f, phase = ScanPhase.DONE, lastFoundIp = null) }
                 withContext(NonCancellable) { reloadFromDb() }
+                // Se avisa del final del escaneo cuando ya están cargados sus números reales
+                if (completed) _home.update { it.copy(scanFinished = true) }
                 loadHistory()
             }
         }
@@ -347,8 +364,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun cancelScan() {
+        if (scanJob?.isActive == true) _home.update { it.copy(scanCancelled = true) }
         scanJob?.cancel()
     }
+
+    fun dismissScanCancelled() = _home.update { it.copy(scanCancelled = false) }
+
+    fun dismissScanFinished() = _home.update { it.copy(scanFinished = false) }
 
     fun dismissNewDevices() = _home.update { it.copy(newDevices = emptyList()) }
 

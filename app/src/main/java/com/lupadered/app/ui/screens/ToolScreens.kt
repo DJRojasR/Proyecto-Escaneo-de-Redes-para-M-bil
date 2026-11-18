@@ -43,6 +43,8 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.outlined.NetworkCheck
@@ -110,6 +112,7 @@ class ToolsActions(
     val onHeatMap: () -> Unit,
     val onWifiSecurity: () -> Unit,
     val onWifiQr: () -> Unit,
+    val onIpManager: () -> Unit = {},
 )
 
 @Composable
@@ -160,6 +163,11 @@ fun ToolsScreen(a: ToolsActions) {
                 Icons.Outlined.QrCode2, tr("Compartir tu WiFi"),
                 tr("Crea un código QR para que tus visitas se conecten con la cámara, sin escribir la contraseña."),
                 a.onWifiQr,
+            )
+            ToolCard(
+                Icons.Outlined.Lan, tr("IP Manager"),
+                tr("Todas las direcciones de tu red y cuáles están ocupadas."),
+                a.onIpManager,
             )
             ToolCard(
                 Icons.Outlined.Wifi, tr("Mis redes"),
@@ -233,19 +241,16 @@ private fun ToolSection(title: String, subtitle: String?, icon: ImageVector, col
                 modifier = Modifier.padding(start = 28.dp),
             )
         }
-        HorizontalDivider(Modifier.padding(top = 8.dp), color = color.copy(alpha = 0.35f))
+
     }
 }
 
 @Composable
 private fun ToolCard(icon: ImageVector, title: String, text: String, onClick: () -> Unit, premium: Boolean = false) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(16.dp))
+    com.lupadered.app.ui.components.AppCard(onClick = onClick, contentPadding = 14.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            com.lupadered.app.ui.components.IconBadge(icon, size = 42.dp)
+            Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f, fill = false))
@@ -256,6 +261,11 @@ private fun ToolCard(icon: ImageVector, title: String, text: String, onClick: ()
                 }
                 Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            Icon(
+                Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+            )
         }
     }
 }

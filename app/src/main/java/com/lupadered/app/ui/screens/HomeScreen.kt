@@ -1,105 +1,120 @@
 package com.lupadered.app.ui.screens
 
-import androidx.compose.ui.platform.LocalContext
-import com.lupadered.app.net.WifiSecurityCheck
-import androidx.compose.material.icons.outlined.Wifi
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.compose.rememberLauncherForActivityResult
 import android.Manifest
-import com.lupadered.app.i18n.tr
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.Lifecycle
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.material.icons.outlined.BatteryAlert
-import com.lupadered.app.ui.components.diagColor
-import com.lupadered.app.net.DiagStatus
-import com.lupadered.app.net.DiagItem
-import androidx.compose.material.icons.outlined.GppMaybe
-import androidx.compose.material.icons.outlined.GppBad
-import androidx.compose.material.icons.outlined.VerifiedUser
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.ManageSearch
-import androidx.compose.runtime.LaunchedEffect
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilterChip
-import com.lupadered.app.ui.components.rememberIsPremium
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.ManageSearch
+import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.Devices
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.NewReleases
-import androidx.compose.material.icons.outlined.WifiOff
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.SwapHoriz
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.material3.Card
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.foundation.background
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Surface
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.outlined.GppBad
+import androidx.compose.material.icons.outlined.GppMaybe
+import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.Radar
+import androidx.compose.material.icons.outlined.Router
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SettingsEthernet
+import androidx.compose.material.icons.outlined.Smartphone
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lupadered.app.i18n.tr
+import com.lupadered.app.net.DiagItem
+import com.lupadered.app.net.DiagStatus
+import com.lupadered.app.net.WifiSecurityCheck
 import com.lupadered.app.ui.DeviceItem
 import com.lupadered.app.ui.HomeState
 import com.lupadered.app.ui.MainViewModel
 import com.lupadered.app.ui.Presence
 import com.lupadered.app.ui.ScreenScaffold
-import com.lupadered.app.ui.components.RadarSpinner
+import com.lupadered.app.ui.components.AppCard
+import com.lupadered.app.ui.components.BannerKind
 import com.lupadered.app.ui.components.DeviceAvatar
 import com.lupadered.app.ui.components.EmptyState
-import com.lupadered.app.ui.components.ExplainRow
-import com.lupadered.app.ui.components.SectionTitle
+import com.lupadered.app.ui.components.IconBadge
+import com.lupadered.app.ui.components.InfoTile
+import com.lupadered.app.ui.components.RadarSpinner
+import com.lupadered.app.ui.components.SectionHeader
+import com.lupadered.app.ui.components.StatusBanner
 import com.lupadered.app.ui.components.StatusDot
 import com.lupadered.app.ui.components.Tag
+import com.lupadered.app.ui.components.diagColor
 import com.lupadered.app.ui.components.latencyText
+import com.lupadered.app.ui.components.prefixToMask
 import com.lupadered.app.ui.components.presenceColor
 import com.lupadered.app.ui.components.relativeTime
 import com.lupadered.app.ui.theme.StatusColors
+import kotlinx.coroutines.launch
 
+/** Cuántos equipos se muestran como vista previa en Inicio (el resto, en "Dispositivos"). */
+private const val PREVIEW_COUNT = 5
+
+/**
+ * Inicio: el estado de tu red de un vistazo (a qué red estás conectado, tus direcciones,
+ * el rango y cuántos equipos hay), el botón de escaneo y los avisos importantes.
+ * La lista completa vive en la pestaña "Dispositivos".
+ */
 @Composable
 fun HomeScreen(
     vm: MainViewModel,
@@ -108,39 +123,34 @@ fun HomeScreen(
     onLearn: () -> Unit,
     onInspectIp: () -> Unit,
     onWifiSecurity: () -> Unit,
+    onOpenDevices: () -> Unit = {},
+    onSettings: () -> Unit = {},
 ) {
     val s by vm.home.collectAsStateWithLifecycle()
-    // Aviso "cambiaste de red" como notificación pequeña abajo (no una tarjeta grande)
-    val netSnackbar = remember { SnackbarHostState() }
+    // Avisos breves abajo (cambio de red, escaneo terminado), sin tarjetas grandes
+    val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(s.networkChanged) {
         if (s.networkChanged && s.network != null) {
             val msg =
                 if (s.profile == null) tr("Te conectaste a una red nueva. Escanéala para guardarla en \"Mis redes\".")
                 else tr("Cambiaste a la red \"%1\$s\". Te mostramos sus equipos.", s.profile?.displayName)
-            netSnackbar.showSnackbar(msg)
             vm.dismissNetworkChanged()
+            snackbar.showSnackbar(msg)
+        }
+    }
+    LaunchedEffect(s.scanFinished, s.lastScan?.id) {
+        val last = s.lastScan
+        if (s.scanFinished && last != null) {
+            vm.dismissScanFinished()
+            snackbar.showSnackbar(
+                tr("Escaneo completado: %1\$s dispositivos en %2\$s s", last.found, (last.durationMs + 500) / 1000),
+            )
         }
     }
     // Revisión automática del "candado" del WiFi (también al volver a esta pantalla)
     LaunchedEffect(Unit) { vm.checkWifiSecurity() }
-    val isPremium = rememberIsPremium()
+
     val homeContext = LocalContext.current
-    var nameMsg by remember { mutableStateOf<String?>(null) }
-    fun tryWifiName() {
-        vm.applyWifiNameAsNetwork { ok ->
-            nameMsg = if (ok) null
-            else tr("No pudimos leer el nombre. Enciende la ubicación del teléfono y vuelve a intentarlo.")
-        }
-    }
-    val locPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) tryWifiName()
-        else nameMsg = tr("Sin el permiso de ubicación, Android no deja ver el nombre del WiFi.")
-    }
-    val onUseWifiName = {
-        nameMsg = null
-        if (WifiSecurityCheck.hasLocationPermission(homeContext)) tryWifiName()
-        else locPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
     // Al tocar "Escanear": si falta el permiso de ubicación lo pedimos ahí mismo, para que la red
     // quede con el nombre de tu WiFi. Si no lo da, se lo explicamos y escaneamos igual.
     val scanScope = rememberCoroutineScope()
@@ -149,7 +159,7 @@ fun HomeScreen(
         if (!granted && !locationExplained) {
             locationExplained = true
             scanScope.launch {
-                netSnackbar.showSnackbar(tr("Sin el permiso de ubicación, Android no deja ver el nombre del WiFi."))
+                snackbar.showSnackbar(tr("Sin el permiso de ubicación, Android no deja ver el nombre del WiFi."))
             }
         }
         onScan()
@@ -170,67 +180,76 @@ fun HomeScreen(
         )
     }
 
-    // El botón "?" se quitó: "¿Qué estoy viendo?" está en Ajustes › Ayuda
     ScreenScaffold(
         title = tr("NexoLan Scanner"),
         actions = {
             IconButton(onClick = onInspectIp) {
                 Icon(Icons.AutoMirrored.Outlined.ManageSearch, contentDescription = tr("Analizar una IP"))
             }
+            IconButton(onClick = onSettings) {
+                Icon(Icons.Outlined.Settings, contentDescription = tr("Ajustes"))
+            }
         },
-        snackbarHost = { SnackbarHost(netSnackbar) },
+        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
+        // ---------- Sin red: explicación clara y una acción útil
         if (s.networkChecked && s.network == null && !s.scanning) {
             EmptyState(
                 icon = Icons.Outlined.WifiOff,
                 title = tr("No estás conectado a un WiFi"),
                 text = tr("Para ver los dispositivos de tu casa, conecta este teléfono a tu red WiFi. Con datos móviles no hay una red local que revisar."),
-                modifier = Modifier.padding(padding),
+                modifier = Modifier.padding(padding).padding(top = 24.dp),
                 action = { Button(onClick = { vm.refreshNetwork() }) { Text(tr("Reintentar")) } },
             )
             return@ScreenScaffold
         }
 
-        val shown = s.selectedGroup?.let { g -> s.devices.filter { it.groupName == g } } ?: s.devices
-        val online = shown.filter { it.presence != Presence.OFFLINE }
-        val offline = shown.filter { it.presence == Presence.OFFLINE }
+        val online = s.devices.filter { it.presence != Presence.OFFLINE }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item(key = "hero") {
+                NetworkHeroCard(
+                    s = s,
+                    onRename = { renaming = true },
+                    onScan = scanTapped,
+                    onCancel = vm::cancelScan,
+                )
+            }
+
+            // ---------- Estados del último escaneo
             if (s.scanError) {
-                item {
-                    Card(
-                        modifier = Modifier.padding(bottom = 12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    ) {
-                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.WifiOff, contentDescription = null)
-                            Spacer(Modifier.width(10.dp))
-                            Text(
-                                tr("No se pudo completar el escaneo. Intenta de nuevo."),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f),
-                            )
-                            TextButton(onClick = vm::dismissScanError) { Text("OK") }
-                        }
-                    }
+                item(key = "error") {
+                    StatusBanner(
+                        kind = BannerKind.ERROR,
+                        title = tr("No se pudo completar el escaneo. Intenta de nuevo."),
+                        actions = {
+                            TextButton(onClick = vm::dismissScanError) { Text(tr("Cerrar")) }
+                            TextButton(onClick = { vm.dismissScanError(); scanTapped() }) { Text(tr("Reintentar")) }
+                        },
+                    )
                 }
             }
-            // El círculo "Escanea tu red" va arriba; el rango que revisamos queda debajo
-            item { ScanCard(s, onScan = scanTapped, onCancel = vm::cancelScan) }
-            item { Spacer(Modifier.height(12.dp)) }
-            item { NetworkCard(s, onRename = { renaming = true }) }
-            if (!s.scanning && s.wifiSecurity.isNotEmpty()) {
-                item { WifiSecurityCard(s.wifiSecurity, onClick = onWifiSecurity) }
-            }
-            if (!s.scanning) {
-                item { BatteryWarningCard() }
+            if (s.scanCancelled && !s.scanning) {
+                item(key = "cancelled") {
+                    StatusBanner(
+                        kind = BannerKind.INFO,
+                        icon = Icons.Outlined.Stop,
+                        title = tr("Escaneo detenido"),
+                        text = tr("Los resultados parciales no se guardaron. Vuelve a escanear cuando quieras."),
+                        actions = {
+                            TextButton(onClick = vm::dismissScanCancelled) { Text(tr("Cerrar")) }
+                            TextButton(onClick = { vm.dismissScanCancelled(); scanTapped() }) { Text(tr("Escanear")) }
+                        },
+                    )
+                }
             }
 
             if (s.newDevices.isNotEmpty()) {
-                item {
+                item(key = "new") {
                     NewDevicesCard(
                         s = s,
                         onTrust = vm::trust,
@@ -239,78 +258,333 @@ fun HomeScreen(
                         onDismiss = vm::dismissNewDevices,
                     )
                 }
-            }
-
-            if (s.groups.isNotEmpty() && isPremium) {
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 12.dp),
-                    ) {
-                        item {
-                            FilterChip(
-                                selected = s.selectedGroup == null,
-                                onClick = { vm.selectGroup(null) },
-                                label = { Text(tr("Todos")) },
-                            )
-                        }
-                        items(s.groups) { g ->
-                            FilterChip(
-                                selected = s.selectedGroup == g,
-                                onClick = { vm.selectGroup(if (s.selectedGroup == g) null else g) },
-                                label = { Text(g) },
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (s.devices.isEmpty() && !s.scanning) {
-                item {
-                    EmptyState(
-                        icon = Icons.Outlined.Devices,
-                        title = tr("Aún no hay dispositivos"),
-                        text = tr("Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez."),
+            } else if (!s.scanning && s.untrustedOnline > 0) {
+                item(key = "untrusted") {
+                    StatusBanner(
+                        kind = BannerKind.WARNING,
+                        icon = Icons.Outlined.GppMaybe,
+                        title = tr("Hay %1\$s dispositivo(s) sin revisar en línea. Ábrelos para marcarlos como conocidos.", s.untrustedOnline),
+                        onClick = onOpenDevices,
                     )
                 }
             }
+            if (!s.scanning && s.wifiSecurity.isNotEmpty()) {
+                item(key = "wifisec") { WifiSecurityCard(s.wifiSecurity, onClick = onWifiSecurity) }
+            }
+            if (!s.scanning) {
+                item(key = "battery") { BatteryWarningCard() }
+            }
 
-            if (online.isNotEmpty()) {
-                item { SectionTitle(if (s.scanning) tr("Encontrados (%1\$s)", s.onlineCount) else tr("En línea (%1\$s)", online.size)) }
-                items(online, key = { "on-" + (it.id?.toString() ?: it.ip) }) { d ->
-                    DeviceRow(d, onClick = { d.id?.let(onOpenDevice) })
-                }
+            // ---------- Vista previa de dispositivos
+            item(key = "devices-header") {
+                SectionHeader(
+                    title = if (s.scanning) tr("Encontrados (%1\$s)", s.onlineCount) else tr("Dispositivos"),
+                    count = if (s.scanning) null else s.devices.size.takeIf { it > 0 },
+                    action = if (s.devices.isNotEmpty()) {
+                        {
+                            TextButton(onClick = onOpenDevices) {
+                                Text(tr("Ver todos"))
+                                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    } else null,
+                )
             }
-            if (offline.isNotEmpty()) {
-                item {
-                    SectionTitle(tr("Vistos antes (%1\$s)", offline.size))
-                    Text(
-                        tr("No respondieron en el último escaneo. Pueden estar apagados, dormidos o fuera de casa."),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                    )
-                }
-                items(offline, key = { "off-" + (it.id?.toString() ?: it.ip) }) { d ->
-                    DeviceRow(d, onClick = { d.id?.let(onOpenDevice) })
-                }
+            item(key = "devices") {
+                DevicePreview(
+                    s = s,
+                    online = online,
+                    onOpenDevice = onOpenDevice,
+                    onOpenAll = onOpenDevices,
+                )
             }
-            if (!s.scanning && s.devices.isNotEmpty()) {
-                item {
-                    OutlinedButton(
-                        onClick = onInspectIp,
-                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    ) {
-                        Icon(Icons.AutoMirrored.Outlined.ManageSearch, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(tr("¿No aparece un equipo? Analízalo por su IP"))
-                    }
-                }
-            }
-            item { Spacer(Modifier.height(24.dp)) }
         }
     }
 }
+
+// ============================================================== Tarjeta principal
+
+/**
+ * La tarjeta principal: a qué red estás conectado y sus datos clave, con el escaneo
+ * integrado. Al escanear, la parte de abajo se transforma en el panel de progreso.
+ */
+@Composable
+private fun NetworkHeroCard(s: HomeState, onRename: () -> Unit, onScan: () -> Unit, onCancel: () -> Unit) {
+    val net = s.network
+    AppCard(contentPadding = 16.dp) {
+        // --- Encabezado: red y estado de la conexión
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconBadge(
+                when {
+                    net == null -> Icons.Outlined.Wifi
+                    net.isWifi -> Icons.Outlined.Wifi
+                    else -> Icons.Outlined.SettingsEthernet
+                },
+                size = 44.dp,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        s.profile?.displayName ?: net?.ssid ?: tr("Tu red"),
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (net != null && s.profile == null) {
+                        Spacer(Modifier.width(8.dp))
+                        Tag(tr("Red nueva"), StatusColors.warn)
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (net == null) {
+                        RadarSpinner(size = 14.dp)
+                        Spacer(Modifier.width(6.dp))
+                        Text(tr("Buscando tu red…"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else {
+                        StatusDot(StatusColors.good, Modifier.size(8.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            buildString {
+                                append(if (net.isWifi) tr("Conectado por WiFi") else tr("Conectado por cable"))
+                                net.wifiRssi?.let { append(" · ").append(it).append(" dBm") }
+                                net.linkSpeedMbps?.let { append(" · ").append(it).append(" Mbps") }
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+            if (s.profile != null) {
+                IconButton(onClick = onRename) {
+                    Icon(
+                        Icons.Outlined.Edit,
+                        contentDescription = tr("Cambiar el nombre de la red"),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+        }
+
+        if (net != null) {
+            Spacer(Modifier.height(16.dp))
+            // --- Datos clave en cuadrícula (cada uno con su explicación al tocarlo)
+            val total = s.devices.size
+            val onlineNow = if (s.scanning) s.onlineCount else s.devices.count { it.presence == Presence.ONLINE }
+            TileRow {
+                InfoTile(
+                    tr("Tu teléfono"), net.selfIp, Modifier.weight(1f), icon = Icons.Outlined.Smartphone,
+                    explanation = tr("Es la dirección IP que el router le dio a este teléfono dentro de tu red."),
+                )
+                InfoTile(
+                    tr("Router"), net.gateway ?: tr("No encontrado"), Modifier.weight(1f), icon = Icons.Outlined.Router,
+                    explanation = tr("El router es la \"puerta\" de tu casa hacia Internet. Desde esta dirección puedes entrar a su configuración con un navegador."),
+                    valueColor = if (net.gateway == null) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            TileRow {
+                InfoTile(
+                    tr("Máscara de subred"), "${prefixToMask(net.prefix)} /${net.prefix}", Modifier.weight(1f), icon = Icons.Outlined.GridView,
+                    explanation = tr("Indica qué parte de la dirección IP identifica a tu red y qué parte a cada equipo. Con /24 (255.255.255.0) caben hasta 254 equipos."),
+                )
+                InfoTile(
+                    tr("Rango que revisamos"), net.scanSubnet.cidr, Modifier.weight(1f), icon = Icons.Outlined.Lan,
+                    explanation = tr("Tu red usa estas direcciones IP. La app revisa cada una para saber si hay un equipo.") +
+                        if (net.reducedRange) tr("\n\nTu red es muy grande (/%1\$s), así que revisamos solo el bloque donde está tu teléfono para que el escaneo sea rápido.", net.prefix)
+                        else "",
+                )
+            }
+            TileRow {
+                InfoTile(
+                    tr("En línea"),
+                    if (total > onlineNow && !s.scanning) "$onlineNow / $total" else "$onlineNow",
+                    Modifier.weight(1f), icon = Icons.Outlined.Devices,
+                    explanation = tr("Equipos que respondieron en el último escaneo, de todos los que esta app conoce en esta red."),
+                    valueColor = if (onlineNow > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+                InfoTile(
+                    tr("Último escaneo"),
+                    s.lastScan?.let { relativeTime(it.startedAt) } ?: tr("nunca"),
+                    Modifier.weight(1f), icon = Icons.Outlined.Schedule, mono = false,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        // --- Escaneo: botón en reposo, panel de progreso mientras trabaja
+        AnimatedContent(
+            targetState = s.scanning,
+            transitionSpec = {
+                (fadeIn(tween(220, delayMillis = 60)) + slideInVertically(tween(220)) { it / 6 }) togetherWith fadeOut(tween(120))
+            },
+            label = "scan",
+        ) { scanning ->
+            if (scanning) {
+                ScanProgressPanel(s, onCancel)
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = onScan,
+                        enabled = net != null,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                    ) {
+                        Icon(Icons.Outlined.Radar, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Text(tr("Escanear red"), style = MaterialTheme.typography.titleSmall)
+                    }
+                    val last = s.lastScan
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        if (last != null) {
+                            tr("Último escaneo %1\$s · %2\$s dispositivos · %3\$s s", relativeTime(last.startedAt), last.found, (last.durationMs + 500) / 1000)
+                        } else {
+                            tr("Escanea tu red para ver quién está conectado.")
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TileRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        content = content,
+    )
+}
+
+/** Panel de progreso del escaneo: radar, fase, porcentaje, equipos y la última IP que respondió. */
+@Composable
+private fun ScanProgressPanel(s: HomeState, onCancel: () -> Unit) {
+    val progress by animateFloatAsState(s.progress.coerceIn(0f, 1f), tween(400), label = "progress")
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RadarSpinner(size = 52.dp)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                AnimatedContent(targetState = s.phase.label, label = "phase", transitionSpec = { fadeIn() togetherWith fadeOut() }) { label ->
+                    Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 2)
+                }
+                Text(
+                    tr("%1\$s dispositivos encontrados", s.onlineCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                "${(progress * 100).toInt()}%",
+                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(Modifier.height(14.dp))
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxWidth().height(6.dp),
+            strokeCap = StrokeCap.Round,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            gapSize = 0.dp,
+            drawStopIndicator = {},
+        )
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                val ip = s.lastFoundIp
+                Text(
+                    if (ip != null) tr("Última respuesta: %1\$s", ip) else (s.network?.scanSubnet?.cidr ?: ""),
+                    style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            OutlinedButton(onClick = onCancel, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
+                Icon(Icons.Outlined.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(tr("Detener"))
+            }
+        }
+        Text(
+            tr("Usamos varios métodos a la vez y revisamos dos veces a los que no responden, para no dejar a nadie fuera."),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}
+
+// ============================================================== Vista previa
+
+@Composable
+private fun DevicePreview(
+    s: HomeState,
+    online: List<DeviceItem>,
+    onOpenDevice: (Long) -> Unit,
+    onOpenAll: () -> Unit,
+) {
+    when {
+        s.devices.isEmpty() && s.scanning -> AppCard {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadarSpinner(size = 28.dp)
+                Spacer(Modifier.width(12.dp))
+                Text(tr("Buscando dispositivos…"), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        s.devices.isEmpty() -> AppCard(contentPadding = 0.dp) {
+            EmptyState(
+                icon = Icons.Outlined.Devices,
+                title = tr("Aún no hay dispositivos"),
+                text = tr("Toca el botón \"Escanear\" de arriba para descubrir quién está conectado a tu WiFi. La app recordará los dispositivos para mostrártelos al instante la próxima vez."),
+            )
+        }
+        else -> {
+            // Primero los que están en línea; si no hay, los últimos vistos
+            val list = (online.ifEmpty { s.devices }).take(PREVIEW_COUNT)
+            val rest = s.devices.size - list.size
+            AppCard(contentPadding = 0.dp) {
+                Column(Modifier.animateContentSize()) {
+                    list.forEachIndexed { i, d ->
+                        DeviceRow(
+                            d,
+                            onClick = { d.id?.let(onOpenDevice) },
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                        )
+                        if (i < list.lastIndex) {
+                            HorizontalDivider(
+                                Modifier.padding(start = 68.dp, end = 12.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                            )
+                        }
+                    }
+                    if (rest > 0) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                        TextButton(
+                            onClick = onOpenAll,
+                            modifier = Modifier.fillMaxWidth().padding(4.dp),
+                        ) {
+                            Text(tr("Ver todos") + " (${s.devices.size})")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================== Avisos
 
 /**
  * Resumen de la seguridad del WiFi en Inicio: discreto si todo está bien,
@@ -338,201 +612,27 @@ private fun WifiSecurityCard(items: List<DiagItem>, onClick: () -> Unit) {
         wpsUnknown -> tr("Toca para revisar también el WPS del router.")
         else -> tr("Toca para ver los detalles.")
     }
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = if (worst == DiagStatus.GOOD) MaterialTheme.colorScheme.surfaceContainerLow
-            else color.copy(alpha = 0.15f),
-        ),
-    ) {
-        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                when (worst) {
-                    DiagStatus.GOOD -> Icons.Outlined.VerifiedUser
-                    DiagStatus.BAD -> Icons.Outlined.GppBad
-                    else -> Icons.Outlined.GppMaybe
-                },
-                contentDescription = null,
-                tint = color,
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleSmall)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-private fun NetworkCard(s: HomeState, onRename: () -> Unit) {
-    val net = s.network
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                // El nombre ocupa el espacio libre y el lápiz queda siempre a la derecha,
-                // sea el nombre corto o largo (antes dos pesos se repartían el espacio).
-                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        s.profile?.displayName ?: tr("Tu red"),
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (net != null && s.profile == null) {
-                        Spacer(Modifier.width(8.dp))
-                        Tag(tr("Red nueva"), StatusColors.warn)
-                    }
+    if (worst == DiagStatus.GOOD) {
+        // Todo bien: una fila discreta, sin colores llamativos
+        AppCard(onClick = onClick, contentPadding = 14.dp) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(Icons.Outlined.VerifiedUser, size = 36.dp, tint = color)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (s.profile != null) {
-                    IconButton(onClick = onRename) {
-                        Icon(Icons.Outlined.Edit, contentDescription = tr("Cambiar el nombre de la red"))
-                    }
-                }
-            }
-            if (net == null) {
-                Text(tr("Buscando tu red…"), style = MaterialTheme.typography.bodyMedium)
-                return@Column
-            }
-            ExplainRow(
-                tr("Rango que revisamos"),
-                net.scanSubnet.cidr + tr(" · %1\$s direcciones", net.scanSubnet.usableCount),
-                tr("Tu red usa estas direcciones IP. La app revisa cada una para saber si hay un equipo.") +
-                    if (net.reducedRange) tr("\n\nTu red es muy grande (/%1\$s), así que revisamos solo el bloque donde está tu teléfono para que el escaneo sea rápido.", net.prefix)
-                    else "",
-            )
-            ExplainRow(
-                tr("Router"),
-                net.gateway ?: tr("No encontrado"),
-                tr("El router es la \"puerta\" de tu casa hacia Internet. Desde esta dirección puedes entrar a su configuración con un navegador."),
-            )
-            ExplainRow(
-                tr("Tu teléfono"),
-                net.selfIp,
-                tr("Es la dirección IP que el router le dio a este teléfono dentro de tu red."),
-            )
-        }
-    }
-}
-
-@Composable
-private fun ScanCard(s: HomeState, onScan: () -> Unit, onCancel: () -> Unit) {
-    // En reposo el círculo va sin tarjeta de fondo; al escanear se muestra la tarjeta del radar
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (s.scanning) MaterialTheme.colorScheme.primaryContainer
-            else androidx.compose.ui.graphics.Color.Transparent,
-        ),
-    ) {
-        Column(Modifier.fillMaxWidth().padding(if (s.scanning) 16.dp else 0.dp)) {
-            if (s.scanning) {
-                // Radar girando (como antes), con el paso y el porcentaje al lado
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadarSpinner(size = 56.dp)
-                    Spacer(Modifier.width(14.dp))
-                    Column {
-                        Text(s.phase.label, style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            "${(s.progress * 100).toInt()}%",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                        )
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        tr("%1\$s dispositivos encontrados", s.onlineCount),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = onCancel) { Text(tr("Detener")) }
-                }
-                Text(
-                    tr("Usamos varios métodos a la vez y revisamos dos veces a los que no responden, para no dejar a nadie fuera."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                )
-            } else {
-                // Círculo con un halo que late suavemente (sin tarjeta de fondo)
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    val base = MaterialTheme.colorScheme.primary
-                    val enabled = s.network != null
-                    val pulse = androidx.compose.animation.core.rememberInfiniteTransition(label = "halo")
-                    val wave by pulse.animateFloat(
-                        initialValue = 0f,
-                        targetValue = 1f,
-                        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                            animation = androidx.compose.animation.core.tween(1800, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
-                            repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
-                        ),
-                        label = "wave",
-                    )
-                    Box(Modifier.size(170.dp), contentAlignment = Alignment.Center) {
-                        if (enabled) {
-                            // Onda que sale del círculo y se desvanece
-                            Box(
-                                Modifier
-                                    .size(108.dp)
-                                    .graphicsLayer {
-                                        val sc = 1f + 0.55f * wave
-                                        scaleX = sc
-                                        scaleY = sc
-                                        alpha = 0.35f * (1f - wave)
-                                    }
-                                    .clip(CircleShape)
-                                    .background(base),
-                            )
-                        }
-                        Box(
-                            Modifier
-                                .size(108.dp)
-                                .shadow(10.dp, CircleShape)
-                                .clip(CircleShape)
-                                .background(if (enabled) base else base.copy(alpha = 0.4f))
-                                .clickable(enabled = enabled, onClick = onScan),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Outlined.Search,
-                                contentDescription = tr("Escanea tu red"),
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(42.dp),
-                            )
-                        }
-                    }
-                    Text(
-                        tr("Escanear"),
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Light,
-                            letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp),
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    val last = s.lastScan
-                    if (last != null) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            tr("Último escaneo %1\$s · %2\$s dispositivos · %3\$s s", relativeTime(last.startedAt), last.found, (last.durationMs + 500) / 1000),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (s.untrustedOnline > 0 && s.newDevices.isEmpty()) {
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            tr("Hay %1\$s dispositivo(s) sin revisar en línea. Ábrelos para marcarlos como conocidos.", s.untrustedOnline),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = StatusColors.warn,
-                        )
-                    }
-                }
+                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+    } else {
+        StatusBanner(
+            kind = if (worst == DiagStatus.BAD) BannerKind.ERROR else BannerKind.WARNING,
+            icon = if (worst == DiagStatus.BAD) Icons.Outlined.GppBad else Icons.Outlined.GppMaybe,
+            title = title,
+            text = subtitle,
+            onClick = onClick,
+        )
     }
 }
 
@@ -544,65 +644,70 @@ private fun NewDevicesCard(
     onOpen: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AnimatedVisibility(visible = s.newDevices.isNotEmpty()) {
-        Card(
-            modifier = Modifier.padding(top = 12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.NewReleases, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (s.newDevices.size == 1) tr("Se conectó un dispositivo nuevo")
-                        else tr("Se conectaron %1\$s dispositivos nuevos", s.newDevices.size),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-                Text(
-                    tr("No los habíamos visto antes en esta red. Si son tuyos, márcalos como conocidos. Si no los reconoces, revisa quién tiene tu clave WiFi."),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
-                s.newDevices.take(5).forEach { d ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { onOpen(d.id) }.padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(d.displayName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(d.ip, style = MaterialTheme.typography.bodySmall)
+    AnimatedVisibility(visible = s.newDevices.isNotEmpty(), enter = fadeIn() + slideInVertically { -it / 4 }) {
+        StatusBanner(
+            kind = BannerKind.WARNING,
+            icon = Icons.Outlined.NewReleases,
+            title = if (s.newDevices.size == 1) tr("Se conectó un dispositivo nuevo")
+            else tr("Se conectaron %1\$s dispositivos nuevos", s.newDevices.size),
+            text = tr("No los habíamos visto antes en esta red. Si son tuyos, márcalos como conocidos. Si no los reconoces, revisa quién tiene tu clave WiFi."),
+            actions = {
+                Column(Modifier.fillMaxWidth()) {
+                    s.newDevices.take(5).forEach { d ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpen(d.id) }
+                                .padding(start = 32.dp, top = 2.dp, bottom = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(d.displayName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    d.ip,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            TextButton(onClick = { onTrust(d.id) }) { Text(tr("Es mío")) }
                         }
-                        TextButton(onClick = { onTrust(d.id) }) { Text(tr("Es mío")) }
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = onDismiss) { Text(tr("Más tarde")) }
+                        if (s.newDevices.size > 1) {
+                            OutlinedButton(onClick = onTrustAll) { Text(tr("Todos son míos")) }
+                        }
                     }
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text(tr("Más tarde")) }
-                    if (s.newDevices.size > 1) {
-                        OutlinedButton(onClick = onTrustAll) { Text(tr("Todos son míos")) }
-                    }
-                }
-            }
-        }
+            },
+        )
     }
 }
 
+// ============================================================== Fila de dispositivo
+
+/**
+ * Una fila de la lista de dispositivos: ícono con su estado, nombre, IP y fabricante
+ * (si se conoce) y, a la derecha, el tiempo de respuesta o cuándo se vio por última vez.
+ */
 @Composable
-fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
+fun DeviceRow(d: DeviceItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         Modifier
             .fillMaxWidth()
             .clickable(enabled = d.id != null, onClick = onClick)
-            .padding(vertical = 8.dp),
+            .then(modifier)
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        DeviceAvatar(d.type, d.presence, iconKey = d.customIcon)
+        DeviceAvatar(d.type, d.presence, iconKey = d.customIcon, showPresence = true)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     d.title,
                     style = MaterialTheme.typography.bodyLarge,
+                    color = if (d.presence == Presence.OFFLINE) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -614,7 +719,7 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
             }
             Text(
                 d.subtitle,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -622,22 +727,26 @@ fun DeviceRow(d: DeviceItem, onClick: () -> Unit) {
         }
         Spacer(Modifier.width(8.dp))
         Column(horizontalAlignment = Alignment.End) {
-            StatusDot(presenceColor(d.presence))
-            Spacer(Modifier.height(4.dp))
             Text(
                 when (d.presence) {
                     Presence.ONLINE -> latencyText(d.latencyMs)
-                    Presence.CHECKING -> "buscando…"
+                    Presence.CHECKING -> tr("Buscando…")
                     Presence.OFFLINE -> relativeTime(d.lastSeen)
                 },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                color = if (d.presence == Presence.ONLINE) presenceColor(d.presence) else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (d.id != null) {
+            Icon(
+                Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(start = 2.dp).size(18.dp),
             )
         }
     }
 }
-
-
 
 @Composable
 fun NetworkNameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
@@ -686,35 +795,19 @@ internal fun BatteryWarningCard() {
     } ?: return
 
     var showHow by remember { mutableStateOf(false) }
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-        colors = CardDefaults.cardColors(containerColor = StatusColors.warn.copy(alpha = 0.15f)),
-    ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.BatteryAlert, contentDescription = null, tint = StatusColors.warn)
-                Spacer(Modifier.width(10.dp))
-                Text(tr("La batería está frenando la vigilancia"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+    StatusBanner(
+        kind = BannerKind.WARNING,
+        icon = Icons.Outlined.BatteryAlert,
+        title = tr("La batería está frenando la vigilancia"),
+        text = tr("Tu teléfono está frenando los escaneos automáticos para ahorrar batería. Por eso quizá no te avisemos cuando se conecte un equipo nuevo.") +
+            if (showHow) "\n\n" + com.lupadered.app.monitor.BatteryGuard.brandSteps() else "",
+        actions = {
+            TextButton(onClick = { showHow = !showHow }) {
+                Text(if (showHow) tr("Ocultar pasos") else tr("¿Cómo?"))
             }
-            Text(
-                tr("Tu teléfono está frenando los escaneos automáticos para ahorrar batería. Por eso quizá no te avisemos cuando se conecte un equipo nuevo."),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { com.lupadered.app.monitor.BatteryGuard.openBatterySettings(context) }) {
-                    Text(tr("Arreglarlo"))
-                }
-                TextButton(onClick = { showHow = !showHow }) {
-                    Text(if (showHow) tr("Ocultar pasos") else tr("¿Cómo?"))
-                }
+            Button(onClick = { com.lupadered.app.monitor.BatteryGuard.openBatterySettings(context) }) {
+                Text(tr("Arreglarlo"))
             }
-            if (showHow) {
-                Text(
-                    com.lupadered.app.monitor.BatteryGuard.brandSteps(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
+        },
+    )
 }
