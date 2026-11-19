@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DJRojasR · Apps</title>
+<meta name="description" content="Apps de DJRojasR para Android. Android apps by DJRojasR.">
+<meta name="color-scheme" content="light dark">
+<style>
+:root{--bg:#F4F6F9;--card:#FFFFFF;--text:#0F172A;--muted:#526075;--line:#E2E8F0;--primary:#0A5FE0;--chip:#DBE7FF;--chipText:#0A3E99}
+@media (prefers-color-scheme:dark){:root{--bg:#090E1A;--card:#111827;--text:#E6EBF3;--muted:#98A3B5;--line:#1F2A3C;--primary:#7AB8FF;--chip:#123F86;--chipText:#DBE7FF}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0A5FE0,#00A6D6);display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px;letter-spacing:-.5px;flex:none}
+.brand{font-weight:800;letter-spacing:.14em;font-size:15px}
+.brand small{display:block;font-weight:500;letter-spacing:0;color:var(--muted);font-size:13px}
+h1{font-size:clamp(26px,5vw,34px);line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+.meta{display:inline-block;background:var(--chip);color:var(--chipText);font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;margin-bottom:24px}
+article{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:8px 26px 22px}
+h2{font-size:19px;margin:30px 0 8px;letter-spacing:-.01em}
+h2:first-child{margin-top:22px}
+p,li{color:var(--text)}
+ul{padding-left:22px}
+li{margin:6px 0}
+a{color:var(--primary);text-underline-offset:3px;word-break:break-word}
+strong{font-weight:650}
+mark.todo{background:#FDE68A;color:#78350F;padding:0 4px;border-radius:4px}
+footer{margin-top:28px;color:var(--muted);font-size:13px;text-align:center}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}.top header{margin:0}
+.lang{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;flex:none}
+.lang button{all:unset;cursor:pointer;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--primary);color:#fff}
+@media (prefers-color-scheme:dark){.lang button[aria-pressed="true"]{color:#06142B}}
+.lang button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+[data-lang]{display:none}html[lang="es"] [data-lang="es"],html[lang="en"] [data-lang="en"]{display:block}
+html[lang="es"] span[data-lang="es"],html[lang="en"] span[data-lang="en"]{display:inline}
+@media (max-width:520px){article{padding:4px 18px 16px}.wrap{padding-top:22px}}
+
+.dev{display:flex;align-items:center;gap:14px}.avatar{width:44px;height:44px;border-radius:50%;background:var(--chip);color:var(--chipText);display:grid;place-items:center;font-weight:800}
+.sub{color:var(--muted);margin:0 0 22px}
+.app{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.app .logo{width:56px;height:56px;font-size:26px;border-radius:16px}
+.app h2{margin:0;font-size:18px}.app p{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.links a{font-size:14px;font-weight:600;margin-right:14px}
+.grid{display:grid;gap:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div class="dev"><div class="avatar" aria-hidden="true">DJ</div><div class="brand" style="letter-spacing:.02em">DJRojasR<small><span data-lang="es">Desarrollador de apps Android</span><span data-lang="en">Android app developer</span></small></div></div><div class="lang" role="group" aria-label="Idioma / Language"><button type="button" data-set="es" aria-pressed="false">Español</button><button type="button" data-set="en" aria-pressed="false">English</button></div></div>
+<h1><span data-lang="es">Mis apps</span><span data-lang="en">My apps</span></h1>
+<p class="sub"><span data-lang="es">Mis aplicaciones y sus políticas de privacidad.</span><span data-lang="en">My apps and their privacy policies.</span></p>
+<div class="grid">
+<div class="app"><div class="logo" aria-hidden="true">X</div><div>
+<h2>XYNTRA – Smart WiFi Scanner</h2>
+<p><span data-lang="es">Mira qué dispositivos están conectados a tu WiFi.</span><span data-lang="en">See which devices are connected to your WiFi.</span></p>
+<div class="links"><a href="xyntra/privacidad/"><span data-lang="es">Política de privacidad</span><span data-lang="en">Privacy Policy</span></a></div>
+</div></div>
+</div>
+<footer><span data-lang="es">Contacto</span><span data-lang="en">Contact</span>: <a href="mailto:josteinrojas590@gmail.com">josteinrojas590@gmail.com</a></footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement;
+  function pick(){
+    var h=(location.hash||"").slice(1).toLowerCase();
+    if(h==="es"||h==="en")return h;
+    try{var s=localStorage.getItem("xyntra_lang");if(s==="es"||s==="en")return s;}catch(e){}
+    var l=(navigator.languages&&navigator.languages[0])||navigator.language||"en";
+    return l.toLowerCase().indexOf("es")===0?"es":"en";
+  }
+  function set(l,save){
+    root.lang=l;
+    document.title=l==="es"?"DJRojasR · Apps":"DJRojasR · Apps";
+    var b=document.querySelectorAll(".lang button");
+    for(var i=0;i<b.length;i++)b[i].setAttribute("aria-pressed",b[i].getAttribute("data-set")===l?"true":"false");
+    if(save){try{localStorage.setItem("xyntra_lang",l);}catch(e){}}
+  }
+  set(pick(),false);
+  document.addEventListener("click",function(e){var t=e.target.closest&&e.target.closest(".lang button");if(t)set(t.getAttribute("data-set"),true);});
+  window.addEventListener("hashchange",function(){set(pick(),false);});
+})();
+</script>
+</body>
+</html>

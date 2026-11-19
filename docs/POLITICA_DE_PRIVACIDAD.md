@@ -1,11 +1,9 @@
 # Política de privacidad de XYNTRA
 
-*Última actualización: [FECHA]*
+*Última actualización: 19 de noviembre de 2026*
 
 Esta política explica qué información trata la aplicación **XYNTRA** ("la app"), desarrollada por
-**[TU NOMBRE O EMPRESA]** ("nosotros"). Si tienes preguntas, escríbenos a **[TU CORREO DE CONTACTO]**.
-
-> Plantilla orientativa. Revísala y adáptala a tu caso; no es asesoría legal.
+**DJRojasR** ("nosotros"). Si tienes preguntas, escríbenos a **josteinrojas590@gmail.com**.
 
 ## 1. Información de tu red local
 
