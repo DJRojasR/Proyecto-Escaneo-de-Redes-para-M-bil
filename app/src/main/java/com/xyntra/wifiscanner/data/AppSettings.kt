@@ -21,7 +21,8 @@ enum class DarkMode(val label: String) {
     DARK(tr("Oscuro")),
 }
 
-data class Appearance(val color: ThemeColor = ThemeColor.BRAND, val dark: DarkMode = DarkMode.SYSTEM)
+/** Por defecto la app se ve en modo oscuro; se puede cambiar en Ajustes › Apariencia. */
+data class Appearance(val color: ThemeColor = ThemeColor.BRAND, val dark: DarkMode = DarkMode.DARK)
 
 /** Configuración de la vigilancia de la red (RF-24, RF-25, RF-26). */
 data class MonitorSettings(
@@ -86,7 +87,7 @@ class AppSettings(context: Context) {
         color = prefs.getString("theme_color", null)
             ?.let { n -> ThemeColor.entries.firstOrNull { it.name == n } } ?: ThemeColor.BRAND,
         dark = prefs.getString("dark_mode", null)
-            ?.let { n -> DarkMode.entries.firstOrNull { it.name == n } } ?: DarkMode.SYSTEM,
+            ?.let { n -> DarkMode.entries.firstOrNull { it.name == n } } ?: DarkMode.DARK,
     )
 
     private fun readMonitor() = MonitorSettings(

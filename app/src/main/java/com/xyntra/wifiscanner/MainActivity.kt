@@ -4,7 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
+import com.xyntra.wifiscanner.ui.theme.LocalIsDark
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -30,6 +33,15 @@ class MainActivity : ComponentActivity() {
             val appearance by app.settings.appearance.collectAsStateWithLifecycle()
             val premium by app.premium.state.collectAsStateWithLifecycle()
             XyntraTheme(appearance = appearance, premium = premium.isPremium) {
+                // Íconos de la barra de estado y de navegación legibles en claro y en oscuro,
+                // aunque el tema elegido en la app no coincida con el del teléfono.
+                val isDark = LocalIsDark.current
+                LaunchedEffect(isDark) {
+                    val transparent = android.graphics.Color.TRANSPARENT
+                    val style = if (isDark) SystemBarStyle.dark(transparent)
+                    else SystemBarStyle.light(transparent, transparent)
+                    enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                }
                 // El árabe se lee de derecha a izquierda
                 CompositionLocalProvider(
                     LocalLayoutDirection provides if (I18n.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr,

@@ -98,7 +98,6 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
                     when (s.source) {
                         PremiumSource.LIFETIME -> tr("Tienes Premium de por vida. ¡Gracias por apoyar la app!")
                         PremiumSource.SUBSCRIPTION -> tr("Tu suscripción mensual está activa.")
-                        PremiumSource.TEST -> tr("Premium de prueba activado (solo en la versión de desarrollo).")
                         null -> tr("El escaneo de tu red siempre será gratis. Premium suma vigilancia, análisis y orden.")
                     },
                     style = MaterialTheme.typography.bodyMedium,
@@ -117,7 +116,7 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
                 }
                 PlanCard(
                     title = tr("Mensual"),
-                    price = s.monthly?.price?.takeIf { it.isNotBlank() } ?: tr("S/ 4.90 al mes"),
+                    price = s.monthly?.price?.takeIf { it.isNotBlank() } ?: tr("US$ 2 al mes"),
                     detail = s.monthly?.trial ?: tr("Cancela cuando quieras desde Google Play."),
                     tag = s.monthly?.trial?.let { tr("Prueba gratis") },
                     button = if (s.monthly?.trial != null) tr("Empezar prueba gratis") else tr("Suscribirme"),
@@ -126,7 +125,7 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
                 )
                 PlanCard(
                     title = tr("Pro de por vida"),
-                    price = s.lifetime?.price?.takeIf { it.isNotBlank() }?.let { tr("%1\$s una sola vez", it) } ?: tr("S/ 14.90 una sola vez"),
+                    price = s.lifetime?.price?.takeIf { it.isNotBlank() }?.let { tr("%1\$s una sola vez", it) } ?: tr("US$ 10 una sola vez"),
                     detail = tr("Pagas una vez y tienes todo Premium para siempre, sin suscripción."),
                     tag = tr("Pago único"),
                     button = tr("Comprar de por vida"),
@@ -165,18 +164,6 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
                 }
             }
             TextButton(onClick = { premium.refresh() }) { Text(tr("Restaurar compras")) }
-            if (BuildConfig.DEBUG && s.source == PremiumSource.TEST) {
-                OutlinedButton(onClick = { premium.setTestPremium(false) }) {
-                    Text(tr("Quitar Premium de prueba (volver a la versión gratis)"))
-                }
-            }
-            if (BuildConfig.DEBUG && !s.isPremium) {
-                Text(
-                    tr("Versión de pruebas: los botones de compra activan Premium sin cobrar nada."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PremiumGold,
-                )
-            }
             Text(
                 tr("Los pagos los procesa Google Play con tu cuenta de Google. La suscripción se renueva cada mes hasta que la canceles en Google Play › Pagos y suscripciones. Si cambias de celular, Premium vuelve solo al iniciar sesión con la misma cuenta."),
                 style = MaterialTheme.typography.bodySmall,

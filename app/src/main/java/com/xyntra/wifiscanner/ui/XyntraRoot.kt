@@ -56,6 +56,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.xyntra.wifiscanner.ads.AdBanner
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -177,6 +183,25 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
         }
     }
 
+    // ---------- Anuncios: mini banner (solo en Inicio, Dispositivos e Historial) y aviso discreto de Premium
+    val adsReady by app.ads.ready.collectAsStateWithLifecycle()
+    val premiumState by app.premium.state.collectAsStateWithLifecycle()
+    val showBanner = showBar && adsReady && !premiumState.isPremium && app.ads.bannerAllowed(route)
+    val rootSnackbar = remember { SnackbarHostState() }
+    val premiumHint by app.ads.premiumHint.collectAsStateWithLifecycle()
+    LaunchedEffect(premiumHint) {
+        if (premiumHint) {
+            app.ads.dismissPremiumHint()
+            val result = rootSnackbar.showSnackbar(
+                message = tr("¿Prefieres sin anuncios? Prueba XYNTRA Premium."),
+                actionLabel = tr("Ver Premium"),
+                withDismissAction = true,
+                duration = SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) openPremium()
+        }
+    }
+
     var showSplash by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(1400)
@@ -185,10 +210,20 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
     Box(Modifier.fillMaxSize()) {
     CompositionLocalProvider(LocalOpenPremium provides openPremium) {
     Scaffold(
+        snackbarHost = { SnackbarHost(rootSnackbar) },
         bottomBar = {
             if (showBar) {
                 Column {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                    if (showBanner) {
+                        // Mini banner sobre la barra, con un pequeño margen para que nadie
+                        // lo toque sin querer al cambiar de pestaña.
+                        Column(Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
+                            AdBanner(Modifier.padding(top = 4.dp))
+                            Spacer(Modifier.height(6.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        }
+                    }
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                         tonalElevation = 0.dp,
@@ -394,6 +429,21 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
     }
     }
     AppSplash(visible = showSplash)
+
+    // "Pago confirmado": solo tras una compra nueva confirmada por Google Play
+    val celebrate by app.premium.celebrate.collectAsStateWithLifecycle()
+    androidx.compose.animation.AnimatedVisibility(
+        visible = celebrate != null,
+        enter = fadeIn(tween(300)),
+        exit = fadeOut(tween(400)),
+    ) {
+        // Recordamos el plan para que no desaparezca durante el fundido de salida
+        val plan = remember { celebrate } ?: return@AnimatedVisibility
+        com.xyntra.wifiscanner.ui.components.PurchaseCelebration(plan) {
+            app.premium.celebrationShown()
+            openTab("herramientas")
+        }
+    }
     }
 }
 

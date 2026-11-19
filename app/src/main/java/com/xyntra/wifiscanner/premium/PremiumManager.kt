@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /** De dónde viene el Premium del usuario. */
-enum class PremiumSource { SUBSCRIPTION, LIFETIME, TEST }
+enum class PremiumSource { SUBSCRIPTION, LIFETIME }
 
 /** Un plan que se muestra en la pantalla Premium, con el precio que da Google Play. */
 data class PlanInfo(
@@ -49,9 +49,10 @@ data class PremiumState(
  * Compras de XYNTRA Premium con Google Play Billing (RF-20, RF-21).
  *
  * Productos que debes crear en Play Console con estos mismos IDs:
- *  - Suscripción [SUB_MONTHLY] con el plan base [BASE_PLAN_MONTHLY] (S/ 4.90 al mes) y
- *    una oferta de prueba gratis de 7 días.
- *  - Producto de compra única [LIFETIME] ("Pro de por vida", S/ 14.90).
+ *  - Suscripción [SUB_MONTHLY] con el plan base [BASE_PLAN_MONTHLY] (US$ 2 al mes; Google Play
+ *    lo convierte a la moneda de cada país). Sin prueba gratis: Premium solo se
+ *    desbloquea pagando (si algún día se crea una oferta de prueba, la app la muestra sola).
+ *  - Producto de compra única [LIFETIME] ("Pro de por vida", US$ 10).
  *
  * El estado Premium se guarda en el teléfono para que funcione sin Internet y se
  * vuelve a comprobar con Google Play cada vez que se abre la app, así el usuario
@@ -62,9 +63,9 @@ data class PremiumState(
  * Es una decisión de producto consciente: esta app no tiene backend, y el riesgo de
  * no verificar server-side es de negocio (alguien podría intentar forzar el estado
  * Premium en su propio teléfono), nunca de exposición de datos de otros usuarios.
- * [setTestPremium] solo existe en builds de depuración ([BuildConfig.DEBUG]) y queda
- * ofuscado por R8 en `release` igual que el resto de la clase (ver proguard-rules.pro,
- * que no tiene ningún `-keep` sobre este paquete).
+ * Premium solo se activa con una compra real de Google Play: no hay ningún modo de
+ * "simular" la compra. Para probar sin pagar, usa las cuentas de prueba de licencias de
+ * Play Console (ver docs/PREMIUM.md).
  */
 class PremiumManager(context: Context) : PurchasesUpdatedListener {
 
@@ -73,6 +74,19 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
 
     private val _state = MutableStateFlow(initialState())
     val state: StateFlow<PremiumState> = _state.asStateFlow()
+
+    private val _celebrate = MutableStateFlow<PremiumSource?>(null)
+
+    /**
+     * Plan recién confirmado por Google Play, para mostrar la animación de "Pago confirmado".
+     * Solo se activa con una compra nueva (o un pago pendiente que se aprueba), nunca al
+     * abrir la app ni al restaurar compras. La pantalla lo descarta con [celebrationShown].
+     */
+    val celebrate: StateFlow<PremiumSource?> = _celebrate.asStateFlow()
+
+    fun celebrationShown() {
+        _celebrate.value = null
+    }
 
     val isPremium: Boolean get() = _state.value.isPremium
 
@@ -190,16 +204,6 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
 
     /** Abre la hoja de pago de Google Play. [lifetime] = pago único; si no, suscripción mensual. */
     fun buy(activity: Activity, lifetime: Boolean) {
-        // Fase de pruebas: en la versión de desarrollo la compra es solo representativa.
-        if (BuildConfig.DEBUG) {
-            setTestPremium(true)
-            _state.update {
-                it.copy(
-                    message = tr("Compra simulada (") + (if (lifetime) tr("Pro de por vida") else "mensual") + tr("). Ya puedes probar todas las funciones Premium. No se cobró nada: en la versión de pruebas los pagos no pasan por Google Play."),
-                )
-            }
-            return
-        }
         val pd = if (lifetime) lifetimeDetails else monthlyDetails
         if (pd == null) {
             _state.update {
@@ -250,14 +254,18 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         // Una consulta completa sin compras significa que la suscripción terminó.
         // Una compra nueva sin resultado no quita el Premium que ya tenía.
         if (source != null || fromQuery) savePurchased(source)
+        // Compra nueva confirmada (o pago pendiente que por fin se aprobó): celebración
+        val wasPending = _state.value.pendingPayment
+        val confirmedNow = source != null && (!fromQuery || wasPending)
+        if (confirmedNow) _celebrate.value = source
         _state.update {
-            val test = prefs.getBoolean(KEY_TEST, false) && BuildConfig.DEBUG
             it.copy(
-                isPremium = source != null || test,
-                source = source ?: if (test) PremiumSource.TEST else null,
+                isPremium = source != null,
+                source = source,
                 pendingPayment = pending,
                 message = when {
-                    !fromQuery && source != null -> tr("¡Gracias! Ya tienes XYNTRA Premium.")
+                    // La animación de "Pago confirmado" ya lo dice: no hace falta otra ventana
+                    confirmedNow -> null
                     pending -> tr("Tu pago está pendiente. Activaremos Premium apenas Google Play lo confirme.")
                     else -> it.message
                 },
@@ -280,27 +288,13 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
     fun manageSubscriptionUrl(): String =
         "https://play.google.com/store/account/subscriptions?sku=$SUB_MONTHLY&package=${app.packageName}"
 
-    /** Solo en builds de prueba: activa Premium sin pagar para probar las funciones. */
-    fun setTestPremium(enabled: Boolean) {
-        if (!BuildConfig.DEBUG) return
-        prefs.edit().putBoolean(KEY_TEST, enabled).apply()
-        _state.update {
-            val bought = savedSource()
-            it.copy(
-                isPremium = bought != null || enabled,
-                source = bought ?: if (enabled) PremiumSource.TEST else null,
-            )
-        }
-    }
-
-    val testPremiumEnabled: Boolean get() = BuildConfig.DEBUG && prefs.getBoolean(KEY_TEST, false)
-
     private fun initialState(): PremiumState {
         val bought = savedSource()
-        val test = BuildConfig.DEBUG && prefs.getBoolean(KEY_TEST, false)
+        // Limpia el antiguo interruptor de "Premium de prueba" si quedó guardado
+        if (prefs.contains(KEY_OLD_TEST)) prefs.edit().remove(KEY_OLD_TEST).apply()
         return PremiumState(
-            isPremium = bought != null || test,
-            source = bought ?: if (test) PremiumSource.TEST else null,
+            isPremium = bought != null,
+            source = bought,
         )
     }
 
@@ -337,6 +331,6 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         const val BASE_PLAN_MONTHLY = "mensual"
         const val LIFETIME = "premium_de_por_vida"
         private const val KEY_SOURCE = "purchased_source"
-        private const val KEY_TEST = "test_premium"
+        private const val KEY_OLD_TEST = "test_premium"
     }
 }

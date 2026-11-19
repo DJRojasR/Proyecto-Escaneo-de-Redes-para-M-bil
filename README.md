@@ -53,11 +53,21 @@ y por el nombre que les pone el usuario.
 
 Lógica en `ads/AdsManager.kt`:
 
-- Los primeros 3 escaneos, sin anuncios.
-- Después, máximo **1 anuncio cada 3 escaneos** y con un mínimo de 3 minutos entre uno y otro.
-- El anuncio aparece al tocar *Escanear* y **el escaneo corre detrás**: al cerrarlo, los resultados ya están.
-- Nunca interrumpe resultados ni detalles. Si no hay anuncio cargado, no se espera.
-- Incluye el formulario de consentimiento (UMP) obligatorio en Europa.
+Todas las reglas están en el objeto `AdPolicy` (un solo lugar para ajustarlas):
+
+- **Periodo de gracia:** sin anuncios de pantalla completa el primer día ni en los primeros 5 escaneos
+  (el mini banner sí aparece desde el inicio, porque es pequeño y no interrumpe).
+- **Pantalla completa:** máximo **1 cada 4 escaneos**, al menos 5 minutos entre uno y otro y **3 al día**.
+  Aparece al tocar *Escanear* y **el escaneo corre detrás**: al cerrarlo, los resultados ya están.
+- **Mini banner:** sobre la barra de navegación, solo en *Inicio*, *Dispositivos* e *Historial*, con margen
+  para evitar toques accidentales. Nunca en Herramientas, detalle, Ajustes ni Premium.
+- Nunca al abrir o cerrar la app, ni en medio de resultados o detalles. Si no hay anuncio cargado, no se espera.
+- Cada 3 anuncios cerrados, un aviso discreto (snackbar) sugiere Premium. Nunca una ventana que tape la pantalla.
+- Premium no ve anuncios. Incluye el formulario de consentimiento (UMP) obligatorio en Europa.
+
+**Medir y ajustar:** revisa cada semana el informe de AdMob (ingresos, eCPM, tasa de clics) junto con las
+reseñas y desinstalaciones en Play Console. Si las reseñas mencionan los anuncios, sube `SCANS_PER_AD` o baja
+`MAX_INTERSTITIALS_PER_DAY` en `AdPolicy` y publica una actualización.
 
 Mientras desarrollas, se usan los **IDs de prueba** de Google. Los builds *debug* siempre usan anuncios de prueba.
 Para publicar, pon tus IDs reales en `gradle.properties` (ver comentarios allí).
@@ -89,7 +99,7 @@ Hay imágenes para la ficha en `docs/play-store/`.
 
 ## XYNTRA Premium (versión 1.1.0)
 
-La app es gratis con anuncios y ofrece **Premium** (suscripción mensual con 7 días gratis o pago único
+La app es gratis con anuncios y ofrece **Premium** (suscripción mensual de US$ 2 o pago único de US$ 10
 "Pro de por vida"): sin anuncios, vigilancia automática con alerta de intrusos, escaneo diario programado,
 historial completo, análisis de puertos extendido, revisión de seguridad (ahora con vulnerabilidades
 del router: Telnet, UPnP, HTTP sin cifrar, firmware viejo y contraseña de fábrica), aviso de posibles cámaras en la revisión de seguridad, mapa de calor WiFi (realidad aumentada o

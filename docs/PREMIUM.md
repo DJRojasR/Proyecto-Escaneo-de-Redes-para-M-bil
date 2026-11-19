@@ -22,17 +22,12 @@ Play Console › tu app › **Monetizar › Productos › Suscripciones › Crea
 | Nombre | XYNTRA Premium |
 | Plan base: ID | `mensual` |
 | Plan base: tipo | Renovación automática, período de facturación **1 mes** |
-| Precio | S/ 4.90 (Perú). Usa "Establecer precios" para que Google calcule los demás países |
+| Precio | **US$ 2.00** como precio base. Usa "Establecer precios" para que Google lo convierta a la moneda de cada país (en Perú sale alrededor de S/ 6.90; puedes fijar otro precio solo para Perú) |
 
-Luego, dentro del plan base, **Agregar oferta**:
+> **Sin prueba gratis:** las funciones Premium solo se desbloquean pagando. No crees ninguna oferta de
+> "prueba gratuita" en el plan base. (Si algún día quieres darla, la app la detecta y la muestra sola.)
 
-| Campo | Valor |
-|---|---|
-| ID de la oferta | `prueba-7-dias` |
-| Elegibilidad | Adquisición de clientes nuevos |
-| Fase | Prueba gratuita · 7 días |
-
-Activa el plan base y la oferta.
+Activa el plan base.
 
 ## 3. Crear el pago único "Pro de por vida"
 
@@ -42,7 +37,7 @@ Play Console › **Monetizar › Productos › Productos únicos (In-app) › Cr
 |---|---|
 | ID del producto | `premium_de_por_vida` |
 | Nombre | XYNTRA Pro de por vida |
-| Precio | S/ 14.90 |
+| Precio | **US$ 10.00** (en Perú, alrededor de S/ 34.90; ajustable por país) |
 
 Actívalo.
 
@@ -51,9 +46,7 @@ Actívalo.
 
 ## 4. Probar sin pagar de verdad
 
-- **Durante el desarrollo** (versión debug, la que instala Android Studio): en
-  *Ajustes y privacidad* aparece el interruptor **"Simular Premium (solo pruebas)"**.
-  Activa todas las funciones Premium sin Google Play. **No existe en la versión que subes a Play.**
+- La app **no tiene ningún modo para simular Premium**: solo se activa con una compra de Google Play.
 - **Compras reales de prueba**: Play Console › Configuración › **Pruebas de licencias** › agrega tu
   correo de Gmail. Instala la app desde el enlace de **prueba interna** (no desde Android Studio).
   Verás "Tarjeta de prueba, siempre se aprueba" y no se te cobrará. En pruebas, una suscripción

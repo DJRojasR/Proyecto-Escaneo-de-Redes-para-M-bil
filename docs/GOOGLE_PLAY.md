@@ -8,8 +8,9 @@ Lista de pasos en orden. Los requisitos de Google cambian; revisa la Play Consol
       se puede cambiar después de publicar.
 - [ ] **Nivel de API**: el proyecto ya apunta a Android 16 (API 36), que Google Play exige desde el 31 de agosto
       de 2026 para apps nuevas y actualizaciones.
-- [ ] **AdMob**: crea la app en <https://admob.google.com>, crea un bloque de anuncios *Intersticial* y pon los IDs
-      en `gradle.properties` (`ADMOB_APP_ID`, `ADMOB_INTERSTITIAL_ID`). Vincula AdMob con tu app de Play cuando
+- [ ] **AdMob**: crea la app en <https://admob.google.com>, crea dos bloques de anuncios
+      (*Intersticial* y *Banner adaptable*) y pon los IDs en `gradle.properties` (`ADMOB_APP_ID`,
+      `ADMOB_INTERSTITIAL_ID`, `ADMOB_BANNER_ID`). Vincula AdMob con tu app de Play cuando
       ya esté publicada.
 - [ ] **Mensaje de consentimiento**: en AdMob > *Privacidad y mensajes*, crea un mensaje GDPR (y si quieres, de
       estados de EE. UU.). La app ya muestra ese formulario automáticamente.
@@ -108,7 +109,7 @@ DIAGNÓSTICO DE CONEXIÓN
 ¿Internet va lento? Descubre si el problema es la señal WiFi, el router, tu proveedor o el DNS.
 
 SIN LÍMITES Y SIN ANUNCIOS QUE INTERRUMPAN
-Escaneos ilimitados. Como máximo un anuncio cada tres escaneos, y el escaneo sigue trabajando detrás.
+Escaneos ilimitados. Tu primer día no tiene anuncios; después, como máximo un anuncio cada cuatro escaneos (y tres al día), y el escaneo sigue trabajando detrás.
 
 PRIVADA
 La información de tu red se queda en tu teléfono.

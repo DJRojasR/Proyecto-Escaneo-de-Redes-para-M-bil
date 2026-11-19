@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xyntra.wifiscanner.BuildConfig
+import com.xyntra.wifiscanner.ads.AdPolicy
 import com.xyntra.wifiscanner.ads.AdsManager
 import com.xyntra.wifiscanner.data.AppSettings
 import com.xyntra.wifiscanner.data.ThemeColor
@@ -273,25 +274,12 @@ fun SettingsScreen(
                         when (p.source) {
                             PremiumSource.LIFETIME -> tr("Pago único: Premium para siempre.")
                             PremiumSource.SUBSCRIPTION -> tr("Suscripción mensual activa. Toca para administrarla.")
-                            PremiumSource.TEST -> tr("Premium de prueba (versión de desarrollo).")
                             null -> tr("Sin anuncios, vigilancia, alerta de intrusos y más.")
                         },
                     )
                 },
                 leadingContent = { Icon(Icons.Outlined.WorkspacePremium, contentDescription = null, tint = PremiumGold) },
             )
-            if (BuildConfig.DEBUG) {
-                ListItem(
-                    headlineContent = { Text(tr("Simular Premium (solo pruebas)")) },
-                    supportingContent = {
-                        Text(tr("Solo aparece en la versión de desarrollo. Sirve para probar las funciones Premium sin pagar."))
-                    },
-                    leadingContent = { Icon(Icons.Outlined.BugReport, contentDescription = null) },
-                    trailingContent = {
-                        Switch(checked = premium.testPremiumEnabled, onCheckedChange = { premium.setTestPremium(it) })
-                    },
-                )
-            }
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
             // ---------------------------------------------------------------- General
@@ -385,7 +373,7 @@ fun SettingsScreen(
                 supportingContent = {
                     Text(
                         if (p.isPremium) tr("Con Premium no verás ningún anuncio.")
-                        else tr("Tus primeros %1\$s escaneos no tienen anuncios. Después, como máximo uno cada %2\$s escaneos, y el escaneo sigue trabajando detrás del anuncio para que no esperes de más.", AdsManager.SCANS_PER_AD, AdsManager.SCANS_PER_AD),
+                        else tr("Tu primer día y tus primeros %1\$s escaneos no tienen anuncios. Después, como máximo uno cada %2\$s escaneos y %3\$s al día, y el escaneo sigue trabajando detrás del anuncio para que no esperes de más.", AdPolicy.GRACE_SCANS, AdPolicy.SCANS_PER_AD, AdPolicy.MAX_INTERSTITIALS_PER_DAY),
                     )
                 },
                 leadingContent = { Icon(Icons.Outlined.Campaign, contentDescription = null) },

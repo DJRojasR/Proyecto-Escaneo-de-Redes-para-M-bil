@@ -17,8 +17,10 @@ val hasReleaseKey = keystoreProps.getProperty("storeFile") != null
 // IDs de PRUEBA oficiales de Google AdMob
 val testAdmobAppId = "ca-app-pub-3940256099942544~3347511713"
 val testInterstitialId = "ca-app-pub-3940256099942544/1033173712"
+val testBannerId = "ca-app-pub-3940256099942544/9214589741"
 val realAdmobAppId = providers.gradleProperty("ADMOB_APP_ID").getOrElse(testAdmobAppId)
 val realInterstitialId = providers.gradleProperty("ADMOB_INTERSTITIAL_ID").getOrElse(testInterstitialId)
+val realBannerId = providers.gradleProperty("ADMOB_BANNER_ID").getOrElse(testBannerId)
 val privacyUrl = providers.gradleProperty("PRIVACY_POLICY_URL").getOrElse("https://example.com/privacidad")
 
 android {
@@ -36,6 +38,7 @@ android {
 
         manifestPlaceholders["admobAppId"] = testAdmobAppId
         buildConfigField("String", "INTERSTITIAL_AD_UNIT", "\"$testInterstitialId\"")
+        buildConfigField("String", "BANNER_AD_UNIT", "\"$testBannerId\"")
         buildConfigField("String", "PRIVACY_POLICY_URL", "\"$privacyUrl\"")
     }
 
@@ -64,6 +67,7 @@ android {
             )
             manifestPlaceholders["admobAppId"] = realAdmobAppId
             buildConfigField("String", "INTERSTITIAL_AD_UNIT", "\"$realInterstitialId\"")
+            buildConfigField("String", "BANNER_AD_UNIT", "\"$realBannerId\"")
             if (hasReleaseKey) {
                 signingConfig = signingConfigs.getByName("release")
             }
