@@ -74,6 +74,20 @@ class NetCoreTest {
     }
 
     @Test
+    fun routeWhitelist_casosLimite() {
+        assertFalse(RouteWhitelist.isAllowed("dispositivo/-1"))
+        assertFalse(RouteWhitelist.isAllowed("dispositivo/"))
+        assertFalse(RouteWhitelist.isAllowed(" red"))
+        assertFalse(RouteWhitelist.isAllowed("red "))
+        assertFalse(RouteWhitelist.isAllowed("RED"))
+        assertFalse(RouteWhitelist.isAllowed("Premium"))
+        assertFalse(RouteWhitelist.isAllowed(""))
+        // Exactamente en el límite de 32 caracteres: sigue sin ser una ruta conocida.
+        assertFalse(RouteWhitelist.isAllowed("a".repeat(32)))
+        assertTrue(RouteWhitelist.isAllowed("dispositivo/123456789012"))
+    }
+
+    @Test
     fun routerHosts_xmlMalformadoNoRompe() {
         assertNull(RouterHosts.controlUrlOf(""))
         assertNull(RouterHosts.controlUrlOf("<service><serviceType>otro</serviceType>"))

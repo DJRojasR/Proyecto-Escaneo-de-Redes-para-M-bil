@@ -11,7 +11,8 @@ Esta política explica qué información trata la aplicación **XYNTRA** ("la ap
 
 Para mostrarte los dispositivos conectados a tu WiFi, la app consulta tu red local y obtiene datos como
 direcciones IP, nombres que los dispositivos anuncian en la red, tipo de dispositivo, puertos abiertos y
-tiempos de respuesta.
+tiempos de respuesta. También guarda el **nombre (SSID) de la red WiFi** a la que te conectas, para
+mostrártelo y recordar el historial de cada red.
 
 - Esta información **se guarda solo en tu teléfono** (junto con los nombres que tú pongas y el historial).
 - **No la enviamos a ningún servidor** ni la compartimos con terceros.
@@ -21,7 +22,8 @@ tiempos de respuesta.
   servidores de Google). La copia de seguridad en la nube solo guarda tus ajustes (idioma, preferencias),
   nunca el inventario de tu red.
 
-La app no solicita permiso de ubicación ni accede a contactos, fotos, micrófono o cámara.
+La app no accede a contactos, fotos ni micrófono. El permiso de ubicación y el de cámara solo se piden para
+funciones puntuales y opcionales, descritas en las secciones 4.3 y 4.4.
 
 ## 2. Publicidad
 
@@ -63,11 +65,10 @@ Los resultados también se guardan en tu teléfono para mostrarte el historial.
 
 ## 4.2 Revisión de seguridad del router y detector de cámaras (Premium)
 
-La *Revisión de seguridad* puede mostrarte sugerencias sobre tu propio router (puertos abiertos,
-firmware y marca) a partir de la información que el router ya anuncia en tu red. Si tú lo decides
-explícitamente (hay un aviso antes de hacerlo), la app puede probar un pequeño grupo de usuarios y
-contraseñas de fábrica muy conocidas contra el panel de tu propio router, solo dentro de tu red
-local. No guardamos ninguna contraseña: solo si alguna combinación fue aceptada.
+La *Revisión de seguridad* te muestra sugerencias sobre tu propio router (puertos abiertos, firmware,
+marca y si ese modelo suele venir con una contraseña de fábrica conocida) a partir de la información
+que el router ya anuncia en tu red. La app no se conecta ni intenta iniciar sesión en el panel de tu
+router: solo analiza lo que la red ya expone públicamente.
 
 La revisión de seguridad también te avisa si algún equipo de tu red parece una cámara o un grabador,
 según sus puertos y su fabricante. Esa información no sale de tu teléfono.

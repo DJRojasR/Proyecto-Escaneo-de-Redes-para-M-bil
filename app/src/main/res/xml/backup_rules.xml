@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copia de seguridad (Android 11 o anterior). Igual que data_extraction_rules.xml:
-     `lupa.db` guarda el inventario de la red del usuario y no se incluye aquí para
+     `xyntra.db` guarda el inventario de la red del usuario y no se incluye aquí para
      que no se suba a la copia de seguridad de Google. -->
 <full-backup-content>
     <include domain="sharedpref" path="." />

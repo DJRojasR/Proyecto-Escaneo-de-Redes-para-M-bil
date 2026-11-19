@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copia de seguridad (Android 12+). `lupa.db` guarda el inventario de la red del
+<!-- Copia de seguridad (Android 12+). `xyntra.db` guarda el inventario de la red del
      usuario (IPs, nombres de dispositivos, puertos, mapa de calor), así que NO se
      incluye en `cloud-backup` (se subiría a la copia de seguridad de Google del
      usuario). Sí se incluye en `device-transfer`, que transfiere datos directamente
@@ -11,7 +11,7 @@
         <include domain="sharedpref" path="." />
     </cloud-backup>
     <device-transfer>
-        <include domain="database" path="lupa.db" />
+        <include domain="database" path="xyntra.db" />
         <include domain="sharedpref" path="." />
     </device-transfer>
 </data-extraction-rules>

@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.IOException
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -40,11 +41,17 @@ class NetworkScanner {
 
     suspend fun scan(target: ScanTarget, listener: ScanListener): List<HostSnapshot> =
         withContext(Dispatchers.IO) {
+            val acc = ConcurrentHashMap<String, HostAccumulator>()
+
+            // Cada fase tiene su propio timeout, pero una LAN grande o ruidosa (muchos
+            // equipos, respuestas lentas) podía antes hacer que el escaneo completo
+            // corriera sin límite. Si se agota este tope, se devuelven los resultados
+            // parciales ya encontrados en vez de colgar la UI o el worker en segundo plano.
+            withTimeoutOrNull(SCAN_TIMEOUT_MS) {
             val job = coroutineContext[Job]
             val isCancelled = { job?.isActive == false }
             val subnet = target.subnet
             val hosts = subnet.hosts()
-            val acc = ConcurrentHashMap<String, HostAccumulator>()
             val iface = target.interfaceName?.let {
                 try {
                     NetworkInterface.getByName(it)
@@ -219,6 +226,7 @@ class NetworkScanner {
                 }
                 for (h in acc.values) publish(h)
             }
+            } // fin withTimeoutOrNull
 
             listener.onPhase(ScanPhase.DONE, 1f)
             acc.values.filter { it.update { alive } }.map { it.snapshot() }
@@ -226,6 +234,9 @@ class NetworkScanner {
         }
 
     companion object {
+        /** Tope absoluto de un escaneo completo: evita que una LAN grande/ruidosa lo deje corriendo sin fin. */
+        private const val SCAN_TIMEOUT_MS = 90_000L
+
         /** Puertos que prueban casi todos los tipos de equipo de una casa. */
         val DISCOVERY_PORTS = listOf(
             80, 443, 22, 445, 139, 8080, 62078, 8008, 8009, 7000, 554, 9100, 5000, 3389, 53, 49152,
