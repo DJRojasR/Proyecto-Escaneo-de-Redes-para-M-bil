@@ -104,7 +104,7 @@ La app es gratis con anuncios y ofrece **Premium** (suscripción mensual de US$ 
 historial completo, análisis de puertos extendido, revisión de seguridad (ahora con vulnerabilidades
 del router: Telnet, UPnP, HTTP sin cifrar, firmware viejo y contraseña de fábrica), aviso de posibles cámaras en la revisión de seguridad, mapa de calor WiFi (realidad aumentada o
 modo caminata, exportable como imagen), alertas personalizadas por dispositivo (desconexión, puerto nuevo,
-reconexión, cambio de IP), monitor de latencia, grupos e íconos, varias redes, reportes PDF/CSV, widget
+reconexión, cambio de IP), monitor de latencia, varias redes, reportes PDF/CSV, widget
 y temas de color.
 
 Cómo crear los productos en Play Console y probar las compras: **[docs/PREMIUM.md](docs/PREMIUM.md)**.

@@ -28,7 +28,7 @@ data class Device(
     val trusted: Boolean,
     val isGateway: Boolean,
     val isSelf: Boolean,
-    /** Grupo elegido por el usuario, p. ej. "Cámaras" (Premium, RF-32). */
+    /** Grupo elegido por el usuario, p. ej. "Cámaras" (gratis, RF-32). */
     val groupName: String? = null,
     /** Ícono elegido por el usuario (clave de DeviceIcons); null = el del tipo (RF-32). */
     val customIcon: String? = null,

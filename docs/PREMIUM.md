@@ -78,7 +78,7 @@ Actívalo.
 | RF-28 | ~~Puertos extendidos y por rango~~ (retirado: basta con "Volver a analizar") | — |
 | RF-29 | Revisión de seguridad | `knowledge/SecurityReview.kt` |
 | RF-30 | Monitor de latencia | `net/LatencyProbe.kt`, `ui/screens/PremiumToolScreens.kt` |
-| RF-32 | Grupos e íconos | `data/DeviceRepository.kt`, `ui/components/DeviceIcons.kt` |
+| RF-32 | Grupos e íconos (**gratis**, ya no es Premium) | `data/DeviceRepository.kt`, `ui/components/DeviceIcons.kt` |
 | RF-33 | Mis redes | `ui/screens/PremiumToolScreens.kt` (`NetworksScreen`) |
 | RF-34 | Exportar PDF / CSV | `export/ReportExporter.kt` |
 | RF-46 | Prueba de velocidad (gratis 2 por día; Premium ilimitada con historial y gráfico) | `net/SpeedTest.kt`, `ui/screens/SpeedTestScreen.kt` |

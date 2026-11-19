@@ -59,7 +59,6 @@ import com.xyntra.wifiscanner.ui.ScreenScaffold
 import com.xyntra.wifiscanner.ui.components.EmptyState
 import com.xyntra.wifiscanner.ui.components.RadarSpinner
 import com.xyntra.wifiscanner.ui.components.SectionHeader
-import com.xyntra.wifiscanner.ui.components.rememberIsPremium
 
 /** Filtros rápidos de la lista de dispositivos. */
 private enum class DeviceFilter { ALL, ONLINE, UNREVIEWED, OFFLINE }
@@ -78,7 +77,6 @@ fun DevicesScreen(
     onOpenIps: () -> Unit,
 ) {
     val s by vm.home.collectAsStateWithLifecycle()
-    val isPremium = rememberIsPremium()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(DeviceFilter.ALL) }
 
@@ -182,8 +180,8 @@ fun DevicesScreen(
                                 ),
                             )
                         }
-                        // Grupos creados por el usuario (Premium, RF-32)
-                        if (s.groups.isNotEmpty() && isPremium) {
+                        // Grupos creados por el usuario (gratis, RF-32)
+                        if (s.groups.isNotEmpty()) {
                             items(s.groups, key = { "g-$it" }) { g ->
                                 FilterChip(
                                     selected = s.selectedGroup == g,

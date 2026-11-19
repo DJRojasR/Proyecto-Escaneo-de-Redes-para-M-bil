@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.Work
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.xyntra.wifiscanner.knowledge.DeviceType
 
-/** Íconos extra que el usuario puede elegir para un dispositivo (RF-32, Premium). */
+/** Íconos extra que el usuario puede elegir para un dispositivo (RF-32, gratis). */
 object DeviceIcons {
 
     data class Option(val key: String, val label: String, val icon: ImageVector)

@@ -66,7 +66,6 @@ private val benefits = listOf(
     Benefit(Icons.Outlined.Security, tr("Revisión de seguridad"), tr("Un puntaje de tu red y los pasos para corregir lo riesgoso.")),
     Benefit(Icons.AutoMirrored.Outlined.ShowChart, tr("Monitor de latencia"), tr("Gráfico en vivo para saber si la culpa es del WiFi o del proveedor.")),
     Benefit(Icons.Outlined.Map, tr("Mapa de calor WiFi"), tr("Mide la señal en cada habitación y cada piso, y encuentra las zonas muertas.")),
-    Benefit(Icons.Outlined.Category, tr("Grupos e íconos"), tr("Ordena tus equipos: \"Cámaras\", \"Cuarto de mamá\"…")),
     Benefit(Icons.Outlined.Wifi, tr("Varias redes"), tr("Casa, trabajo, casa de los abuelos: cada una con su inventario.")),
     Benefit(Icons.Outlined.Description, tr("Reportes PDF y CSV"), tr("Exporta el inventario y el historial.")),
     Benefit(Icons.Outlined.Palette, tr("Widget"), tr("Ve cuántos equipos hay conectados desde la pantalla de inicio de tu teléfono.")),

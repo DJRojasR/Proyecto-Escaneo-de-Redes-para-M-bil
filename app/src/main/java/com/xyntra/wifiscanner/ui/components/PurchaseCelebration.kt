@@ -13,6 +13,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -72,7 +79,8 @@ private val PremiumGoldTone = Color(0xFFD9B66A)
  *
  * Secuencia (unos 3 segundos): el fondo pasa a azul noche, aparece la X de XYNTRA y la
  * cruza un brillo de luz una sola vez, un anillo muy fino se dibuja alrededor y al cerrarse
- * aparece un pequeño ✓ (con una vibración breve). Luego el texto y el botón "Continuar".
+ * aparece un pequeño ✓ (con una vibración breve). Luego "¡Pago confirmado!", la bienvenida,
+ * el plan, lo que se desbloquea y el botón "Empezar a usar Premium".
  * Azul para la suscripción mensual; dorado para "Pro de por vida".
  * Si el teléfono tiene las animaciones desactivadas, se muestra directamente el final.
  */
@@ -122,7 +130,7 @@ fun PurchaseCelebration(source: PremiumSource, onContinue: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.weight(1f))
-            Box(Modifier.size(180.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(160.dp), contentAlignment = Alignment.Center) {
                 // La X de XYNTRA, con un brillo que la cruza una sola vez
                 Image(
                     painter = painterResource(R.drawable.ic_stat_xyntra),
@@ -186,28 +194,57 @@ fun PurchaseCelebration(source: PremiumSource, onContinue: () -> Unit) {
 
             Spacer(Modifier.height(22.dp))
             Text(
-                "PREMIUM",
-                color = accent,
-                fontSize = 11.sp,
-                letterSpacing = 4.sp,
-                modifier = Modifier.rise(step(t, 2.1f, 0.9f, Smooth)),
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                tr("Pago confirmado"),
+                tr("¡Pago confirmado!"),
                 color = Color(0xFFF2F5F9),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Light,
                 letterSpacing = 0.3.sp,
+                modifier = Modifier.rise(step(t, 2.1f, 0.9f, Smooth)),
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                tr("Bienvenido a XYNTRA Premium"),
+                color = Color(0xFF8D99A8),
+                fontSize = 14.sp,
                 modifier = Modifier.rise(step(t, 2.3f, 0.9f, Smooth)),
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                planText + " · " + tr("Todo está desbloqueado"),
-                color = Color(0xFF8D99A8),
-                fontSize = 13.sp,
-                modifier = Modifier.rise(step(t, 2.5f, 0.9f, Smooth)),
+            Spacer(Modifier.height(12.dp))
+            // Plan contratado, en una etiqueta fina del color de acento
+            Box(
+                Modifier
+                    .rise(step(t, 2.45f, 0.9f, Smooth))
+                    .border(BorderStroke(1.dp, accent.copy(alpha = 0.6f)), RoundedCornerShape(50))
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+            ) {
+                Text(planText, color = accent, fontSize = 12.sp, letterSpacing = 0.4.sp)
+            }
+            Spacer(Modifier.height(24.dp))
+            // Lo más importante que se desbloquea, uno debajo del otro
+            val benefits = listOf(
+                tr("Sin anuncios"), tr("Vigilancia de la red"),
+                tr("Mapa de calor WiFi"), tr("Revisión de seguridad"),
+                tr("Pruebas de velocidad ilimitadas"), tr("Historial completo"),
             )
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                benefits.forEachIndexed { index, label ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.rise(step(t, 2.6f + index * 0.1f, 0.8f, Smooth)),
+                    ) {
+                        Icon(
+                            Icons.Outlined.CheckCircle,
+                            contentDescription = null,
+                            tint = accent,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(label, color = Color(0xFFE3E9F0), fontSize = 15.sp)
+                    }
+                }
+            }
             Spacer(Modifier.weight(1f))
             OutlinedButton(
                 onClick = onContinue,
@@ -217,15 +254,15 @@ fun PurchaseCelebration(source: PremiumSource, onContinue: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .rise(step(t, 2.9f, 0.9f, Smooth)),
+                    .rise(step(t, 3.4f, 0.9f, Smooth)),
             ) {
-                Text(tr("Continuar"), letterSpacing = 0.3.sp)
+                Text(tr("Empezar a usar Premium"), letterSpacing = 0.3.sp)
             }
         }
     }
 }
 
-private const val END = 3.8f
+private const val END = 4.4f
 private val Smooth = CubicBezierEasing(0.2f, 0.7f, 0.2f, 1f)
 
 /** Avance (0..1) de un paso que empieza en [start] segundos y dura [duration]. */

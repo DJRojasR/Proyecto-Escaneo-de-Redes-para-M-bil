@@ -179,7 +179,7 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     DeviceAvatar(
                         d.type, presence, iconKey = d.customIcon, size = 64.dp, showPresence = s.online != null,
-                        modifier = Modifier.clip(RoundedCornerShape(19.dp)).clickable { if (isPremium) choosingIcon = true else openPremium() },
+                        modifier = Modifier.clip(RoundedCornerShape(19.dp)).clickable { choosingIcon = true },
                     )
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
@@ -290,26 +290,22 @@ fun DeviceDetailScreen(vm: DeviceViewModel, onBack: () -> Unit, onChanged: () ->
                         Spacer(Modifier.width(12.dp))
                         Switch(checked = d.trusted, onCheckedChange = { vm.setTrusted(it) })
                     }
-                    // Grupo e ícono (Premium, RF-32)
+                    // Grupo e ícono (gratis para todos, RF-32)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()),
                     ) {
                         AssistChip(
-                            onClick = { if (isPremium) choosingGroup = true else openPremium() },
+                            onClick = { choosingGroup = true },
                             label = { Text(d.groupName?.let { tr("Grupo: %1\$s", it) } ?: tr("Agregar a un grupo")) },
                             leadingIcon = { Icon(Icons.Outlined.Category, contentDescription = null, modifier = Modifier.size(18.dp)) },
                         )
                         Spacer(Modifier.width(8.dp))
                         AssistChip(
-                            onClick = { if (isPremium) choosingIcon = true else openPremium() },
+                            onClick = { choosingIcon = true },
                             label = { Text(tr("Cambiar ícono")) },
                             leadingIcon = { Icon(Icons.Outlined.Palette, contentDescription = null, modifier = Modifier.size(18.dp)) },
                         )
-                        if (!isPremium) {
-                            Spacer(Modifier.width(8.dp))
-                            PremiumTag()
-                        }
                     }
                 }
             }
