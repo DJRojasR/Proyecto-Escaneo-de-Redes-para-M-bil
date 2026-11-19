@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "LupaDeRed"
+rootProject.name = "Xyntra"
 include(":app")

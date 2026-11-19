@@ -1,0 +1,173 @@
+package com.xyntra.wifiscanner.ui
+
+import com.xyntra.wifiscanner.i18n.tr
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.xyntra.wifiscanner.XyntraApp
+import com.xyntra.wifiscanner.net.DiagItem
+import com.xyntra.wifiscanner.net.Diagnostics
+import com.xyntra.wifiscanner.net.HostInspector
+import com.xyntra.wifiscanner.net.InspectionResult
+import com.xyntra.wifiscanner.net.Ipv4
+import com.xyntra.wifiscanner.net.NetworkInfoProvider
+import com.xyntra.wifiscanner.net.WifiSecurityCheck
+import com.xyntra.wifiscanner.knowledge.PortKnowledge
+import com.xyntra.wifiscanner.ui.components.CheckItem
+import com.xyntra.wifiscanner.ui.components.CheckStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+data class ManualState(
+    val running: Boolean = false,
+    val progress: Float = 0f,
+    val step: String = "",
+    val result: InspectionResult? = null,
+    val error: String? = null,
+    /** Pasos del análisis en vivo (ping, puertos, nombre) con su resultado. */
+    val checks: List<CheckItem> = emptyList(),
+)
+
+data class WifiSecState(
+    val running: Boolean = false,
+    val result: WifiSecurityCheck.Result? = null,
+    val items: List<DiagItem> = emptyList(),
+    val error: String? = null,
+)
+
+data class DiagState(
+    val running: Boolean = false,
+    val progress: Float = 0f,
+    /** Qué está haciendo la app ahora mismo (para mostrarlo mientras diagnostica). */
+    val step: String? = null,
+    val items: List<DiagItem> = emptyList(),
+    val error: String? = null,
+)
+
+class ToolsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val app = application as XyntraApp
+    private val inspector = HostInspector()
+    private var manualJob: Job? = null
+
+    private val _manual = MutableStateFlow(ManualState())
+    val manual: StateFlow<ManualState> = _manual.asStateFlow()
+
+    private val _diag = MutableStateFlow(DiagState())
+    val diag: StateFlow<DiagState> = _diag.asStateFlow()
+
+    private val _wifiSec = MutableStateFlow(WifiSecState())
+    val wifiSec: StateFlow<WifiSecState> = _wifiSec.asStateFlow()
+
+    /** Revisión gratis de la protección del WiFi (WEP/WPA/WPA2/WPA3, WPS). */
+    fun checkWifiSecurity() {
+        if (_wifiSec.value.running) return
+        viewModelScope.launch {
+            _wifiSec.update { it.copy(running = true, error = null) }
+            try {
+                val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+                if (net == null || !net.isWifi) {
+                    _wifiSec.value = WifiSecState(error = tr("No estás conectado a un WiFi. Conéctate a tu red para revisarla."))
+                    return@launch
+                }
+                val r = WifiSecurityCheck.check(app)
+                _wifiSec.value = WifiSecState(result = r, items = WifiSecurityCheck.items(r, net.gateway))
+            } finally {
+                _wifiSec.update { it.copy(running = false) }
+            }
+        }
+    }
+
+    /** Sugerencia para el campo de IP: "192.168.1." */
+    fun ipPrefix(): String {
+        val net = NetworkInfoProvider.current(app) ?: return ""
+        return net.selfIp.substringBeforeLast('.') + "."
+    }
+
+    /** Valida la IP. Devuelve un mensaje de error o null si es válida. */
+    fun validate(ip: String): String? = when {
+        ip.isBlank() -> tr("Escribe una dirección IP, por ejemplo 192.168.1.10")
+        !Ipv4.isValid(ip.trim()) -> tr("Eso no parece una IP. Debe tener 4 números entre 0 y 255 separados por puntos.")
+        !Ipv4.isPrivate(ip.trim()) ->
+            tr("Solo puedes analizar direcciones de redes locales (como 192.168.x.x o 10.x.x.x). Esta app es para revisar TU red, no equipos de Internet.")
+        else -> null
+    }
+
+    fun inspect(ip: String) {
+        val clean = ip.trim()
+        validate(clean)?.let { err ->
+            _manual.update { it.copy(error = err) }
+            return
+        }
+        if (manualJob?.isActive == true) return
+        manualJob = viewModelScope.launch {
+            _manual.value = ManualState(running = true, step = tr("Preparando…"))
+            try {
+                val dns = withContext(Dispatchers.IO) {
+                    NetworkInfoProvider.current(app)?.let { listOfNotNull(it.gateway) + it.dnsServers }.orEmpty()
+                }
+                val titles = listOf(
+                    tr("Midiendo cuánto tarda en responder (4 pings)"),
+                    tr("Revisando %1\$s puertos comunes", PortKnowledge.COMMON_PORTS.size),
+                    tr("Buscando su nombre en la red"),
+                )
+                val result = inspector.inspect(
+                    clean, dns,
+                    onProgress = { p, step -> _manual.update { it.copy(progress = p, step = step) } },
+                    onStep = { i, done, summary, good ->
+                        val item = CheckItem(
+                            id = "step$i",
+                            title = titles[i],
+                            status = when {
+                                !done -> CheckStatus.RUNNING
+                                good -> CheckStatus.OK
+                                else -> CheckStatus.WARN
+                            },
+                            result = summary,
+                        )
+                        _manual.update { s ->
+                            val idx = s.checks.indexOfFirst { it.id == item.id }
+                            s.copy(checks = if (idx < 0) s.checks + item else s.checks.toMutableList().also { it[idx] = item })
+                        }
+                    },
+                )
+                app.ads.onScanCompleted()
+                _manual.update { it.copy(result = result) }
+            } finally {
+                _manual.update { it.copy(running = false) }
+            }
+        }
+    }
+
+    fun cancelInspect() {
+        manualJob?.cancel()
+    }
+
+    fun clearError() = _manual.update { it.copy(error = null) }
+
+    fun runDiagnostics() {
+        if (_diag.value.running) return
+        viewModelScope.launch {
+            _diag.value = DiagState(running = true)
+            try {
+                val net = withContext(Dispatchers.IO) { NetworkInfoProvider.current(app) }
+                if (net == null) {
+                    _diag.value = DiagState(error = tr("No estás conectado a un WiFi. Conéctate a tu red para hacer el diagnóstico."))
+                    return@launch
+                }
+                val items = Diagnostics().run(net.gateway, net.dnsServers, net.wifiRssi) { p, step ->
+                    _diag.update { it.copy(progress = p, step = step) }
+                }
+                _diag.value = DiagState(items = items)
+            } finally {
+                _diag.update { it.copy(running = false) }
+            }
+        }
+    }
+}

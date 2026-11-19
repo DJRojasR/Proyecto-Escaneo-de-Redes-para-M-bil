@@ -1,8 +1,8 @@
-# Política de privacidad de Lupa de Red
+# Política de privacidad de XYNTRA
 
 *Última actualización: [FECHA]*
 
-Esta política explica qué información trata la aplicación **Lupa de Red** ("la app"), desarrollada por
+Esta política explica qué información trata la aplicación **XYNTRA** ("la app"), desarrollada por
 **[TU NOMBRE O EMPRESA]** ("nosotros"). Si tienes preguntas, escríbenos a **[TU CORREO DE CONTACTO]**.
 
 > Plantilla orientativa. Revísala y adáptala a tu caso; no es asesoría legal.
@@ -39,7 +39,7 @@ ajustes de Android.
 
 ## 3. Compras y suscripción Premium
 
-Las compras de **Lupa de Red Premium** (suscripción mensual o pago único) las procesa **Google Play**. Nosotros no
+Las compras de **XYNTRA Premium** (suscripción mensual o pago único) las procesa **Google Play**. Nosotros no
 recibimos ni guardamos los datos de tu tarjeta ni de tu medio de pago. La app solo consulta a Google Play si tu
 cuenta tiene una compra activa, para activar las funciones Premium. Los usuarios Premium no ven anuncios.
 
@@ -95,7 +95,7 @@ según sus puertos y su fabricante. Esa información no sale de tu teléfono.
   cercanas en el momento de la revisión. **La app no obtiene tu posición, no la guarda y no la envía a
   ningún servidor.** Puedes negar el permiso: la revisión funciona igual, solo que sin el dato de WPS
   (y, en Android 11 o anterior, sin el tipo de protección).
-- Puedes quitar el permiso cuando quieras en *Ajustes de Android > Apps > Lupa de Red > Permisos*.
+- Puedes quitar el permiso cuando quieras en *Ajustes de Android > Apps > XYNTRA > Permisos*.
 
 ## 5. Reportes exportados (Premium)
 

@@ -22,13 +22,13 @@ val realInterstitialId = providers.gradleProperty("ADMOB_INTERSTITIAL_ID").getOr
 val privacyUrl = providers.gradleProperty("PRIVACY_POLICY_URL").getOrElse("https://example.com/privacidad")
 
 android {
-    namespace = "com.lupadered.app"
+    namespace = "com.xyntra.wifiscanner"
     compileSdk = 36
 
     defaultConfig {
         // IMPORTANTE: el applicationId es el identificador único en Google Play y
-        // NO se puede cambiar después de publicar. Cámbialo ahora si quieres otro.
-        applicationId = "com.lupadered.app"
+        // NO se puede cambiar después de publicar.
+        applicationId = "com.xyntra.wifiscanner"
         minSdk = 26
         targetSdk = 36
         versionCode = 2

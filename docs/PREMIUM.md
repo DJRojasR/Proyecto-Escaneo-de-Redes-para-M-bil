@@ -1,8 +1,8 @@
-# Lupa de Red Premium: cómo activarlo en Google Play
+# XYNTRA Premium: cómo activarlo en Google Play
 
 La app ya trae todo el código de las compras. Para que funcione de verdad tienes que crear
 los productos en Play Console **con los mismos IDs** que usa el código
-(`app/src/main/java/com/lupadered/app/premium/PremiumManager.kt`).
+(`app/src/main/java/com/xyntra/wifiscanner/premium/PremiumManager.kt`).
 
 ## 1. Requisitos previos
 
@@ -19,7 +19,7 @@ Play Console › tu app › **Monetizar › Productos › Suscripciones › Crea
 | Campo | Valor |
 |---|---|
 | ID del producto | `premium_mensual` |
-| Nombre | Lupa de Red Premium |
+| Nombre | XYNTRA Premium |
 | Plan base: ID | `mensual` |
 | Plan base: tipo | Renovación automática, período de facturación **1 mes** |
 | Precio | S/ 4.90 (Perú). Usa "Establecer precios" para que Google calcule los demás países |
@@ -41,7 +41,7 @@ Play Console › **Monetizar › Productos › Productos únicos (In-app) › Cr
 | Campo | Valor |
 |---|---|
 | ID del producto | `premium_de_por_vida` |
-| Nombre | Lupa de Red Pro de por vida |
+| Nombre | XYNTRA Pro de por vida |
 | Precio | S/ 14.90 |
 
 Actívalo.

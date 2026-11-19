@@ -1,10 +1,10 @@
-# Publicar "Lupa de Red" en Google Play
+# Publicar "XYNTRA" en Google Play
 
 Lista de pasos en orden. Los requisitos de Google cambian; revisa la Play Console en el momento de publicar.
 
 ## 1. Antes de compilar la versión final
 
-- [ ] **Decide el `applicationId`** en `app/build.gradle.kts` (ahora `com.lupadered.app`). Es permanente: no
+- [ ] **Decide el `applicationId`** en `app/build.gradle.kts` (ahora `com.xyntra.wifiscanner`). Es permanente: no
       se puede cambiar después de publicar.
 - [ ] **Nivel de API**: el proyecto ya apunta a Android 16 (API 36), que Google Play exige desde el 31 de agosto
       de 2026 para apps nuevas y actualizaciones.
@@ -76,7 +76,7 @@ del WiFi; leer el SSID exige permiso de ubicación en Android, y eso complica la
 
 ## 4. Ficha de Play Store (borrador)
 
-**Nombre (máx. 30):** `Lupa de Red: escáner WiFi`
+**Nombre (máx. 30):** `XYNTRA – Smart WiFi Scanner`
 
 **Descripción breve (máx. 80):**
 `Mira quién está en tu WiFi y entiende tu red. Escaneos ilimitados y rápidos.`
@@ -84,7 +84,7 @@ del WiFi; leer el SSID exige permiso de ubicación en Android, y eso complica la
 **Descripción completa:**
 
 ```
-¿Quién está conectado a tu WiFi? Lupa de Red lo descubre en segundos y, a diferencia de otras apps, te explica lo que estás viendo en palabras sencillas.
+¿Quién está conectado a tu WiFi? XYNTRA lo descubre en segundos y, a diferencia de otras apps, te explica lo que estás viendo en palabras sencillas.
 
 DETECTA MÁS DISPOSITIVOS
 Combinamos varios métodos a la vez (conexiones, ping, Bonjour, UPnP y NetBIOS) y revisamos dos veces a los equipos que no responden, como celulares en reposo o PCs con el ping bloqueado.

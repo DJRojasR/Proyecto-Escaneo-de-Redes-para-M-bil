@@ -2,7 +2,7 @@
 <resources>
     <!-- El aspecto real lo pinta Compose (ui/theme/Theme.kt). Esto solo evita un
          destello blanco al abrir la app. -->
-    <style name="Theme.LupaDeRed" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Xyntra" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 </resources>

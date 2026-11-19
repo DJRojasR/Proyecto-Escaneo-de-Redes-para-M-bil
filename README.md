@@ -1,4 +1,4 @@
-# Lupa de Red
+# XYNTRA
 
 App Android para descubrir los dispositivos de tu red WiFi y **entender** lo que estás viendo.
 
@@ -31,7 +31,7 @@ Cada dato técnico tiene un botón **(i)** con su explicación en lenguaje senci
 
 ## Cómo evita "no detectar" dispositivos
 
-El motor (`app/src/main/java/com/lupadered/app/net/`) combina varios métodos **a la vez**:
+El motor (`app/src/main/java/com/xyntra/wifiscanner/net/`) combina varios métodos **a la vez**:
 
 1. **TCP no bloqueante (NIO)**: hasta 1.024 conexiones en paralelo a 16 puertos comunes. Si un puerto
    está cerrado, el equipo responde "rechazado" al instante, y eso también prueba que existe
@@ -65,7 +65,7 @@ Para publicar, pon tus IDs reales en `gradle.properties` (ver comentarios allí)
 ## Estructura
 
 ```
-app/src/main/java/com/lupadered/app/
+app/src/main/java/com/xyntra/wifiscanner/
 ├── net/          Motor de escaneo (TCP NIO, ping, mDNS, SSDP, NetBIOS, DNS, diagnóstico)
 ├── data/         Base de datos SQLite: dispositivos, escaneos y eventos
 ├── knowledge/    Explicaciones: puertos, tipos de dispositivo, glosario
@@ -87,7 +87,7 @@ Hay imágenes para la ficha en `docs/play-store/`.
 - Versión Pro sin anuncios (Google Play Billing).
 
 
-## Lupa de Red Premium (versión 1.1.0)
+## XYNTRA Premium (versión 1.1.0)
 
 La app es gratis con anuncios y ofrece **Premium** (suscripción mensual con 7 días gratis o pago único
 "Pro de por vida"): sin anuncios, vigilancia automática con alerta de intrusos, escaneo diario programado,

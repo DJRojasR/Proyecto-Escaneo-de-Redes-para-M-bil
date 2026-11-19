@@ -1,0 +1,247 @@
+package com.xyntra.wifiscanner.net
+
+import com.xyntra.wifiscanner.i18n.tr
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
+import kotlin.random.Random
+
+enum class DiagStatus { GOOD, WARN, BAD, UNKNOWN }
+
+/** Un resultado del diagnóstico, explicado para cualquier persona. */
+data class DiagItem(
+    val title: String,
+    val status: DiagStatus,
+    /** Una o dos palabras: "Buena", "Rápido", "No responde"… */
+    val value: String,
+    /** Qué es lo que medimos (para quien quiera entenderlo). */
+    val explanation: String,
+    val advice: String? = null,
+    /** Qué significa para ti, en palabras simples: lo primero que se lee. */
+    val meaning: String? = null,
+    /** El número exacto (dBm, ms…), en letra chica para quien lo quiera. */
+    val technical: String? = null,
+)
+
+/**
+ * Diagnóstico de la conexión: ¿el problema es el WiFi, el router, Internet o el DNS?
+ */
+class Diagnostics {
+
+    suspend fun run(
+        gateway: String?,
+        dnsServers: List<String>,
+        wifiRssi: Int?,
+        onProgress: (Float, String) -> Unit,
+    ): List<DiagItem> = withContext(Dispatchers.IO) {
+        val items = ArrayList<DiagItem>()
+        // Mostramos cada paso con su nombre y dejamos un momento para que se vea el avance;
+        // así no termina de golpe y la persona entiende qué está revisando la app.
+        val pause = 650L
+
+        onProgress(0.08f, tr("Revisando la señal del WiFi…"))
+        items += signalItem(wifiRssi)
+        onProgress(0.25f, tr("Revisando la señal del WiFi…"))
+        delay(pause)
+
+        onProgress(0.3f, tr("Probando la conexión con el router…"))
+        items += routerItem(gateway)
+        onProgress(0.5f, tr("Probando la conexión con el router…"))
+        delay(pause)
+
+        onProgress(0.55f, tr("Midiendo tu Internet…"))
+        items += internetItem()
+        onProgress(0.8f, tr("Midiendo tu Internet…"))
+        delay(pause)
+
+        onProgress(0.85f, tr("Revisando el DNS (lo que abre las páginas)…"))
+        items += dnsItem(dnsServers.firstOrNull() ?: gateway)
+        onProgress(1f, tr("Casi listo…"))
+        delay(pause)
+
+        items
+    }
+
+    private fun signalItem(rssi: Int?): DiagItem {
+        if (rssi == null || rssi <= -127 || rssi >= 0) {
+            return DiagItem(
+                tr("Señal WiFi"), DiagStatus.UNKNOWN, tr("No disponible"),
+                tr("No pudimos leer la intensidad de la señal (por ejemplo, si estás conectado por cable o datos)."),
+            )
+        }
+        val (status, text) = when {
+            rssi >= -55 -> DiagStatus.GOOD to tr("Excelente")
+            rssi >= -67 -> DiagStatus.GOOD to tr("Buena")
+            rssi >= -75 -> DiagStatus.WARN to tr("Regular")
+            else -> DiagStatus.BAD to tr("Débil")
+        }
+        return DiagItem(
+            tr("Señal WiFi"), status, text,
+            tr("Mide qué tan fuerte llega el WiFi a tu teléfono. Cuanto más cerca de 0, mejor: -50 es excelente y -80 es muy débil."),
+            if (status == DiagStatus.GOOD) null
+            else tr("Acércate al router, evita paredes gruesas o considera un repetidor o sistema mesh."),
+            meaning = signalMeaning(rssi),
+            technical = tr("Dato técnico: %1\$s dBm", rssi),
+        )
+    }
+
+    private fun routerItem(gateway: String?): DiagItem {
+        if (gateway == null) {
+            return DiagItem(
+                tr("Router"), DiagStatus.UNKNOWN, tr("No encontrado"),
+                tr("No pudimos saber cuál es tu router. Revisa que estés conectado a un WiFi."),
+            )
+        }
+        val samples = (1..6).map { tcpOrPing(gateway) }
+        val ok = samples.filterNotNull()
+        val loss = 100 * samples.count { it == null } / samples.size
+        if (ok.isEmpty()) {
+            return DiagItem(
+                tr("Router (%1\$s)", gateway), DiagStatus.BAD, tr("No responde"),
+                tr("Tu teléfono no recibió respuesta del router. Puede que el router bloquee estas pruebas, o que la conexión con él esté fallando."),
+                tr("Si además no tienes Internet, reinicia el router.")
+            )
+        }
+        val avg = ok.average().toLong()
+        val jitter = (ok.maxOrNull()!! - ok.minOrNull()!!)
+        val status = when {
+            loss > 20 || avg > 100 -> DiagStatus.BAD
+            loss > 0 || avg > 30 || jitter > 80 -> DiagStatus.WARN
+            else -> DiagStatus.GOOD
+        }
+        return DiagItem(
+            tr("Router"), status,
+            when (status) {
+                DiagStatus.GOOD -> tr("Responde rápido")
+                DiagStatus.WARN -> tr("Algo lento")
+                else -> tr("Falla")
+            },
+            tr("Es el tiempo que tarda el router en contestar a tu teléfono. Dentro de casa lo normal es menos de 10–20 ms. La \"pérdida\" son mensajes que nunca llegaron."),
+            when (status) {
+                DiagStatus.GOOD -> null
+                else -> tr("El problema parece estar entre tu teléfono y el router (señal WiFi, interferencias o router saturado). Prueba acercarte, cambiar a la banda de 5 GHz o reiniciar el router.")
+            },
+            meaning = when (status) {
+                DiagStatus.GOOD -> tr("Tu teléfono y el router se comunican sin problemas.")
+                DiagStatus.WARN -> tr("La conexión con el router tiene algo de demora o se pierden algunos mensajes. Puede notarse en videollamadas.")
+                else -> tr("La conexión con el router está fallando: se pierden muchos mensajes o tarda demasiado.")
+            },
+            technical = tr("Dato técnico: router %1\$s · responde en %2\$s ms · %3\$s%% de mensajes perdidos", gateway, avg, loss),
+        )
+    }
+
+    private fun internetItem(): DiagItem {
+        val targets = listOf("1.1.1.1" to 443, "8.8.8.8" to 443, "9.9.9.9" to 443)
+        val times = targets.map { (ip, port) -> tcpConnect(ip, port, 2500) }
+        val ok = times.filterNotNull()
+        if (ok.isEmpty()) {
+            return DiagItem(
+                tr("Internet"), DiagStatus.BAD, tr("Sin conexión"),
+                tr("Tu red local funciona pero no logramos llegar a Internet."),
+                tr("Revisa si el router muestra alguna luz roja, reinícialo o consulta a tu proveedor de Internet.")
+            )
+        }
+        val best = ok.minOrNull()!!
+        val status = when {
+            best <= 60 -> DiagStatus.GOOD
+            best <= 150 -> DiagStatus.WARN
+            else -> DiagStatus.BAD
+        }
+        return DiagItem(
+            tr("Internet"), status, speedWord(status),
+            tr("Es lo que tarda en llegar a un servidor de Internet y volver. Menos de 60 ms es muy bueno para videollamadas y juegos."),
+            if (status == DiagStatus.GOOD) null
+            else tr("Si el router responde rápido pero esto es lento, el problema probablemente está en tu proveedor de Internet o en que alguien usa mucho la red (descargas, videos en 4K)."),
+            meaning = when (status) {
+                DiagStatus.GOOD -> tr("Llegas a Internet rápido: videollamadas, juegos y videos irán bien.")
+                DiagStatus.WARN -> tr("Internet responde con algo de demora: los juegos y videollamadas pueden trabarse un poco.")
+                else -> tr("Internet responde muy lento: las páginas y llamadas pueden trabarse.")
+            },
+            technical = tr("Dato técnico: responde en %1\$s ms", best),
+        )
+    }
+
+    private fun dnsItem(server: String?): DiagItem {
+        if (server == null) {
+            return DiagItem("DNS", DiagStatus.UNKNOWN, tr("No disponible"), tr("No encontramos tu servidor DNS."))
+        }
+        val name = "www.google.com"
+        val time = dnsQueryTime(server, name)
+        if (time == null) {
+            return DiagItem(
+                tr("DNS (%1\$s)", server), DiagStatus.BAD, tr("No responde"),
+                tr("El DNS es como la agenda de Internet: traduce nombres como google.com en direcciones. Si falla, las páginas no cargan aunque haya conexión."),
+                tr("Prueba reiniciar el router o configurar un DNS público (por ejemplo 1.1.1.1 u 8.8.8.8) en tu router.")
+            )
+        }
+        val status = when {
+            time <= 80 -> DiagStatus.GOOD
+            time <= 250 -> DiagStatus.WARN
+            else -> DiagStatus.BAD
+        }
+        return DiagItem(
+            tr("DNS"), status, speedWord(status),
+            tr("El DNS traduce nombres como google.com en direcciones. Si es lento, las páginas tardan en empezar a cargar."),
+            if (status == DiagStatus.GOOD) null
+            else tr("Un DNS público (1.1.1.1 u 8.8.8.8) suele ser más rápido. Se configura en el router."),
+            meaning = when (status) {
+                DiagStatus.GOOD -> tr("Las páginas empiezan a cargar sin demora.")
+                DiagStatus.WARN -> tr("Las páginas pueden tardar un poco en empezar a cargar.")
+                else -> tr("Las páginas tardan bastante en empezar a cargar.")
+            },
+            technical = tr("Dato técnico: servidor %1\$s · responde en %2\$s ms", server, time),
+        )
+    }
+
+    private fun speedWord(status: DiagStatus) = when (status) {
+        DiagStatus.GOOD -> tr("Rápido")
+        DiagStatus.WARN -> tr("Algo lento")
+        else -> tr("Lento")
+    }
+
+    private fun tcpOrPing(ip: String): Long? =
+        NetworkScanner.ping(ip, 1000) ?: listOf(80, 443, 53).firstNotNullOfOrNull { tcpConnect(ip, it, 1000, refusedCounts = true) }
+
+    private fun tcpConnect(ip: String, port: Int, timeoutMs: Int, refusedCounts: Boolean = false): Long? {
+        val start = System.nanoTime()
+        return try {
+            Socket().use { it.connect(InetSocketAddress(ip, port), timeoutMs) }
+            (System.nanoTime() - start) / 1_000_000L
+        } catch (e: IOException) {
+            if (refusedCounts && (e.message ?: "").contains("refused", true)) (System.nanoTime() - start) / 1_000_000L
+            else null
+        }
+    }
+
+    private fun dnsQueryTime(server: String, name: String): Long? {
+        return try {
+            DatagramSocket().use { s ->
+                s.soTimeout = 2000
+                val id = Random.nextInt(0, 0xFFFF)
+                val q = DnsMessage.buildQuery(id, listOf(DnsMessage.Question(name, DnsMessage.TYPE_A)))
+                val start = System.nanoTime()
+                s.send(DatagramPacket(q, q.size, InetAddress.getByName(server), 53))
+                val buf = ByteArray(1500)
+                val p = DatagramPacket(buf, buf.size)
+                s.receive(p)
+                (System.nanoTime() - start) / 1_000_000L
+            }
+        } catch (_: IOException) {
+            null
+        }
+    }
+}
+
+/** Qué significa la señal WiFi para una persona común. */
+fun signalMeaning(rssi: Int): String = when {
+    rssi >= -55 -> tr("El WiFi llega con mucha fuerza aquí. Videos, llamadas y juegos irán bien.")
+    rssi >= -67 -> tr("El WiFi llega bien aquí. Todo debería funcionar sin problemas.")
+    rssi >= -75 -> tr("El WiFi llega algo débil aquí. Puede ir lento o cortarse en videollamadas o videos en HD.")
+    else -> tr("El WiFi casi no llega aquí. Es normal que Internet vaya lento o se corte.")
+}

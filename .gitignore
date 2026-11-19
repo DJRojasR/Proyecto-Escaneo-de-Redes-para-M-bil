@@ -1,5 +1,5 @@
 # ============================================================
-#  .gitignore - Lupa de Red (Android / Kotlin / Gradle)
+#  .gitignore - XYNTRA (Android / Kotlin / Gradle)
 # ============================================================
 
 # ---------- SECRETOS: NUNCA subir ----------
@@ -49,6 +49,10 @@ mapping.txt
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------- Documentos personales (no van al repositorio) ----------
+docs/Monografia*.docx
+docs/respaldo_*.zip
 
 # ---------- Registros ----------
 *.log

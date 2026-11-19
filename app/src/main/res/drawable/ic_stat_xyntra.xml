@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono pequeño de las notificaciones: la "X" de XYNTRA con su órbita (un solo color). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Trazo que baja de izquierda a derecha -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3.5,6h4.2l12.8,12h-4.2z" />
+    <!-- Trazo que sube de izquierda a derecha -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16.3,6h4.2l-10,10.2c-1.6,1.6 -3.4,2.4 -5.1,2.3l-0.6,-1.6c1.3,0 2.6,-0.6 3.8,-1.8z" />
+    <!-- Órbita -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M14.5,4.2C17.5,2.6 21,2.5 21.5,4.2C22,5.8 20.6,8 18.4,10.2" />
+</vector>
