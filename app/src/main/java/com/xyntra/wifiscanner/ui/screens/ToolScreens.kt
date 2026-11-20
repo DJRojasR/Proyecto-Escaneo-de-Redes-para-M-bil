@@ -144,14 +144,14 @@ fun ToolsScreen(a: ToolsActions) {
             // "Analizar una IP" y "Seguridad de tu WiFi" ahora están en Inicio
             ToolSection(
                 title = tr("Herramientas gratis"),
-                subtitle = tr("Disponibles para todos, sin pagar."),
+                subtitle = if (isPremium) tr("Con Premium se abren sin anuncios.")
+                else tr("Se abren después de un anuncio corto y luego quedan libres %1\$s minutos. Compartir tu WiFi no tiene anuncio.", com.xyntra.wifiscanner.ads.AdPolicy.TOOL_UNLOCK_MINUTES),
                 icon = Icons.Outlined.LockOpen,
                 color = MaterialTheme.colorScheme.primary,
             )
             ToolCard(
                 Icons.Outlined.NetworkCheck, tr("Prueba de velocidad"),
-                tr("¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos.") +
-                    if (isPremium) "" else tr(" Gratis: 2 pruebas al día."),
+                tr("¿Cuánto Internet te llega de verdad? Mide la bajada, la subida y la latencia en 20 segundos."),
                 a.onSpeed,
             )
             ToolCard(

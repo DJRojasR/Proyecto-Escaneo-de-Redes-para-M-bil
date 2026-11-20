@@ -1287,5 +1287,15 @@
 "Continuar": "जारी रखें",
 "¡Pago confirmado!": "भुगतान की पुष्टि हुई!",
 "Bienvenido a XYNTRA Premium": "XYNTRA Premium में आपका स्वागत है",
-"Empezar a usar Premium": "Premium का उपयोग शुरू करें"
+"Empezar a usar Premium": "Premium का उपयोग शुरू करें",
+  "Con Premium se abren sin anuncios.": "Premium के साथ ये बिना विज्ञापन के खुलते हैं।",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "ये एक छोटे विज्ञापन के बाद खुलते हैं और फिर %1$s मिनट तक अनलॉक रहते हैं। अपना WiFi साझा करें में कोई विज्ञापन नहीं है।",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "स्कैन करते समय: आपके पहले दिन और पहले %1$s स्कैन में कोई विज्ञापन नहीं; उसके बाद, अधिकतम हर %2$s स्कैन पर एक और दिन में %3$s, और स्कैन पीछे चलता रहता है। मुफ़्त टूल: खोलते समय एक छोटा विज्ञापन, फिर वे %4$s मिनट तक अनलॉक रहते हैं।",
+  "Mejor valor": "सबसे अच्छा मूल्य",
+  "Listo: recuperamos tu Premium de por vida.": "हो गया: हमने आपका आजीवन Premium वापस ला दिया।",
+  "Listo: recuperamos tu suscripción Premium.": "हो गया: हमने आपकी Premium सदस्यता वापस ला दी।",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "इस Google खाते में कोई Premium खरीदारी नहीं मिली। अगर आपने किसी दूसरे खाते से भुगतान किया है, तो Google Play में उस खाते पर जाएँ और फिर से कोशिश करें।",
+  "Herramientas sin anuncios": "बिना विज्ञापन के टूल",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "स्पीड टेस्ट, डायग्नोस्टिक और बाकी टूल तुरंत खुलते हैं।",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "आपके सभी स्पीड टेस्ट ग्राफ़ के साथ सहेजता है ताकि आप देख सकें कि आपका इंटरनेट कैसे बदलता है।"
 }

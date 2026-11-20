@@ -373,7 +373,7 @@ fun SettingsScreen(
                 supportingContent = {
                     Text(
                         if (p.isPremium) tr("Con Premium no verás ningún anuncio.")
-                        else tr("Tu primer día y tus primeros %1\$s escaneos no tienen anuncios. Después, como máximo uno cada %2\$s escaneos y %3\$s al día, y el escaneo sigue trabajando detrás del anuncio para que no esperes de más.", AdPolicy.GRACE_SCANS, AdPolicy.SCANS_PER_AD, AdPolicy.MAX_INTERSTITIALS_PER_DAY),
+                        else tr("Al escanear: tu primer día y tus primeros %1\$s escaneos no tienen anuncios; después, como máximo uno cada %2\$s escaneos y %3\$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4\$s minutos.", AdPolicy.GRACE_SCANS, AdPolicy.SCANS_PER_AD, AdPolicy.MAX_INTERSTITIALS_PER_DAY, AdPolicy.TOOL_UNLOCK_MINUTES),
                     )
                 },
                 leadingContent = { Icon(Icons.Outlined.Campaign, contentDescription = null) },

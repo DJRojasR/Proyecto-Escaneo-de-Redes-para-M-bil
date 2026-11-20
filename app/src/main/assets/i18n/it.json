@@ -1287,5 +1287,15 @@
 "Continuar": "Continua",
 "¡Pago confirmado!": "Pagamento confermato!",
 "Bienvenido a XYNTRA Premium": "Benvenuto in XYNTRA Premium",
-"Empezar a usar Premium": "Inizia a usare Premium"
+"Empezar a usar Premium": "Inizia a usare Premium",
+  "Con Premium se abren sin anuncios.": "Con Premium si aprono senza pubblicità.",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "Si aprono dopo una breve pubblicità e poi restano sbloccati per %1$s minuti. Condividi il tuo WiFi non ha pubblicità.",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "Durante la scansione: il primo giorno e le prime %1$s scansioni sono senza pubblicità; poi, al massimo una ogni %2$s scansioni e %3$s al giorno, e la scansione continua a lavorare dietro. Strumenti gratuiti: una breve pubblicità quando li apri, poi restano sbloccati per %4$s minuti.",
+  "Mejor valor": "Miglior valore",
+  "Listo: recuperamos tu Premium de por vida.": "Fatto: abbiamo ripristinato il tuo Premium a vita.",
+  "Listo: recuperamos tu suscripción Premium.": "Fatto: abbiamo ripristinato il tuo abbonamento Premium.",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "Non abbiamo trovato acquisti Premium su questo account Google. Se hai pagato con un altro account, passa a quello in Google Play e riprova.",
+  "Herramientas sin anuncios": "Strumenti senza pubblicità",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "Test di velocità, diagnostica e gli altri strumenti si aprono subito.",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "Salva tutti i tuoi test di velocità con un grafico per vedere come cambia la tua connessione."
 }

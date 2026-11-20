@@ -52,6 +52,14 @@ object AdPolicy {
 
     /** Pestañas donde puede aparecer el mini banner, sobre la barra de navegación. */
     val BANNER_ROUTES = setOf("red", "dispositivos", "historial")
+
+    /**
+     * Herramientas gratis: se abren después de un anuncio de pantalla completa y luego
+     * quedan libres este tiempo (todas, no solo la que se abrió). "Compartir tu WiFi" nunca
+     * pide anuncio. Si no hay un anuncio listo (sin Internet, sin inventario), se abren igual.
+     */
+    const val TOOL_UNLOCK_MINUTES = 10
+    const val TOOL_UNLOCK_MS = TOOL_UNLOCK_MINUTES * 60 * 1000L
 }
 
 /**
@@ -64,7 +72,10 @@ object AdPolicy {
  *    Dispositivos e Historial (nunca en Herramientas, detalle, Ajustes ni Premium).
  *  - El de pantalla completa respeta el periodo de gracia del primer día / primeros escaneos
  *    ([AdPolicy]); el mini banner aparece desde el primer uso porque no interrumpe.
- *  - Si no hay un anuncio ya cargado, no se espera: se escanea directo.
+ *  - **Herramientas gratis:** un anuncio de pantalla completa al abrir una (Prueba de velocidad,
+ *    Diagnóstico, IP Manager, Mis redes) y después quedan libres [AdPolicy.TOOL_UNLOCK_MINUTES]
+ *    minutos. "Compartir tu WiFi" siempre es libre.
+ *  - Si no hay un anuncio ya cargado, no se espera: se escanea o se abre la herramienta directo.
  *  - Los usuarios Premium nunca ven anuncios.
  */
 class AdsManager(context: Context, private val isPremium: () -> Boolean = { false }) {
@@ -155,8 +166,8 @@ class AdsManager(context: Context, private val isPremium: () -> Boolean = { fals
     private fun preload() {
         if (isPremium()) return
         if (!initialized.get() || interstitial != null || loading) return
-        // No hace falta cargar nada mientras dure el periodo de gracia
-        if (!gracePassed()) return
+        // Se carga siempre (también en el periodo de gracia): las herramientas gratis lo usan.
+        // Que se MUESTRE al escanear lo deciden las reglas de maybeShowOnScanStart.
         loading = true
         InterstitialAd.load(
             app,
@@ -210,12 +221,7 @@ class AdsManager(context: Context, private val isPremium: () -> Boolean = { fals
         }
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
-                interstitial = null
-                val total = prefs.getInt(KEY_ADS_SHOWN, 0) + 1
-                prefs.edit().putInt(KEY_ADS_SHOWN, total).apply()
-                // De vez en cuando, un aviso discreto: "¿Sin anuncios? Prueba Premium"
-                if (total % AdPolicy.PREMIUM_HINT_EVERY == 0) _premiumHint.value = true
-                preload()
+                onFullScreenAdClosed()
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
@@ -234,6 +240,66 @@ class AdsManager(context: Context, private val isPremium: () -> Boolean = { fals
         ad.show(activity)
     }
 
+    /** Después de cerrar cualquier anuncio de pantalla completa (de escaneo o de herramienta). */
+    private fun onFullScreenAdClosed() {
+        interstitial = null
+        val total = prefs.getInt(KEY_ADS_SHOWN, 0) + 1
+        prefs.edit()
+            .putInt(KEY_ADS_SHOWN, total)
+            // Acaba de ver un anuncio: las herramientas gratis quedan libres un rato
+            .putLong(KEY_TOOLS_FREE_UNTIL, System.currentTimeMillis() + AdPolicy.TOOL_UNLOCK_MS)
+            .apply()
+        // De vez en cuando, un aviso discreto: "¿Sin anuncios? Prueba Premium"
+        if (total % AdPolicy.PREMIUM_HINT_EVERY == 0) _premiumHint.value = true
+        preload()
+    }
+
+    /** Para cargar un anuncio con tiempo, al entrar a la pestaña Herramientas. */
+    fun preloadForTools() {
+        if (!toolsUnlocked()) preload()
+    }
+
+    /** ¿Las herramientas gratis están libres ahora (Premium o anuncio visto hace poco)? */
+    fun toolsUnlocked(now: Long = System.currentTimeMillis()): Boolean =
+        isPremium() || now < prefs.getLong(KEY_TOOLS_FREE_UNTIL, 0L)
+
+    /**
+     * Abrir una herramienta gratis: si toca, primero un anuncio y al cerrarlo se abre la
+     * herramienta. Si ya están libres, o no hay un anuncio listo, se abre directo:
+     * nunca se bloquea una herramienta porque el anuncio no cargó.
+     */
+    fun openFreeTool(activity: Activity?, onOpen: () -> Unit) {
+        val ad = interstitial
+        if (activity == null || toolsUnlocked() || ad == null) {
+            if (!toolsUnlocked()) preload()
+            onOpen()
+            return
+        }
+        var opened = false
+        val openOnce = {
+            if (!opened) {
+                opened = true
+                onOpen()
+            }
+        }
+        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                onFullScreenAdClosed()
+                openOnce()
+            }
+
+            override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                interstitial = null
+                preload()
+                openOnce()
+            }
+        }
+        interstitial = null
+        // Cuenta como "último anuncio": el de escaneo espera su pausa mínima después de este
+        prefs.edit().putLong(KEY_LAST_AD_AT, System.currentTimeMillis()).apply()
+        ad.show(activity)
+    }
+
     fun dismissPremiumHint() {
         _premiumHint.value = false
     }
@@ -249,5 +315,6 @@ class AdsManager(context: Context, private val isPremium: () -> Boolean = { fals
         private const val KEY_DAY = "ads_day"
         private const val KEY_DAY_COUNT = "ads_day_count"
         private const val KEY_ADS_SHOWN = "ads_shown_total"
+        private const val KEY_TOOLS_FREE_UNTIL = "tools_free_until"
     }
 }

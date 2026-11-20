@@ -1287,5 +1287,15 @@
 "Continuar": "Continue",
 "¡Pago confirmado!": "Payment confirmed!",
 "Bienvenido a XYNTRA Premium": "Welcome to XYNTRA Premium",
-"Empezar a usar Premium": "Start using Premium"
+"Empezar a usar Premium": "Start using Premium",
+  "Con Premium se abren sin anuncios.": "With Premium they open without ads.",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "They open after a short ad and then stay unlocked for %1$s minutes. Share your WiFi has no ad.",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "When scanning: your first day and your first %1$s scans have no ads; after that, at most one every %2$s scans and %3$s per day, and the scan keeps working behind it. Free tools: a short ad when you open them, then they stay unlocked for %4$s minutes.",
+  "Mejor valor": "Best value",
+  "Listo: recuperamos tu Premium de por vida.": "Done: we restored your lifetime Premium.",
+  "Listo: recuperamos tu suscripción Premium.": "Done: we restored your Premium subscription.",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "We didn't find any Premium purchases on this Google account. If you paid with another account, switch to it in Google Play and try again.",
+  "Herramientas sin anuncios": "Tools without ads",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "Speed test, diagnostics and the other tools open instantly.",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "Keeps all your speed tests with a chart so you can see how your Internet changes."
 }

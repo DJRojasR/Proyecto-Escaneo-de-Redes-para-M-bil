@@ -104,6 +104,10 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
     @Volatile
     private var connecting = false
 
+    /** true mientras el usuario espera la respuesta de "Restaurar compras". */
+    @Volatile
+    private var restoring = false
+
     fun start() {
         if (client.isReady) {
             refresh()
@@ -118,6 +122,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
                     refresh()
                 } else {
                     Log.i(TAG, "Google Play Billing no disponible: ${result.debugMessage}")
+                    if (restoring) restoreFailed()
                 }
             }
 
@@ -136,6 +141,22 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         }
         queryProducts()
         queryPurchases()
+    }
+
+    /**
+     * "Restaurar compras": para quien ya pagó y cambió de celular o reinstaló la app.
+     * Pregunta a Google Play por las compras de esta cuenta y siempre responde con un mensaje.
+     */
+    fun restore() {
+        restoring = true
+        refresh()
+    }
+
+    private fun restoreFailed() {
+        restoring = false
+        _state.update {
+            it.copy(message = tr("Aún no podemos conectar con Google Play. Revisa tu Internet e inténtalo de nuevo."))
+        }
     }
 
     private fun queryProducts() {
@@ -188,12 +209,18 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         client.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder().setProductType(ProductType.SUBS).build()
         ) { subsResult, subs ->
-            if (subsResult.responseCode != BillingResponseCode.OK) return@queryPurchasesAsync
+            if (subsResult.responseCode != BillingResponseCode.OK) {
+                if (restoring) restoreFailed()
+                return@queryPurchasesAsync
+            }
             all += subs
             client.queryPurchasesAsync(
                 QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build()
             ) { inappResult, inapp ->
-                if (inappResult.responseCode != BillingResponseCode.OK) return@queryPurchasesAsync
+                if (inappResult.responseCode != BillingResponseCode.OK) {
+                    if (restoring) restoreFailed()
+                    return@queryPurchasesAsync
+                }
                 all += inapp
                 applyPurchases(all, fromQuery = true)
             }
@@ -258,6 +285,15 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
         val wasPending = _state.value.pendingPayment
         val confirmedNow = source != null && (!fromQuery || wasPending)
         if (confirmedNow) _celebrate.value = source
+        val restoreAnswer = if (fromQuery && restoring) {
+            restoring = false
+            when {
+                source == PremiumSource.LIFETIME -> tr("Listo: recuperamos tu Premium de por vida.")
+                source != null -> tr("Listo: recuperamos tu suscripción Premium.")
+                pending -> null
+                else -> tr("No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.")
+            }
+        } else null
         _state.update {
             it.copy(
                 isPremium = source != null,
@@ -267,6 +303,7 @@ class PremiumManager(context: Context) : PurchasesUpdatedListener {
                     // La animación de "Pago confirmado" ya lo dice: no hace falta otra ventana
                     confirmedNow -> null
                     pending -> tr("Tu pago está pendiente. Activaremos Premium apenas Google Play lo confirme.")
+                    restoreAnswer != null -> restoreAnswer
                     else -> it.message
                 },
             )

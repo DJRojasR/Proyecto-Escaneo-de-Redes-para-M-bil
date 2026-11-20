@@ -125,10 +125,9 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
             )
 
             // ---------- Botón
-            val limitReached = !isPremium && s.testsToday >= AppSettings.FREE_SPEED_TESTS_PER_DAY && !s.running
             if (s.running) {
                 OutlinedButton(onClick = vm::cancel, modifier = Modifier.fillMaxWidth()) { Text(tr("Detener")) }
-            } else if (!limitReached) {
+            } else {
                 Button(
                     onClick = vm::requestStart,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -141,24 +140,6 @@ fun SpeedTestScreen(vm: SpeedTestViewModel, onBack: () -> Unit) {
                     )
                 }
             }
-            if (!isPremium) {
-                val left = (AppSettings.FREE_SPEED_TESTS_PER_DAY - s.testsToday).coerceAtLeast(0)
-                if (limitReached) {
-                    LockedCard(
-                        tr("Pruebas ilimitadas"),
-                        tr("La versión gratis incluye %1\$s pruebas por día y ya las usaste. Con Premium mides cuantas veces quieras y guardas el historial con gráfico.", AppSettings.FREE_SPEED_TESTS_PER_DAY),
-                    )
-                } else {
-                    Text(
-                        tr("Te quedan %1\$s %2\$s gratis hoy.", left, if (left == 1) tr("prueba") else tr("pruebas")),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-
             s.error?.let { Text(it, color = StatusColors.bad, style = MaterialTheme.typography.bodyMedium) }
 
             // ---------- Resultados

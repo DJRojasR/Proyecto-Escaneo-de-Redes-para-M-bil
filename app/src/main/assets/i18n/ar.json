@@ -1287,5 +1287,15 @@
 "Continuar": "متابعة",
 "¡Pago confirmado!": "تم تأكيد الدفع!",
 "Bienvenido a XYNTRA Premium": "مرحبًا بك في XYNTRA Premium",
-"Empezar a usar Premium": "ابدأ استخدام Premium"
+"Empezar a usar Premium": "ابدأ استخدام Premium",
+  "Con Premium se abren sin anuncios.": "مع Premium تُفتح بدون إعلانات.",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "تُفتح بعد إعلان قصير ثم تبقى متاحة لمدة %1$s دقائق. مشاركة شبكة WiFi بدون إعلان.",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "عند الفحص: يومك الأول وأول %1$s عمليات فحص بدون إعلانات؛ بعد ذلك، إعلان واحد كحد أقصى كل %2$s عمليات فحص و%3$s في اليوم، ويستمر الفحص في الخلفية. الأدوات المجانية: إعلان قصير عند فتحها ثم تبقى متاحة لمدة %4$s دقائق.",
+  "Mejor valor": "أفضل قيمة",
+  "Listo: recuperamos tu Premium de por vida.": "تم: استعدنا Premium مدى الحياة الخاص بك.",
+  "Listo: recuperamos tu suscripción Premium.": "تم: استعدنا اشتراك Premium الخاص بك.",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "لم نعثر على أي عمليات شراء Premium في حساب Google هذا. إذا دفعت بحساب آخر، فانتقل إليه في Google Play وحاول مرة أخرى.",
+  "Herramientas sin anuncios": "أدوات بدون إعلانات",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "يُفتح اختبار السرعة والتشخيص وباقي الأدوات فورًا.",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "يحفظ كل اختبارات السرعة مع رسم بياني لترى كيف يتغير الإنترنت لديك."
 }

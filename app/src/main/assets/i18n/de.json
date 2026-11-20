@@ -1287,5 +1287,15 @@
 "Continuar": "Weiter",
 "¡Pago confirmado!": "Zahlung bestätigt!",
 "Bienvenido a XYNTRA Premium": "Willkommen bei XYNTRA Premium",
-"Empezar a usar Premium": "Premium jetzt nutzen"
+"Empezar a usar Premium": "Premium jetzt nutzen",
+  "Con Premium se abren sin anuncios.": "Mit Premium öffnen sie sich ohne Werbung.",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "Sie öffnen sich nach einer kurzen Werbung und bleiben dann %1$s Minuten freigeschaltet. „WLAN teilen“ hat keine Werbung.",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "Beim Scannen: Dein erster Tag und deine ersten %1$s Scans sind werbefrei; danach höchstens eine Werbung alle %2$s Scans und %3$s pro Tag, und der Scan läuft im Hintergrund weiter. Kostenlose Werkzeuge: eine kurze Werbung beim Öffnen, danach bleiben sie %4$s Minuten freigeschaltet.",
+  "Mejor valor": "Bester Preis",
+  "Listo: recuperamos tu Premium de por vida.": "Fertig: Wir haben dein lebenslanges Premium wiederhergestellt.",
+  "Listo: recuperamos tu suscripción Premium.": "Fertig: Wir haben dein Premium-Abo wiederhergestellt.",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "Wir haben in diesem Google-Konto keine Premium-Käufe gefunden. Wenn du mit einem anderen Konto bezahlt hast, wechsle in Google Play zu diesem Konto und versuche es erneut.",
+  "Herramientas sin anuncios": "Werkzeuge ohne Werbung",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "Geschwindigkeitstest, Diagnose und die anderen Werkzeuge öffnen sich sofort.",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "Speichert alle deine Geschwindigkeitstests mit einem Diagramm, damit du siehst, wie sich dein Internet verändert."
 }

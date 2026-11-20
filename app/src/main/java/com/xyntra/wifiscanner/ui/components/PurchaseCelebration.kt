@@ -223,7 +223,7 @@ fun PurchaseCelebration(source: PremiumSource, onContinue: () -> Unit) {
             val benefits = listOf(
                 tr("Sin anuncios"), tr("Vigilancia de la red"),
                 tr("Mapa de calor WiFi"), tr("Revisión de seguridad"),
-                tr("Pruebas de velocidad ilimitadas"), tr("Historial completo"),
+                tr("Historial de velocidad"), tr("Historial completo"),
             )
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = 12.dp),

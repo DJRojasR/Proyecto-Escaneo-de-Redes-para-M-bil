@@ -2,6 +2,26 @@ package com.xyntra.wifiscanner.ui.screens
 
 import com.xyntra.wifiscanner.i18n.tr
 import android.app.Activity
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +38,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -59,7 +80,8 @@ private data class Benefit(val icon: ImageVector, val title: String, val text: S
 
 private val benefits = listOf(
     Benefit(Icons.Outlined.Block, tr("Sin anuncios"), tr("Escanea todas las veces que quieras sin interrupciones.")),
-    Benefit(Icons.Outlined.Speed, tr("Pruebas de velocidad ilimitadas"), tr("Mide cuantas veces quieras, con historial y gráfico.")),
+    Benefit(Icons.Outlined.Bolt, tr("Herramientas sin anuncios"), tr("Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.")),
+    Benefit(Icons.Outlined.Speed, tr("Historial de velocidad"), tr("Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.")),
     Benefit(Icons.Outlined.NotificationsActive, tr("Alerta de intrusos"), tr("Revisamos tu red cada 15, 30 o 60 minutos y te avisamos si se conecta alguien desconocido.")),
     Benefit(Icons.Outlined.CalendarMonth, tr("Escaneos programados"), tr("Un escaneo automático cada día a la hora que elijas.")),
     Benefit(Icons.Outlined.History, tr("Historial completo"), tr("Todo el historial, no solo 7 días, y la línea de tiempo de cada equipo.")),
@@ -113,24 +135,53 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
                         color = PremiumGold,
                     )
                 }
-                PlanCard(
-                    title = tr("Mensual"),
-                    price = s.monthly?.price?.takeIf { it.isNotBlank() } ?: tr("US$ 2 al mes"),
-                    detail = s.monthly?.trial ?: tr("Cancela cuando quieras desde Google Play."),
-                    tag = s.monthly?.trial?.let { tr("Prueba gratis") },
-                    button = if (s.monthly?.trial != null) tr("Empezar prueba gratis") else tr("Suscribirme"),
-                    highlighted = false,
-                    onClick = { activity?.let { premium.buy(it, lifetime = false) } },
-                )
-                PlanCard(
-                    title = tr("Pro de por vida"),
-                    price = s.lifetime?.price?.takeIf { it.isNotBlank() }?.let { tr("%1\$s una sola vez", it) } ?: tr("US$ 10 una sola vez"),
-                    detail = tr("Pagas una vez y tienes todo Premium para siempre, sin suscripción."),
-                    tag = tr("Pago único"),
-                    button = tr("Comprar de por vida"),
-                    highlighted = true,
-                    onClick = { activity?.let { premium.buy(it, lifetime = true) } },
-                )
+                var lifetimeSelected by rememberSaveable { mutableStateOf(false) }
+                val monthlyPrice = s.monthly?.price?.takeIf { it.isNotBlank() } ?: tr("US$ 2 al mes")
+                val lifetimePrice = s.lifetime?.price?.takeIf { it.isNotBlank() }
+                    ?.let { tr("%1\$s una sola vez", it) } ?: tr("US$ 10 una sola vez")
+                Column(
+                    Modifier.selectableGroup(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    PlanOption(
+                        title = tr("Mensual"),
+                        price = monthlyPrice,
+                        detail = s.monthly?.trial ?: tr("Cancela cuando quieras desde Google Play."),
+                        tag = s.monthly?.trial?.let { tr("Prueba gratis") },
+                        selected = !lifetimeSelected,
+                        onSelect = { lifetimeSelected = false },
+                    )
+                    PlanOption(
+                        title = tr("Pro de por vida"),
+                        price = lifetimePrice,
+                        detail = tr("Pagas una vez y tienes todo Premium para siempre, sin suscripción."),
+                        tag = tr("Mejor valor"),
+                        selected = lifetimeSelected,
+                        onSelect = { lifetimeSelected = true },
+                    )
+                }
+                Button(
+                    onClick = { activity?.let { premium.buy(it, lifetime = lifetimeSelected) } },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                ) {
+                    AnimatedContent(
+                        targetState = lifetimeSelected,
+                        transitionSpec = {
+                            (fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 3 })
+                                .togetherWith(fadeOut(tween(150)))
+                        },
+                        label = "planButton",
+                    ) { lifetime ->
+                        Text(
+                            when {
+                                lifetime -> tr("Comprar de por vida")
+                                s.monthly?.trial != null -> tr("Empezar prueba gratis")
+                                else -> tr("Suscribirme")
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                    }
+                }
                 if (!s.storeReady) {
                     Text(
                         tr("Conectando con Google Play… Los precios finales se muestran en tu moneda antes de pagar."),
@@ -162,7 +213,7 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
                     Text(tr("Administrar o cancelar la suscripción"))
                 }
             }
-            TextButton(onClick = { premium.refresh() }) { Text(tr("Restaurar compras")) }
+            TextButton(onClick = { premium.restore() }) { Text(tr("Restaurar compras")) }
             Text(
                 tr("Los pagos los procesa Google Play con tu cuenta de Google. La suscripción se renueva cada mes hasta que la canceles en Google Play › Pagos y suscripciones. Si cambias de celular, Premium vuelve solo al iniciar sesión con la misma cuenta."),
                 style = MaterialTheme.typography.bodySmall,
@@ -182,32 +233,54 @@ fun PremiumScreen(premium: PremiumManager, activity: Activity?, onBack: () -> Un
     }
 }
 
+/** Una opción de plan que se elige tocándola; la elegida se resalta con una transición suave. */
 @Composable
-private fun PlanCard(
+private fun PlanOption(
     title: String,
     price: String,
     detail: String,
     tag: String?,
-    button: String,
-    highlighted: Boolean,
-    onClick: () -> Unit,
+    selected: Boolean,
+    onSelect: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
+    val anim = tween<androidx.compose.ui.graphics.Color>(260)
+    val container by animateColorAsState(
+        if (selected) colors.primaryContainer else colors.surfaceContainerLow, anim, label = "planBg",
+    )
+    val borderColor by animateColorAsState(
+        if (selected) colors.primary else colors.outlineVariant, anim, label = "planBorder",
+    )
+    val borderWidth by animateDpAsState(if (selected) 2.dp else 1.dp, tween(260), label = "planBorderW")
+    val dot by animateDpAsState(if (selected) 10.dp else 0.dp, tween(220), label = "planDot")
+    val shape = RoundedCornerShape(20.dp)
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (highlighted) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-        border = if (highlighted) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = container),
+        border = BorderStroke(borderWidth, borderColor),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                tag?.let { Tag(it, PremiumGold) }
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(22.dp)
+                    .border(2.dp, borderColor, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(Modifier.size(dot).background(colors.primary, CircleShape))
             }
-            Text(price, style = MaterialTheme.typography.headlineSmall)
-            Text(detail, style = MaterialTheme.typography.bodySmall)
-            Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) { Text(button) }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    tag?.let { Tag(it, PremiumGold) }
+                }
+                Text(price, style = MaterialTheme.typography.titleLarge)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+            }
         }
     }
 }

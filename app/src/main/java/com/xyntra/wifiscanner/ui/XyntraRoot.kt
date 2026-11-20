@@ -157,6 +157,10 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
         mainVm.startScan()
     }
     val openPremium: () -> Unit = { nav.navigate("premium") { launchSingleTop = true } }
+    // Herramientas gratis: un anuncio al abrirlas (si toca) y luego quedan libres un rato
+    val openFreeTool: (String) -> Unit = { target ->
+        app.ads.openFreeTool(activity) { nav.navigate(target) { launchSingleTop = true } }
+    }
     // Cambiar de pestaña conservando el estado de cada una
     val openTab: (String) -> Unit = { target ->
         nav.navigate(target) {
@@ -278,7 +282,7 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                     onScan = startNetworkScan,
                     onOpenDevice = { id -> nav.navigate("dispositivo/$id") },
                     onInspectIp = { nav.navigate("manual?ip=") },
-                    onOpenIps = { nav.navigate("ips") { launchSingleTop = true } },
+                    onOpenIps = { openFreeTool("ips") },
                 )
             }
             composable("ips") {
@@ -294,10 +298,11 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                 HistoryScreen(vm = mainVm, onOpenDevice = { id -> nav.navigate("dispositivo/$id") })
             }
             composable("herramientas") {
+                LaunchedEffect(adsReady) { if (adsReady) app.ads.preloadForTools() }
                 ToolsScreen(
                     ToolsActions(
                         onManual = { nav.navigate("manual?ip=") },
-                        onDiagnostics = { nav.navigate("diagnostico") },
+                        onDiagnostics = { openFreeTool("diagnostico") },
                         onWifiSecurity = { nav.navigate("seguridad_wifi") },
                         onWifiQr = { nav.navigate("wifi_qr") },
                         onLearn = { nav.navigate("aprende") },
@@ -306,11 +311,11 @@ fun XyntraRoot(openRoute: String? = null, onRouteOpened: () -> Unit = {}) {
                         onMonitor = { nav.navigate("vigilancia") },
                         onSecurity = { nav.navigate("seguridad") },
                         onLatency = { nav.navigate("latencia") },
-                        onNetworks = { nav.navigate("redes") },
+                        onNetworks = { openFreeTool("redes") },
                         onExport = { nav.navigate("exportar") },
-                        onSpeed = { nav.navigate("velocidad") },
+                        onSpeed = { openFreeTool("velocidad") },
                         onHeatMap = { nav.navigate("mapa_calor") },
-                        onIpManager = { nav.navigate("ips") { launchSingleTop = true } },
+                        onIpManager = { openFreeTool("ips") },
                     )
                 )
             }

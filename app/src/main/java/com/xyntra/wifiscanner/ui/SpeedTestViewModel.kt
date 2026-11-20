@@ -73,9 +73,11 @@ class SpeedTestViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /** ¿Puede hacer otra prueba hoy? (gratis: 2 por día; Premium: sin límite). */
-    fun canTestNow(): Boolean =
-        app.premium.isPremium || _state.value.testsToday < AppSettings.FREE_SPEED_TESTS_PER_DAY
+    /**
+     * Sin límite diario: en la versión gratis la herramienta ya se "paga" con el anuncio
+     * que se ve al abrirla (ver AdPolicy.TOOL_UNLOCK_MS). Premium: sin anuncios.
+     */
+    fun canTestNow(): Boolean = true
 
     /** Toca "Iniciar": primero pide permiso y avisa si usa datos móviles. */
     fun requestStart() {

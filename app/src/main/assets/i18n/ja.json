@@ -1287,5 +1287,15 @@
 "Continuar": "続ける",
 "¡Pago confirmado!": "支払いが確認されました！",
 "Bienvenido a XYNTRA Premium": "XYNTRA Premium へようこそ",
-"Empezar a usar Premium": "Premium を使い始める"
+"Empezar a usar Premium": "Premium を使い始める",
+  "Con Premium se abren sin anuncios.": "Premium なら広告なしで開けます。",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "短い広告のあとに開き、その後 %1$s 分間は広告なしで使えます。「WiFi を共有」には広告がありません。",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "スキャン時：最初の 1 日と最初の %1$s 回のスキャンは広告なし。その後は最大で %2$s 回に 1 回、1 日 %3$s 回まで。広告の裏でスキャンは続きます。無料ツール：開くときに短い広告があり、その後 %4$s 分間は広告なしで使えます。",
+  "Mejor valor": "いちばんお得",
+  "Listo: recuperamos tu Premium de por vida.": "完了：買い切りの Premium を復元しました。",
+  "Listo: recuperamos tu suscripción Premium.": "完了：Premium のサブスクリプションを復元しました。",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "この Google アカウントには Premium の購入が見つかりませんでした。別のアカウントで支払った場合は、Google Play でそのアカウントに切り替えてもう一度お試しください。",
+  "Herramientas sin anuncios": "ツールが広告なし",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "スピードテスト、診断、その他のツールがすぐに開きます。",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "すべてのスピードテストをグラフ付きで保存し、インターネットの変化を確認できます。"
 }

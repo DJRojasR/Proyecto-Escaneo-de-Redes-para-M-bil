@@ -1287,5 +1287,15 @@
 "Continuar": "Lanjutkan",
 "¡Pago confirmado!": "Pembayaran dikonfirmasi!",
 "Bienvenido a XYNTRA Premium": "Selamat datang di XYNTRA Premium",
-"Empezar a usar Premium": "Mulai gunakan Premium"
+"Empezar a usar Premium": "Mulai gunakan Premium",
+  "Con Premium se abren sin anuncios.": "Dengan Premium, alat ini terbuka tanpa iklan.",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "Terbuka setelah iklan singkat, lalu tetap terbuka selama %1$s menit. Bagikan WiFi Anda tanpa iklan.",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "Saat memindai: hari pertama dan %1$s pemindaian pertama Anda tanpa iklan; setelah itu, paling banyak satu setiap %2$s pemindaian dan %3$s per hari, dan pemindaian tetap berjalan di belakangnya. Alat gratis: iklan singkat saat dibuka, lalu tetap terbuka selama %4$s menit.",
+  "Mejor valor": "Paling hemat",
+  "Listo: recuperamos tu Premium de por vida.": "Selesai: Premium seumur hidup Anda sudah dipulihkan.",
+  "Listo: recuperamos tu suscripción Premium.": "Selesai: langganan Premium Anda sudah dipulihkan.",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "Kami tidak menemukan pembelian Premium di akun Google ini. Jika Anda membayar dengan akun lain, beralihlah ke akun itu di Google Play dan coba lagi.",
+  "Herramientas sin anuncios": "Alat tanpa iklan",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "Tes kecepatan, diagnostik, dan alat lainnya langsung terbuka.",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "Menyimpan semua tes kecepatan Anda dengan grafik untuk melihat perubahan Internet Anda."
 }

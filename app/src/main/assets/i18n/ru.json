@@ -1287,5 +1287,15 @@
 "Continuar": "Продолжить",
 "¡Pago confirmado!": "Оплата подтверждена!",
 "Bienvenido a XYNTRA Premium": "Добро пожаловать в XYNTRA Premium",
-"Empezar a usar Premium": "Начать пользоваться Premium"
+"Empezar a usar Premium": "Начать пользоваться Premium",
+  "Con Premium se abren sin anuncios.": "С Premium они открываются без рекламы.",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "Открываются после короткой рекламы, а затем остаются доступными %1$s минут. «Поделиться WiFi» — без рекламы.",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "При сканировании: в первый день и первые %1$s сканирований рекламы нет; затем не чаще одного раза за %2$s сканирования и %3$s в день, а сканирование продолжается за рекламой. Бесплатные инструменты: короткая реклама при открытии, затем они доступны %4$s минут.",
+  "Mejor valor": "Выгоднее всего",
+  "Listo: recuperamos tu Premium de por vida.": "Готово: мы восстановили ваш пожизненный Premium.",
+  "Listo: recuperamos tu suscripción Premium.": "Готово: мы восстановили вашу подписку Premium.",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "В этом аккаунте Google не найдено покупок Premium. Если вы платили с другого аккаунта, переключитесь на него в Google Play и попробуйте снова.",
+  "Herramientas sin anuncios": "Инструменты без рекламы",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "Тест скорости, диагностика и другие инструменты открываются сразу.",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "Сохраняет все ваши тесты скорости с графиком, чтобы видеть, как меняется интернет."
 }

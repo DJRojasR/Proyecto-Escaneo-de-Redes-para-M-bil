@@ -1287,5 +1287,15 @@
 "Continuar": "继续",
 "¡Pago confirmado!": "付款已确认！",
 "Bienvenido a XYNTRA Premium": "欢迎使用 XYNTRA Premium",
-"Empezar a usar Premium": "开始使用 Premium"
+"Empezar a usar Premium": "开始使用 Premium",
+  "Con Premium se abren sin anuncios.": "开通 Premium 后打开无广告。",
+  "Se abren después de un anuncio corto y luego quedan libres %1$s minutos. Compartir tu WiFi no tiene anuncio.": "观看一段简短广告后打开，之后 %1$s 分钟内无需再看。分享 WiFi 没有广告。",
+  "Al escanear: tu primer día y tus primeros %1$s escaneos no tienen anuncios; después, como máximo uno cada %2$s escaneos y %3$s al día, y el escaneo sigue trabajando detrás. Herramientas gratis: un anuncio corto al abrirlas y luego quedan libres %4$s minutos.": "扫描时：第一天和前 %1$s 次扫描没有广告；之后最多每 %2$s 次扫描一次、每天 %3$s 次，且扫描会在广告后面继续进行。免费工具：打开时有一段简短广告，之后 %4$s 分钟内无需再看。",
+  "Mejor valor": "最超值",
+  "Listo: recuperamos tu Premium de por vida.": "完成：已恢复你的终身 Premium。",
+  "Listo: recuperamos tu suscripción Premium.": "完成：已恢复你的 Premium 订阅。",
+  "No encontramos compras de Premium en esta cuenta de Google. Si pagaste con otra cuenta, cámbiala en Google Play y vuelve a intentarlo.": "此 Google 账号中未找到 Premium 购买记录。如果你用其他账号付款，请在 Google Play 中切换到该账号后重试。",
+  "Herramientas sin anuncios": "工具无广告",
+  "Prueba de velocidad, diagnóstico y las demás herramientas se abren al instante.": "测速、诊断和其他工具立即打开。",
+  "Guarda todas tus pruebas de velocidad con un gráfico para ver cómo cambia tu Internet.": "保存你所有的测速结果并显示图表，查看网速如何变化。"
 }
